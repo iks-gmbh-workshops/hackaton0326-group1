@@ -1,4 +1,8 @@
 export type RegistrationPolicy = {
+  nickname: {
+    minLength: number;
+    maxLength: number;
+  };
   password: {
     minLength: number;
     minUpperCase: number;
@@ -35,6 +39,16 @@ export type PasswordRequirementView = {
   label: string;
   satisfied: boolean;
 };
+
+export function validateNickname(nickname: string, policy: RegistrationPolicy["nickname"]): string | null {
+  const trimmedNickname = nickname.trim();
+
+  if (trimmedNickname.length < policy.minLength || trimmedNickname.length > policy.maxLength) {
+    return `Nickname muss zwischen ${policy.minLength} und ${policy.maxLength} Zeichen lang sein`;
+  }
+
+  return null;
+}
 
 export function evaluatePassword(password: string, policy: RegistrationPolicy["password"]): PasswordRequirementView[] {
   const upperCaseCount = [...password].filter((character) => /[A-Z]/.test(character)).length;

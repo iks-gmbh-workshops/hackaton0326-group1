@@ -3,8 +3,14 @@ package de.heuermannplus.backend.registration
 import java.time.Instant
 
 data class RegistrationPolicyResponse(
+    val nickname: NicknamePolicyResponse,
     val password: PasswordPolicyResponse,
     val captcha: CaptchaPolicyResponse
+)
+
+data class NicknamePolicyResponse(
+    val minLength: Int,
+    val maxLength: Int
 )
 
 data class PasswordPolicyResponse(

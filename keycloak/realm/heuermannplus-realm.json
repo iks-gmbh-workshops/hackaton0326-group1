@@ -121,6 +121,7 @@
           "manage-users",
           "query-users",
           "query-clients",
+          "view-realm",
           "view-users",
           "view-clients"
         ]

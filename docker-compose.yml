@@ -38,7 +38,8 @@ services:
       start_period: 10s
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.5.5
+    build:
+      context: ./keycloak
     restart: unless-stopped
     command:
       - start-dev
@@ -57,8 +58,6 @@ services:
       KC_HTTP_ENABLED: "true"
     ports:
       - "${KEYCLOAK_PORT}:8080"
-    volumes:
-      - ./keycloak/realm:/opt/keycloak/data/import:ro
     depends_on:
       keycloak-postgres:
         condition: service_healthy

@@ -1,11 +1,12 @@
 package de.heuermannplus.backend.registration
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.util.LinkedMultiValueMap
 import org.springframework.stereotype.Component
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClient
@@ -32,6 +33,7 @@ class RestKeycloakAdminClient(
     restClientBuilder: RestClient.Builder
 ) : KeycloakAdminClient {
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val objectMapper = jacksonObjectMapper()
 
     private val restClient = restClientBuilder.build()
 
@@ -60,38 +62,42 @@ class RestKeycloakAdminClient(
     }
 
     override fun createPendingUser(draft: RegistrationUserDraft): String {
-        val response = restClient.post()
-            .uri("${adminBaseUrl()}/users")
-            .headers { headers -> headers.setBearerAuth(accessToken()) }
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(
-                KeycloakCreateUserRequest(
-                    username = draft.username,
-                    email = draft.email,
-                    firstName = draft.firstName,
-                    lastName = draft.lastName,
-                    enabled = false,
-                    emailVerified = false,
-                    credentials = listOf(
-                        KeycloakCredentialRepresentation(
-                            type = "password",
-                            value = draft.password,
-                            temporary = false
+        try {
+            val response = restClient.post()
+                .uri("${adminBaseUrl()}/users")
+                .headers { headers -> headers.setBearerAuth(accessToken()) }
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    KeycloakCreateUserRequest(
+                        username = draft.username,
+                        email = draft.email,
+                        firstName = draft.firstName,
+                        lastName = draft.lastName,
+                        enabled = false,
+                        emailVerified = false,
+                        credentials = listOf(
+                            KeycloakCredentialRepresentation(
+                                type = "password",
+                                value = draft.password,
+                                temporary = false
+                            )
                         )
                     )
                 )
-            )
-            .retrieve()
-            .toBodilessEntity()
+                .retrieve()
+                .toBodilessEntity()
 
-        val location = response.headers.location?.toString()
-            ?: throw RegistrationException(
-                status = HttpStatus.BAD_GATEWAY,
-                code = "KEYCLOAK_CREATE_FAILED",
-                message = "Benutzer konnte nicht angelegt werden"
-            )
+            val location = response.headers.location?.toString()
+                ?: throw RegistrationException(
+                    status = HttpStatus.BAD_GATEWAY,
+                    code = "KEYCLOAK_CREATE_FAILED",
+                    message = "Benutzer konnte nicht angelegt werden"
+                )
 
-        return location.substringAfterLast("/")
+            return location.substringAfterLast("/")
+        } catch (exception: HttpClientErrorException.BadRequest) {
+            throw mapCreateUserBadRequest(exception)
+        }
     }
 
     override fun assignRealmRoles(userId: String, roleNames: Set<String>) {
@@ -100,13 +106,17 @@ class RestKeycloakAdminClient(
         }
 
         val roles = resolveRoles(roleNames)
-        restClient.post()
-            .uri("${adminBaseUrl()}/users/{userId}/role-mappings/realm", userId)
-            .headers { headers -> headers.setBearerAuth(accessToken()) }
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(roles)
-            .retrieve()
-            .toBodilessEntity()
+        try {
+            restClient.post()
+                .uri("${adminBaseUrl()}/users/{userId}/role-mappings/realm", userId)
+                .headers { headers -> headers.setBearerAuth(accessToken()) }
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(roles)
+                .retrieve()
+                .toBodilessEntity()
+        } catch (exception: HttpClientErrorException.Forbidden) {
+            throw mapRoleOperationForbidden("assign", userId, roleNames, exception)
+        }
     }
 
     override fun removeRealmRoles(userId: String, roleNames: Set<String>) {
@@ -115,13 +125,17 @@ class RestKeycloakAdminClient(
         }
 
         val roles = resolveRoles(roleNames)
-        restClient.method(org.springframework.http.HttpMethod.DELETE)
-            .uri("${adminBaseUrl()}/users/{userId}/role-mappings/realm", userId)
-            .headers { headers -> headers.setBearerAuth(accessToken()) }
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(roles)
-            .retrieve()
-            .toBodilessEntity()
+        try {
+            restClient.method(org.springframework.http.HttpMethod.DELETE)
+                .uri("${adminBaseUrl()}/users/{userId}/role-mappings/realm", userId)
+                .headers { headers -> headers.setBearerAuth(accessToken()) }
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(roles)
+                .retrieve()
+                .toBodilessEntity()
+        } catch (exception: HttpClientErrorException.Forbidden) {
+            throw mapRoleOperationForbidden("remove", userId, roleNames, exception)
+        }
     }
 
     override fun enableUser(userId: String) {
@@ -159,8 +173,14 @@ class RestKeycloakAdminClient(
     }
 
     private fun resolveRoles(roleNames: Set<String>): List<KeycloakRoleRepresentation> =
-        roleNames.map { roleName ->
-            restClient.get()
+        roleNames.map(::resolveRole)
+
+    private fun adminBaseUrl(): String =
+        "${keycloakAdminProperties.serverUrl.trimEnd('/')}/admin/realms/${keycloakAdminProperties.realm}"
+
+    private fun resolveRole(roleName: String): KeycloakRoleRepresentation {
+        try {
+            return restClient.get()
                 .uri("${adminBaseUrl()}/roles/{roleName}", roleName)
                 .headers { headers -> headers.setBearerAuth(accessToken()) }
                 .retrieve()
@@ -170,10 +190,100 @@ class RestKeycloakAdminClient(
                     code = "KEYCLOAK_ROLE_NOT_FOUND",
                     message = "Rolle $roleName konnte nicht geladen werden"
                 )
+        } catch (_: HttpClientErrorException.NotFound) {
+            throw RegistrationException(
+                status = HttpStatus.BAD_GATEWAY,
+                code = "KEYCLOAK_ROLE_NOT_FOUND",
+                message = "Rolle $roleName konnte nicht geladen werden"
+            )
+        } catch (exception: HttpClientErrorException.Forbidden) {
+            logger.error(
+                "Keycloak denied reading realm role {} in realm {} for admin client {}. The service account likely needs realm-management role view-realm. Response: {}",
+                roleName,
+                keycloakAdminProperties.realm,
+                keycloakAdminProperties.adminClientId,
+                exception.responseBodyAsString
+            )
+            throw RegistrationException(
+                status = HttpStatus.BAD_GATEWAY,
+                code = "KEYCLOAK_ADMIN_FORBIDDEN",
+                message = "Registrierung ist momentan nicht verfuegbar"
+            )
+        }
+    }
+
+    private fun mapRoleOperationForbidden(
+        action: String,
+        userId: String,
+        roleNames: Set<String>,
+        exception: HttpClientErrorException.Forbidden
+    ): RegistrationException {
+        logger.error(
+            "Keycloak denied {} realm roles {} for user {} in realm {} for admin client {}. The service account likely needs realm-management permissions such as manage-users. Response: {}",
+            action,
+            roleNames,
+            userId,
+            keycloakAdminProperties.realm,
+            keycloakAdminProperties.adminClientId,
+            exception.responseBodyAsString
+        )
+        return RegistrationException(
+            status = HttpStatus.BAD_GATEWAY,
+            code = "KEYCLOAK_ADMIN_FORBIDDEN",
+            message = "Registrierung ist momentan nicht verfuegbar"
+        )
+    }
+
+    private fun mapCreateUserBadRequest(exception: HttpClientErrorException.BadRequest): RegistrationException {
+        val validationError = runCatching {
+            objectMapper.readValue(exception.responseBodyAsByteArray, KeycloakValidationErrorResponse::class.java)
+        }.getOrNull()
+
+        if (validationError?.field == "username" && validationError.errorMessage == "error-invalid-length") {
+            val minLength = validationError.params.getOrNull(1)
+            val maxLength = validationError.params.getOrNull(2)
+
+            return RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "INVALID_NICKNAME",
+                message = if (minLength != null && maxLength != null) {
+                    "Nickname muss zwischen $minLength und $maxLength Zeichen lang sein"
+                } else {
+                    "Nickname ist ungueltig"
+                },
+                field = "nickname"
+            )
         }
 
-    private fun adminBaseUrl(): String =
-        "${keycloakAdminProperties.serverUrl.trimEnd('/')}/admin/realms/${keycloakAdminProperties.realm}"
+        if (validationError?.field == "username") {
+            return RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "INVALID_NICKNAME",
+                message = "Nickname ist ungueltig",
+                field = "nickname"
+            )
+        }
+
+        if (validationError?.field == "email") {
+            return RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "INVALID_EMAIL",
+                message = "Email-Adresse ist ungueltig",
+                field = "email"
+            )
+        }
+
+        logger.warn(
+            "Keycloak rejected user creation in realm {}: {}",
+            keycloakAdminProperties.realm,
+            exception.responseBodyAsString
+        )
+        return RegistrationException(
+            status = HttpStatus.BAD_REQUEST,
+            code = "KEYCLOAK_CREATE_FAILED",
+            message = "Die Registrierungsdaten sind ungueltig"
+        )
+    }
 
     private fun accessToken(): String {
         try {
@@ -228,6 +338,12 @@ class RestKeycloakAdminClient(
 data class KeycloakTokenResponse(
     @field:JsonProperty("access_token")
     val accessToken: String? = null
+)
+
+data class KeycloakValidationErrorResponse(
+    val field: String? = null,
+    val errorMessage: String? = null,
+    val params: List<String> = emptyList()
 )
 
 data class KeycloakCreateUserRequest(

@@ -1,0 +1,3 @@
+FROM quay.io/keycloak/keycloak:26.5.5
+
+COPY realm/*.json /opt/keycloak/data/import/

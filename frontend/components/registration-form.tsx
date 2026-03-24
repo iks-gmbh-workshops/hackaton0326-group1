@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useState, useTransition } from "react";
 import { CaptchaField } from "@/components/captcha-field";
 import { PasswordRequirements } from "@/components/password-requirements";
-import { evaluatePassword, type RegistrationError, type RegistrationPayload, type RegistrationPolicy } from "@/lib/registration";
+import { evaluatePassword, type RegistrationError, type RegistrationPayload, type RegistrationPolicy, validateNickname } from "@/lib/registration";
 
 const initialForm: RegistrationPayload = {
   nickname: "",
@@ -56,6 +56,7 @@ export function RegistrationForm() {
   }, []);
 
   const requirements = policy ? evaluatePassword(deferredPassword, policy.password) : [];
+  const nicknameValidationError = policy ? validateNickname(form.nickname, policy.nickname) : null;
 
   function updateField<K extends keyof RegistrationPayload>(field: K, value: RegistrationPayload[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -74,6 +75,18 @@ export function RegistrationForm() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSuccessMessage(null);
+
+    if (policy) {
+      const nicknameError = validateNickname(form.nickname, policy.nickname);
+      if (nicknameError) {
+        setSubmitError({
+          code: "INVALID_NICKNAME",
+          message: nicknameError,
+          field: "nickname"
+        });
+        return;
+      }
+    }
 
     startTransition(() => {
       void fetch("/api/registration", {
@@ -145,13 +158,20 @@ export function RegistrationForm() {
         </div>
 
         <Field
-          error={submitError?.field === "nickname" ? submitError.message : undefined}
+          error={submitError?.field === "nickname" ? submitError.message : nicknameValidationError ?? undefined}
           id="nickname"
           label="Nickname"
+          maxLength={policy.nickname.maxLength}
+          minLength={policy.nickname.minLength}
           onChange={(value) => updateField("nickname", value)}
           required
           value={form.nickname}
         />
+        {!submitError?.field || submitError.field !== "nickname" ? (
+          <p className="text-xs text-white/60">
+            Zwischen {policy.nickname.minLength} und {policy.nickname.maxLength} Zeichen.
+          </p>
+        ) : null}
         {submitError?.field === "nickname" && submitError.suggestedNickname ? (
           <button className="btn btn-sm btn-outline" onClick={applySuggestedNickname} type="button">
             Vorschlag uebernehmen: {submitError.suggestedNickname}
@@ -246,9 +266,11 @@ type FieldProps = {
   type?: string;
   required?: boolean;
   error?: string;
+  minLength?: number;
+  maxLength?: number;
 };
 
-function Field({ id, label, value, onChange, type = "text", required = false, error }: FieldProps) {
+function Field({ id, label, value, onChange, type = "text", required = false, error, minLength, maxLength }: FieldProps) {
   return (
     <fieldset className="space-y-2">
       <label className="text-sm font-medium text-white" htmlFor={id}>
@@ -257,6 +279,8 @@ function Field({ id, label, value, onChange, type = "text", required = false, er
       <input
         className={`input input-bordered w-full ${error ? "input-error" : ""}`}
         id={id}
+        maxLength={maxLength}
+        minLength={minLength}
         name={id}
         onChange={(event) => onChange(event.target.value)}
         required={required}

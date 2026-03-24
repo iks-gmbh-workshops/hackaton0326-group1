@@ -106,6 +106,26 @@ class RegistrationServiceTest {
     }
 
     @Test
+    fun `register rejects nickname that is too short`() {
+        val fixture = registrationFixture()
+
+        val exception = assertFailsWith<RegistrationException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "ab",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass"
+                )
+            )
+        }
+
+        assertEquals("Nickname muss zwischen 3 und 255 Zeichen lang sein", exception.message)
+        assertEquals("nickname", exception.field)
+    }
+
+    @Test
     fun `register suggests next free nickname on conflict`() {
         val fixture = registrationFixture().also {
             it.keycloakClient.createPendingUser(

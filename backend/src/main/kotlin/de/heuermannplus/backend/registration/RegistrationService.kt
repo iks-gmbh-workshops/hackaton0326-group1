@@ -23,6 +23,10 @@ class RegistrationService(
 
     fun policy(): RegistrationPolicyResponse =
         RegistrationPolicyResponse(
+            nickname = NicknamePolicyResponse(
+                minLength = NICKNAME_MIN_LENGTH,
+                maxLength = NICKNAME_MAX_LENGTH
+            ),
             password = passwordPolicyEvaluator.policyResponse(),
             captcha = CaptchaPolicyResponse(
                 mode = registrationProperties.captcha.mode.name.lowercase(),
@@ -47,6 +51,15 @@ class RegistrationService(
         val captchaToken = request.captchaToken.requireField("captchaToken", "Bitte Captcha eingeben")
         val firstName = request.firstName.normalizeOptional()
         val lastName = request.lastName.normalizeOptional()
+
+        if (nickname.length !in NICKNAME_MIN_LENGTH..NICKNAME_MAX_LENGTH) {
+            throw RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "INVALID_NICKNAME",
+                message = "Nickname muss zwischen $NICKNAME_MIN_LENGTH und $NICKNAME_MAX_LENGTH Zeichen lang sein",
+                field = "nickname"
+            )
+        }
 
         if (!EMAIL_REGEX.matches(email)) {
             throw RegistrationException(
@@ -236,6 +249,8 @@ class RegistrationService(
 
     companion object {
         private val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+        private const val NICKNAME_MIN_LENGTH = 3
+        private const val NICKNAME_MAX_LENGTH = 255
         private const val REGISTRATION_PENDING_ROLE = "registration-pending"
         private const val APP_USER_ROLE = "app-user"
     }
