@@ -59,3 +59,28 @@ docker compose up --build
 - Backend: Java 25 und `./gradlew bootRun` in `backend/`
 
 Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle Abhaengigkeiten damit konsistent hochfahren.
+
+## Dev Container
+
+Ein VS-Code-Dev-Container liegt unter `.devcontainer/` und ist auf diesen Repo-Stack zugeschnitten.
+
+- Vorinstalliert: Node.js 24.x, npm, Java 25, Docker-CLI-Zugriff auf den Host-Daemon und `@openai/codex`
+- Beim ersten Container-Start werden `frontend`-Dependencies installiert und der Gradle Wrapper in `backend` vorgewaermt
+- Der Root-Stack aus `docker-compose.yml` startet nicht automatisch und bleibt bewusst manuell
+
+Nutzung:
+
+1. In VS Code `Dev Containers: Reopen in Container` ausfuehren.
+2. Nach dem ersten Bootstrap bei Bedarf den App-Stack manuell starten:
+
+```bash
+docker compose up -d
+```
+
+3. Codex im Container manuell authentifizieren:
+
+```bash
+codex login
+```
+
+Alternativ kann ein API-Key wie `OPENAI_API_KEY` manuell im Container gesetzt werden. Die Dev-Container-Konfiguration reicht keine OpenAI-Credentials automatisch durch.
