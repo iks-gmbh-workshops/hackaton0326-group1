@@ -1,0 +1,61 @@
+# HeuermannPlus
+
+Multilayer-Web-App-Scaffold mit Next.js im Frontend, Spring Boot mit Kotlin im Backend, Keycloak fuer Authentifizierung und zwei getrennten PostgreSQL-Instanzen fuer App- und IAM-Daten.
+
+## Stack
+
+- Frontend: Next.js 15.5.9, React 19.1.1, TypeScript 5.9.2, Tailwind CSS 4.1.13, DaisyUI 5.1.7
+- Backend: Spring Boot 4.0.3, Kotlin 2.2.20, Gradle 9.4.0, Java 25 Runtime mit Bytecode-Target 24
+- Auth: Keycloak 26.5.5
+- Persistenz: PostgreSQL 18.3 fuer App und Keycloak
+- Lokales Setup: Docker Compose im Repo-Root
+
+## Projektstruktur
+
+```text
+.
+|-- backend
+|-- docs
+|-- frontend
+|-- keycloak
+|-- .editorconfig
+|-- .env
+|-- .gitignore
+|-- docker-compose.yml
+`-- README.md
+```
+
+## Schnellstart
+
+1. Repo clonen und ins Projektverzeichnis wechseln.
+2. Optional Werte in `.env` anpassen.
+3. Stack starten:
+
+```bash
+docker compose up --build
+```
+
+4. Anwendungen aufrufen:
+
+- Frontend: `http://localhost:3000`
+- Backend Health: `http://localhost:8080/api/public/health`
+- Keycloak: `http://localhost:8081`
+
+## Demo-Zugang
+
+- Keycloak Admin: `admin` / `Admin123!`
+- Demo-User: `demo@heuermannplus.local` / `Demo123!`
+
+## Auth-Demo
+
+- Das Frontend startet den Login gegen Keycloak.
+- Nach erfolgreichem Login speichert `next-auth` die Session JWT-basiert.
+- Der BFF-Endpoint `frontend/app/api/me/route.ts` leitet den Access Token an das Backend weiter.
+- Das Backend validiert den Bearer-Token gegen Keycloak als OAuth2 Resource Server.
+
+## Entwicklung ohne Docker
+
+- Frontend: Node.js 24.x LTS und `npm install && npm run dev` in `frontend/`
+- Backend: Java 25 und `./gradlew bootRun` in `backend/`
+
+Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle Abhaengigkeiten damit konsistent hochfahren.

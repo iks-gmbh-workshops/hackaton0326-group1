@@ -1,0 +1,35 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+
+# Backend
+backend/.gradle/
+backend/build/
+
+# Docker / local data
+*.pid
+*.seed
+
+# Environment overrides
+.env.local
+.env.*.local
+frontend/.env.local
+frontend/.env.*.local
+backend/.env.local
+backend/.env.*.local

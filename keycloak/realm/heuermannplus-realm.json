@@ -1,0 +1,88 @@
+{
+  "realm": "heuermannplus",
+  "enabled": true,
+  "displayName": "HeuermannPlus",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "defaultRoles": [
+    "offline_access",
+    "uma_authorization",
+    "app-user"
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "app-user",
+        "description": "Default role for the scaffold demo user."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "heuermannplus-frontend",
+      "name": "HeuermannPlus Frontend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "heuermannplus-frontend-secret",
+      "redirectUris": [
+        "http://localhost:3000/api/auth/callback/keycloak",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "backchannel.logout.session.required": "true",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "roles",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "clientId": "heuermannplus-backend",
+      "name": "HeuermannPlus Backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true
+    }
+  ],
+  "users": [
+    {
+      "username": "demo@heuermannplus.local",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "User",
+      "email": "demo@heuermannplus.local",
+      "realmRoles": [
+        "app-user"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
