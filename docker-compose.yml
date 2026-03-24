@@ -63,6 +63,13 @@ services:
       keycloak-postgres:
         condition: service_healthy
 
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT}:1025"
+      - "${MAILPIT_UI_PORT}:8025"
+
   backend:
     build:
       context: ./backend
@@ -74,12 +81,24 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${KEYCLOAK_PUBLIC_URL}/realms/${KEYCLOAK_REALM}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+      APP_REGISTRATION_FRONTEND_BASE_URL: http://localhost:${FRONTEND_PORT}
+      APP_REGISTRATION_EMAIL_FROM: ${APP_REGISTRATION_EMAIL_FROM}
+      APP_REGISTRATION_CAPTCHA_MODE: ${APP_REGISTRATION_CAPTCHA_MODE}
+      APP_REGISTRATION_CAPTCHA_MOCK_PASS_TOKEN: ${APP_REGISTRATION_CAPTCHA_MOCK_PASS_TOKEN}
+      APP_KEYCLOAK_SERVER_URL: http://keycloak:8080
+      APP_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      APP_KEYCLOAK_ADMIN_CLIENT_ID: ${APP_KEYCLOAK_ADMIN_CLIENT_ID}
+      APP_KEYCLOAK_ADMIN_CLIENT_SECRET: ${APP_KEYCLOAK_ADMIN_CLIENT_SECRET}
     ports:
       - "${BACKEND_PORT}:8080"
     depends_on:
       app-postgres:
         condition: service_healthy
       keycloak:
+        condition: service_started
+      mailpit:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep UP"]
@@ -99,6 +118,7 @@ services:
       BACKEND_INTERNAL_URL: http://backend:8080
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_FRONTEND_CLIENT_ID}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_FRONTEND_CLIENT_SECRET}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_PUBLIC_URL}/realms/${KEYCLOAK_REALM}
       KEYCLOAK_PUBLIC_BASE_URL: ${KEYCLOAK_PUBLIC_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect
       KEYCLOAK_INTERNAL_BASE_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect
       NEXT_TELEMETRY_DISABLED: "1"

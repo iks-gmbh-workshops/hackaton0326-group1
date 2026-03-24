@@ -8,12 +8,21 @@ type KeycloakProfile = {
   preferred_username?: string;
 };
 
+const openIdConnectPath = "/protocol/openid-connect";
+
+function toIssuerUrl(baseUrl: string): string {
+  return baseUrl.endsWith(openIdConnectPath)
+    ? baseUrl.slice(0, -openIdConnectPath.length)
+    : baseUrl;
+}
+
 const publicBaseUrl =
   process.env.KEYCLOAK_PUBLIC_BASE_URL ??
   "http://localhost:8081/realms/heuermannplus/protocol/openid-connect";
 const internalBaseUrl =
   process.env.KEYCLOAK_INTERNAL_BASE_URL ??
   "http://keycloak:8080/realms/heuermannplus/protocol/openid-connect";
+const issuer = process.env.KEYCLOAK_ISSUER ?? toIssuerUrl(publicBaseUrl);
 const clientId = process.env.KEYCLOAK_CLIENT_ID ?? "heuermannplus-frontend";
 const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET ?? "heuermannplus-frontend-secret";
 
@@ -21,7 +30,9 @@ const keycloakProvider: OAuthConfig<KeycloakProfile> = {
   id: "keycloak",
   name: "Keycloak",
   type: "oauth",
-  idToken: false,
+  issuer,
+  jwks_endpoint: `${internalBaseUrl}/certs`,
+  idToken: true,
   clientId,
   clientSecret,
   checks: ["pkce", "state"],

@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import Link from "next/link";
 import { AuthControls } from "@/components/auth-controls";
 import { ProtectedApiDemo } from "@/components/protected-api-demo";
 import { authOptions } from "@/lib/auth";
@@ -9,14 +10,15 @@ const highlights = [
   "Mobile-first Layout mit Next.js App Router",
   "DaisyUI-Komponenten auf Tailwind CSS 4",
   "Keycloak Login ueber serverseitige Session",
-  "Spring Boot Resource Server mit JWT-Validierung"
+  "Spring Boot Resource Server mit JWT-Validierung",
+  "App-eigene Registrierung mit E-Mail-Verifizierung"
 ];
 
 const steps = [
-  "Frontend startet den Login ueber Keycloak.",
+  "Neue Nutzer registrieren sich ueber das Frontend und bestaetigen ihre E-Mail.",
+  "Keycloak verwaltet die Identitaet und Rollen fuer verifizierte Nutzer.",
   "next-auth speichert die Session im Frontend.",
-  "Der Route-Handler `/api/me` fungiert als BFF.",
-  "Das Backend validiert den Bearer-Token gegen Keycloak."
+  "Der Route-Handler `/api/me` fungiert als BFF zum Backend."
 ];
 
 export default async function HomePage() {
@@ -48,6 +50,11 @@ export default async function HomePage() {
 
             <div className="flex flex-wrap items-center gap-3">
               <AuthControls authenticated={authenticated} />
+              {!authenticated ? (
+                <Link className="btn btn-outline btn-secondary" href="/register">
+                  Jetzt registrieren
+                </Link>
+              ) : null}
               <a className="btn btn-ghost text-white hover:bg-white/10" href="#architecture">
                 Architektur ansehen
               </a>
@@ -69,7 +76,7 @@ export default async function HomePage() {
               <p className="text-sm leading-6 text-white/65">
                 {authenticated
                   ? "Die Session liegt serverseitig vor und kann jetzt ueber den BFF sicher an das Backend weitergegeben werden."
-                  : "Starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
+                  : "Registriere dich oder starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
               </p>
             </div>
 

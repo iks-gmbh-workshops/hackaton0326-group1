@@ -40,6 +40,7 @@ docker compose up --build
 - Frontend: `http://localhost:3000`
 - Backend Health: `http://localhost:8080/api/public/health`
 - Keycloak: `http://localhost:8081`
+- Mailpit UI: `http://localhost:8025`
 
 ## Demo-Zugang
 
@@ -52,6 +53,19 @@ docker compose up --build
 - Nach erfolgreichem Login speichert `next-auth` die Session JWT-basiert.
 - Der BFF-Endpoint `frontend/app/api/me/route.ts` leitet den Access Token an das Backend weiter.
 - Das Backend validiert den Bearer-Token gegen Keycloak als OAuth2 Resource Server.
+
+## Registrierung lokal
+
+- Die Compose-Umgebung enthaelt jetzt Mailpit fuer Verifizierungs-E-Mails und einen technischen Keycloak-Client fuer die Registrierungslogik.
+- Im Default-Setup laeuft Captcha lokal im Mock-Modus; verwende dafuer den Token `test-pass`.
+- Wenn ein bestehendes Keycloak-Postgres-Volume schon vor der Realm-Erweiterung angelegt wurde, zieht `--import-realm` die neuen Clients und Rollen nicht nach.
+- Typisches Symptom davon bei der Registrierung: Im Backend erscheint `401 invalid_client`, waehrend Keycloak selbst `client_not_found` fuer `heuermannplus-registration-service` loggt.
+- In diesem Fall den Stack fuer einen kompletten lokalen Neuimport einmal mit geloeschten Volumes starten:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
 
 ## Entwicklung ohne Docker
 
