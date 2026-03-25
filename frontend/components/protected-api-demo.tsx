@@ -52,7 +52,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
         <div className="flex items-center justify-between gap-4">
           <div className="section-intro">
             <p className="section-title">Protected API Demo</p>
-            <h2 className="section-headline text-[2rem]">Browser ruft das Spring-Backend direkt auf</h2>
+            <h2 className="section-headline">Browser ruft das Spring-Backend direkt auf</h2>
           </div>
           <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
             {authenticated ? "angemeldet" : "nicht angemeldet"}

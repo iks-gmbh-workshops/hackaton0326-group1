@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { Route } from "next";
+import { usePathname } from "next/navigation";
 import { AuthControls } from "@/components/auth-controls";
 
 type AppHeaderProps = {
@@ -8,6 +11,9 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ authenticated, userName }: AppHeaderProps) {
+  const pathname = usePathname();
+  const showPublicLogin = !authenticated && pathname === "/";
+
   return (
     <header className="sticky top-0 z-30 border-b border-base-300/70 bg-base-100/80 backdrop-blur supports-[backdrop-filter]:bg-base-100/60">
       <div className="mx-auto flex min-h-[4.75rem] w-full max-w-7xl items-center justify-between gap-4 px-3 py-3">
@@ -48,6 +54,10 @@ export function AppHeader({ authenticated, userName }: AppHeaderProps) {
 
             <AuthControls authenticated={authenticated} />
           </nav>
+        ) : showPublicLogin ? (
+          <div className="flex items-center gap-2">
+            <AuthControls authenticated={false} variant="header" />
+          </div>
         ) : null}
       </div>
     </header>

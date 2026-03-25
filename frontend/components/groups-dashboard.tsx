@@ -161,7 +161,7 @@ export function GroupsDashboard() {
         <form className="brand-card space-y-4 p-6" onSubmit={handleCreateGroup}>
           <div className="section-intro">
             <p className="section-title">Neue Gruppe</p>
-            <h1 className="section-headline sm:text-[2.4rem]">Gruppen anlegen und verwalten</h1>
+            <h1 className="section-headline">Gruppen anlegen und verwalten</h1>
             <p className="subheadline">
               Der Ersteller wird automatisch Gruppenverwalter und kann danach Mitglieder einladen.
             </p>
@@ -197,7 +197,7 @@ export function GroupsDashboard() {
         <form className="soft-panel space-y-4" onSubmit={handleJoinByToken}>
           <div className="section-intro">
             <p className="section-title">Token</p>
-            <h2 className="section-headline text-[2rem]">Mit Einladungstoken beitreten</h2>
+            <h2 className="section-headline">Mit Einladungstoken beitreten</h2>
           </div>
           <Field
             label="Gruppeneinladungstoken"
@@ -219,7 +219,7 @@ export function GroupsDashboard() {
           <div className="card-body gap-4">
             <div className="section-intro">
               <p className="section-title">Meine Gruppen</p>
-              <h2 className="section-headline text-[2rem]">Aktive Zugehoerigkeiten und Einladungen</h2>
+              <h2 className="section-headline">Aktive Zugehoerigkeiten und Einladungen</h2>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -247,7 +247,7 @@ export function GroupsDashboard() {
         <section className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Einladungen</p>
-            <h2 className="section-headline text-[2rem]">Offene Gruppeneinladungen</h2>
+            <h2 className="section-headline">Offene Gruppeneinladungen</h2>
           </div>
           {data.invitations.map((invitation) => (
             <div key={invitation.membershipId} className="rounded-2xl border border-base-300 bg-white/85 p-4">
@@ -275,7 +275,7 @@ export function GroupsDashboard() {
         <section className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Antraege</p>
-            <h2 className="section-headline text-[2rem]">Eigene Mitgliedschaftsantraege</h2>
+            <h2 className="section-headline">Eigene Mitgliedschaftsantraege</h2>
           </div>
           {data.joinRequests.map((request) => (
             <div key={request.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
@@ -290,7 +290,7 @@ export function GroupsDashboard() {
         <section className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Gruppen finden</p>
-            <h2 className="section-headline text-[2rem]">Mitgliedschaft beantragen</h2>
+            <h2 className="section-headline">Mitgliedschaft beantragen</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {data.availableGroups.map((group) => (

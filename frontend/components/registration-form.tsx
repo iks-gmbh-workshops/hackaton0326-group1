@@ -144,7 +144,7 @@ export function RegistrationForm() {
       <form className="brand-card space-y-5 p-6" onSubmit={handleSubmit}>
         <div className="space-y-2">
           <p className="section-title">Registrierung</p>
-          <h1 className="section-headline sm:text-[2.5rem]">Erstelle dein drumdibum Konto</h1>
+          <h1 className="section-headline">Erstelle dein drumdibum Konto</h1>
           <p className="subheadline">
             Nach der Registrierung senden wir dir einen Verifizierungslink per E-Mail. Erst danach wird dein Zugang freigeschaltet.
           </p>

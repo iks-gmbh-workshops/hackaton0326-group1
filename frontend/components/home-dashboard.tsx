@@ -62,7 +62,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
           <div className="max-w-3xl space-y-4">
             <p className="subheadline">Dein schneller Ueberblick fuer Gruppen und naechste Schritte.</p>
-            <h1 className="headline">Willkommen zurueck, {userName}.</h1>
+            <h1 className="section-headline">Willkommen zurueck, {userName}.</h1>
             <p className="body-copy max-w-2xl">
               Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz fuer kommende
               Aktivitaeten.
@@ -79,26 +79,32 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
         <div className="soft-panel grid gap-4">
           <div className="section-intro">
             <p className="section-title">Uebersicht</p>
-            <h2 className="section-headline text-3xl">Direkt nach dem Login orientieren</h2>
+            <h2 className="section-headline">Direkt nach dem Login orientieren</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+          <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Meine Gruppen</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsGroups}</p>
-              <p className="helper-text">aktive Zugehoerigkeiten</p>
+              <p className="section-headline self-end text-[2rem] leading-none">{statsGroups}</p>
+              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
+                aktive Zugehoerigkeiten
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Einladungen</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsInvitations}</p>
-              <p className="helper-text">offene Gruppeneinladungen</p>
+              <p className="section-headline self-end text-[2rem] leading-none">{statsInvitations}</p>
+              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
+                offene Gruppeneinladungen
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Antraege</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsRequests}</p>
-              <p className="helper-text">laufende Mitgliedschaftsantraege</p>
+              <p className="section-headline self-end text-[2rem] leading-none">{statsRequests}</p>
+              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
+                laufende Mitgliedschaftsantraege
+              </p>
             </div>
           </div>
 
