@@ -109,7 +109,7 @@ export function CaptchaField({ captcha, disabled = false, value, error, onChange
           required
           value={value}
         />
-        <p className="helper-text">Lokaler Testmodus: verwende `{captcha.mockPassToken ?? "test-pass"}`.</p>
+        <p className="helper-text">Bitte bestaetige die Sicherheitspruefung, um die Registrierung fortzusetzen.</p>
         {error ? <p className="text-sm text-error">{error}</p> : null}
       </fieldset>
     );

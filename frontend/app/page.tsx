@@ -1,24 +1,48 @@
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { AuthControls } from "@/components/auth-controls";
-import { ProtectedApiDemo } from "@/components/protected-api-demo";
 import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const highlights = [
-  "Mobile-first Layout mit Next.js App Router",
-  "DaisyUI-Komponenten auf Tailwind CSS 4",
-  "Keycloak Login ueber serverseitige Session",
-  "Spring Boot Resource Server mit JWT-Validierung",
-  "App-eigene Registrierung mit E-Mail-Verifizierung"
+const featureHighlights = [
+  "Gruppen erstellen und Verantwortlichkeiten klar organisieren.",
+  "Mitglieder einladen, Rollen abstimmen und Zusammenarbeit strukturieren.",
+  "Aktivitaeten planen, aktualisieren und als Liste im Blick behalten.",
+  "Anmeldung, Registrierung und AGB-Akzeptanz in einem konsistenten Einstieg."
 ];
 
-const steps = [
-  "Neue Nutzer registrieren sich ueber das Frontend und bestaetigen ihre E-Mail.",
-  "Keycloak verwaltet die Identitaet und Rollen fuer verifizierte Nutzer.",
-  "next-auth speichert die Session im Frontend.",
-  "Der Route-Handler `/api/me` fungiert als BFF zum Backend."
+const productJourney = [
+  "Konto anlegen und E-Mail bestaetigen.",
+  "Erste Gruppe anlegen und Mitglieder einladen.",
+  "Aktivitaeten planen, Listen pflegen und Termine abstimmen."
+];
+
+const focusAreas = [
+  {
+    title: "Gruppenverwaltung",
+    description: "Lege Gruppen an, halte Zustaendigkeiten transparent und strukturiere gemeinsame Vorhaben an einem Ort."
+  },
+  {
+    title: "Mitgliederverwaltung",
+    description: "Lade neue Personen ein, begleite den Einstieg und schaffe Klarheit ueber Rollen und Beteiligung."
+  },
+  {
+    title: "Aktivitaetenverwaltung",
+    description: "Plane Treffen und Aufgaben mit klaren Listen, damit naechste Schritte fuer alle sichtbar bleiben."
+  }
+];
+
+const authenticatedActions = [
+  "Zur Anmeldung wechseln",
+  "Gruppen und Aktivitaeten vorbereiten",
+  "Mitgliedereinladungen organisieren"
+];
+
+const guestActions = [
+  "Konto erstellen",
+  "E-Mail bestaetigen",
+  "Danach Gruppen und Aktivitaeten verwalten"
 ];
 
 export default async function HomePage() {
@@ -32,17 +56,16 @@ export default async function HomePage() {
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <div className="brand-kicker">HeuermannPlus</div>
-              <span className="badge badge-primary badge-outline">Scaffold</span>
+              <span className="badge badge-primary badge-outline">Produktplattform</span>
             </div>
 
             <div className="max-w-3xl space-y-4">
-              <p className="subheadline">Responsives Frontend fuer Authentifizierung, Registrierung und BFF-Zugriffe.</p>
-              <h1 className="headline">
-                Multilayer-Web-App mit klarer Trennung zwischen UI, API und IAM.
-              </h1>
+              <p className="subheadline">Organisation fuer Gruppen, Mitglieder und gemeinsame Aktivitaeten.</p>
+              <h1 className="headline">Alles an einem Ort, damit gemeinsame Planung einfach vorankommt.</h1>
               <p className="body-copy max-w-2xl">
-                Dieses Grundgeruest verbindet ein responsives Next.js-Frontend, ein Kotlin/Spring-Boot-Backend
-                und Keycloak als Identity-Layer. Die lokale Entwicklung startet komplett ueber Docker Compose.
+                HeuermannPlus unterstuetzt den Einstieg vom ersten Konto bis zur laufenden Gruppenarbeit. Nutzer
+                koordinieren Einladungen, planen Aktivitaeten und behalten wichtige Listen in einer klaren
+                Arbeitsoberflaeche im Blick.
               </p>
             </div>
 
@@ -53,15 +76,15 @@ export default async function HomePage() {
                   Jetzt registrieren
                 </Link>
               ) : null}
-              <a className="btn btn-ghost" href="#architecture">
-                Architektur ansehen
+              <a className="btn btn-ghost" href="#produktfokus">
+                Produktfokus ansehen
               </a>
             </div>
           </div>
 
           <div className="soft-panel grid gap-5">
             <div className="flex items-center justify-between">
-              <p className="section-title">Session Status</p>
+              <p className="section-title">Zugang</p>
               <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
                 {authenticated ? "aktiv" : "inaktiv"}
               </span>
@@ -69,31 +92,29 @@ export default async function HomePage() {
 
             <div className="space-y-2">
               <h2 className="section-headline text-3xl">
-                {authenticated ? `Willkommen ${session?.user?.name ?? "zurueck"}` : "Bereit fuer den ersten Login"}
+                {authenticated ? `Willkommen ${session?.user?.name ?? "zurueck"}` : "Bereit fuer den Einstieg"}
               </h2>
               <p className="subheadline">
                 {authenticated
-                  ? "Die Session liegt serverseitig vor und kann jetzt ueber den BFF sicher an das Backend weitergegeben werden."
-                  : "Registriere dich oder starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
+                  ? "Dein Zugang ist aktiv. Jetzt kannst du die naechsten Gruppen, Mitglieder und Aktivitaeten vorbereiten."
+                  : "Registriere dich oder melde dich an, um Gruppen aufzubauen, Mitglieder einzuladen und Aktivitaeten zu planen."}
               </p>
             </div>
 
             <div className="rounded-2xl border border-base-300 bg-white/90 p-4 text-sm text-base-content">
-              <p className="subsection-title">Aktueller Benutzer</p>
-              <p>{session?.user?.email ?? "Nicht angemeldet"}</p>
+              <p className="subsection-title">Konto</p>
+              <p>{session?.user?.email ?? "Noch kein aktiver Zugang"}</p>
             </div>
 
             <div className="brand-divider" />
 
             <div className="status-list">
-              <div className="status-row">
-                <span className="status-dot" />
-                <p className="body-copy text-sm">Linksbuendige Informationsbloecke sorgen fuer klare Lesefuehrung.</p>
-              </div>
-              <div className="status-row">
-                <span className="status-dot" />
-                <p className="body-copy text-sm">DaisyUI-Komponenten bleiben erhalten und werden nur gestalterisch neu gefasst.</p>
-              </div>
+              {(authenticated ? authenticatedActions : guestActions).map((item) => (
+                <div key={item} className="status-row">
+                  <span className="status-dot" />
+                  <p className="body-copy text-sm">{item}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -101,14 +122,14 @@ export default async function HomePage() {
         <section className="page-section">
           <div className="section-intro">
             <p className="section-title">Schwerpunkte</p>
-            <h2 className="section-headline">Was das Grundgeruest heute schon abdeckt</h2>
+            <h2 className="section-headline">Die wichtigsten Funktionen fuer den produktiven Start</h2>
             <p className="subheadline">
-              Die wichtigsten Funktionsbausteine sind in eigenstaendige Themenbloecke gegliedert und auf Wiederverwendbarkeit ausgelegt.
+              Der Einstieg konzentriert sich auf die Aufgaben, die Gruppen in ihrem Alltag wirklich brauchen.
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {highlights.map((highlight) => (
+            {featureHighlights.map((highlight) => (
               <article
                 key={highlight}
                 className="feature-card rounded-[1.5rem] border border-base-300 bg-white/92"
@@ -120,27 +141,57 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]" id="architecture">
-          <ProtectedApiDemo authenticated={authenticated} />
-
+        <section className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]" id="produktfokus">
           <div className="brand-card card">
             <div className="card-body gap-5">
               <div className="section-intro">
-                <p className="section-title">Flow</p>
-                <h2 className="section-headline">Wie die Demo zusammenspielt</h2>
+                <p className="section-title">Ablauf</p>
+                <h2 className="section-headline">Vom Einstieg zur laufenden Organisation</h2>
                 <p className="subheadline">
-                  Die Architektur bleibt sichtbar getrennt, damit Rollen, Session und Backend-Aufrufe nachvollziehbar bleiben.
+                  Jede Phase baut auf dem letzten Schritt auf und fuehrt schnell in die eigentliche Produktnutzung.
                 </p>
               </div>
 
               <div className="info-grid">
-                {steps.map((step, index) => (
+                {productJourney.map((step, index) => (
                   <div key={step} className="step-row">
                     <span className="step-index">{index + 1}</span>
                     <p className="body-copy text-sm">{step}</p>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          <div className="soft-panel grid gap-5">
+            <div className="section-intro">
+              <p className="section-title">Produktfokus</p>
+              <h2 className="section-headline">Worauf HeuermannPlus im Kern ausgelegt ist</h2>
+              <p className="subheadline">
+                Die Plattform unterstuetzt den kompletten Weg von der Registrierung bis zur gemeinsamen Planung.
+              </p>
+            </div>
+
+            <div className="grid gap-4">
+              {focusAreas.map((area) => (
+                <div key={area.title} className="rounded-[1.35rem] border border-base-300 bg-white/90 p-5">
+                  <p className="subsection-title">{area.title}</p>
+                  <p className="body-copy mt-2 text-sm">{area.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="brand-divider" />
+
+            <div className="flex flex-wrap items-center gap-3">
+              {!authenticated ? (
+                <Link className="btn btn-primary" href="/register">
+                  Konto erstellen
+                </Link>
+              ) : null}
+              <Link className="btn btn-outline btn-primary" href="/register">
+                {authenticated ? "Weitere Person registrieren" : "Registrierung ansehen"}
+              </Link>
             </div>
           </div>
         </section>
