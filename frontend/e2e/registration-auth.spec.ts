@@ -46,7 +46,7 @@ test.describe("registration and auth smoke flow", () => {
   test("loads the homepage", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: /Multilayer-Web-App mit klarer Trennung/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Alles an einem Ort, damit gemeinsame Planung einfach vorankommt/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Jetzt registrieren/i })).toBeVisible();
   });
 
@@ -57,7 +57,7 @@ test.describe("registration and auth smoke flow", () => {
 
     await page.goto("/register");
     await page.getByLabel("Vorname").fill("Test");
-    await page.getByLabel("Name").fill("Runner");
+    await page.getByLabel(/^Name$/).fill("Runner");
     await page.getByLabel("Nickname").fill(nickname);
     await page.getByLabel("Email-Adresse").fill(email);
     await page.getByLabel("Passwort").fill("Drum123!");
@@ -79,7 +79,23 @@ test.describe("registration and auth smoke flow", () => {
     await page.locator("button[type='submit']").click();
 
     await expect(page.getByText(/Willkommen/i)).toBeVisible();
-    await page.getByRole("button", { name: /Geschuetzten Call ausfuehren/i }).click();
-    await expect(page.locator("pre")).toContainText("demo@heuermannplus.local");
+
+    const profile = await page.evaluate(async () => {
+      const response = await fetch("/api/me", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+      });
+
+      return {
+        status: response.status,
+        body: await response.json()
+      };
+    });
+
+    expect(profile.status).toBe(200);
+    expect(profile.body).toMatchObject({
+      email: keycloakUsername
+    });
   });
 });
