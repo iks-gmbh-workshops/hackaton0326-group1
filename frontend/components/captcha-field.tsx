@@ -96,7 +96,7 @@ export function CaptchaField({ captcha, disabled = false, value, error, onChange
   if (captcha.mode === "mock") {
     return (
       <fieldset className="space-y-2">
-        <label className="text-sm font-medium text-white" htmlFor="captchaToken">
+        <label className="field-label" htmlFor="captchaToken">
           Captcha
         </label>
         <input
@@ -109,7 +109,7 @@ export function CaptchaField({ captcha, disabled = false, value, error, onChange
           required
           value={value}
         />
-        <p className="text-xs text-white/60">Lokaler Testmodus: verwende `{captcha.mockPassToken ?? "test-pass"}`.</p>
+        <p className="helper-text">Lokaler Testmodus: verwende `{captcha.mockPassToken ?? "test-pass"}`.</p>
         {error ? <p className="text-sm text-error">{error}</p> : null}
       </fieldset>
     );
@@ -117,7 +117,7 @@ export function CaptchaField({ captcha, disabled = false, value, error, onChange
 
   return (
     <fieldset className="space-y-2">
-      <label className="text-sm font-medium text-white">Captcha</label>
+      <label className="field-label">Captcha</label>
       {captcha.turnstileSiteKey ? <div ref={turnstileContainerRef} /> : null}
       {turnstileError ? <p className="text-sm text-error">{turnstileError}</p> : null}
       {error ? <p className="text-sm text-error">{error}</p> : null}

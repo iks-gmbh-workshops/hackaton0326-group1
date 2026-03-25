@@ -8,24 +8,26 @@ type PasswordRequirementsProps = {
 
 export function PasswordRequirements({ requirements }: PasswordRequirementsProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-sm font-medium text-white">Passwortanforderungen</p>
+    <div className="soft-panel">
+      <p className="section-title">Passwortanforderungen</p>
       <ul className="mt-3 space-y-2 text-sm">
         {requirements.map((requirement) => (
-          <li
-            key={requirement.code}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2 ${
-              requirement.satisfied ? "bg-success/15 text-success-content" : "bg-white/5 text-white/70"
-            }`}
-          >
+            <li
+              key={requirement.code}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 ${
+                requirement.satisfied ? "bg-success text-success-content" : "bg-white text-base-content"
+              }`}
+            >
             <span
               className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
-                requirement.satisfied ? "bg-success text-success-content" : "bg-white/10 text-white"
+                requirement.satisfied
+                  ? "bg-success-content text-success"
+                  : "bg-secondary text-primary"
               }`}
             >
               {requirement.satisfied ? "OK" : "!"}
             </span>
-            <span>{requirement.label}</span>
+            <span className="body-copy text-sm">{requirement.label}</span>
           </li>
         ))}
       </ul>

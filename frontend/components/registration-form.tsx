@@ -126,16 +126,16 @@ export function RegistrationForm() {
   }
 
   if (!policy) {
-    return <div className="alert border-white/10 bg-white/5 text-white">Lade Registrierungsformular...</div>;
+    return <div className="soft-panel">Lade Registrierungsformular...</div>;
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <form className="space-y-5 rounded-[2rem] border border-white/10 bg-black/20 p-6 shadow-2xl backdrop-blur" onSubmit={handleSubmit}>
+      <form className="brand-card space-y-5 p-6" onSubmit={handleSubmit}>
         <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.25em] text-accent-content/70">Registrierung</p>
-          <h1 className="text-3xl font-semibold text-white sm:text-4xl">Erstelle dein drumdibum Konto</h1>
-          <p className="text-sm leading-6 text-white/70">
+          <p className="section-title">Registrierung</p>
+          <h1 className="section-headline sm:text-[2.5rem]">Erstelle dein drumdibum Konto</h1>
+          <p className="subheadline">
             Nach der Registrierung senden wir dir einen Verifizierungslink per E-Mail. Erst danach wird dein Zugang freigeschaltet.
           </p>
         </div>
@@ -168,12 +168,12 @@ export function RegistrationForm() {
           value={form.nickname}
         />
         {!submitError?.field || submitError.field !== "nickname" ? (
-          <p className="text-xs text-white/60">
+          <p className="helper-text">
             Zwischen {policy.nickname.minLength} und {policy.nickname.maxLength} Zeichen.
           </p>
         ) : null}
         {submitError?.field === "nickname" && submitError.suggestedNickname ? (
-          <button className="btn btn-sm btn-outline" onClick={applySuggestedNickname} type="button">
+          <button className="btn btn-sm btn-outline btn-primary" onClick={applySuggestedNickname} type="button">
             Vorschlag uebernehmen: {submitError.suggestedNickname}
           </button>
         ) : null}
@@ -225,10 +225,10 @@ export function RegistrationForm() {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="btn btn-accent" disabled={isPending} type="submit">
+          <button className="btn btn-primary" disabled={isPending} type="submit">
             {isPending ? "Registriere..." : "Registrieren"}
           </button>
-          <Link className="btn btn-ghost text-white hover:bg-white/10" href="/">
+          <Link className="btn btn-ghost" href="/">
             Zur Startseite
           </Link>
         </div>
@@ -237,18 +237,18 @@ export function RegistrationForm() {
       <div className="space-y-5">
         <PasswordRequirements requirements={requirements} />
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5">
-          <p className="text-sm uppercase tracking-[0.25em] text-secondary">Ablauf</p>
-          <div className="mt-4 space-y-3 text-sm text-white/70">
-            <p>1. Formular ausfuellen und Captcha bestaetigen.</p>
-            <p>2. Verifizierungs-E-Mail oeffnen und Link klicken.</p>
-            <p>3. Nach erfolgreicher Pruefung wird dein Konto freigeschaltet.</p>
+        <div className="soft-panel">
+          <p className="section-title">Ablauf</p>
+          <div className="mt-4 space-y-3">
+            <p className="body-copy text-sm">1. Formular ausfuellen und Captcha bestaetigen.</p>
+            <p className="body-copy text-sm">2. Verifizierungs-E-Mail oeffnen und Link klicken.</p>
+            <p className="body-copy text-sm">3. Nach erfolgreicher Pruefung wird dein Konto freigeschaltet.</p>
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 text-sm text-white/70">
-          <p className="font-medium text-white">Rollenstart</p>
-          <p className="mt-2">
+        <div className="soft-panel text-sm">
+          <p className="subsection-title">Rollenstart</p>
+          <p className="body-copy mt-2 text-sm">
             Neue Nutzer starten ohne aktive Anwendungsfreigabe. Erst nach der E-Mail-Verifizierung wird die Rolle
             `app-user` zugewiesen.
           </p>
@@ -273,7 +273,7 @@ type FieldProps = {
 function Field({ id, label, value, onChange, type = "text", required = false, error, minLength, maxLength }: FieldProps) {
   return (
     <fieldset className="space-y-2">
-      <label className="text-sm font-medium text-white" htmlFor={id}>
+      <label className="field-label" htmlFor={id}>
         {label}
       </label>
       <input
