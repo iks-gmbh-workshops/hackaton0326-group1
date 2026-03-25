@@ -159,7 +159,7 @@ a {
   overflow: hidden;
 }
 
-.brand-card > .card-body,
+.brand-card>.card-body,
 .soft-panel {
   padding: 1.5rem;
 }
