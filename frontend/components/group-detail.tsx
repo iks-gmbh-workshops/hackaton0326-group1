@@ -1,0 +1,420 @@
+"use client";
+
+import Link from "next/link";
+import type { Route } from "next";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { formatDate, membershipLabel, type GroupDetail, type GroupError, type GroupListResponse, type GroupToken } from "@/lib/group";
+
+type GroupDetailProps = {
+  groupId: number;
+};
+
+export function GroupDetailView({ groupId }: GroupDetailProps) {
+  const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [inviteTarget, setInviteTarget] = useState("");
+  const [latestToken, setLatestToken] = useState<GroupToken | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const loadGroup = useCallback(async () => {
+    const response = await fetch(`/api/groups/${groupId}`, { cache: "no-store" });
+    const body = (await response.json()) as GroupDetail & GroupError;
+
+    if (!response.ok) {
+      throw new Error(body.message || "Gruppe konnte nicht geladen werden");
+    }
+
+    setGroup(body);
+    setName(body.name);
+    setDescription(body.description ?? "");
+    setError(null);
+  }, [groupId]);
+
+  useEffect(() => {
+    void loadGroup().catch((loadError) => {
+      setError(loadError instanceof Error ? loadError.message : "Gruppe konnte nicht geladen werden");
+    });
+  }, [loadGroup]);
+
+  function performAction(
+    action: () => Promise<Response>,
+    onSuccess?: (body: GroupDetail | GroupListResponse | GroupToken) => void
+  ) {
+    setError(null);
+    setSuccessMessage(null);
+
+    startTransition(() => {
+      void action()
+        .then(async (response) => {
+          const body = response.status === 204
+            ? null
+            : ((await response.json()) as GroupDetail & GroupError & GroupToken);
+
+          if (!response.ok) {
+            setError(body?.message ?? "Aktion fehlgeschlagen");
+            return;
+          }
+
+          if (body && "name" in body && "members" in body) {
+            setGroup(body);
+            setName(body.name);
+            setDescription(body.description ?? "");
+          }
+
+          onSuccess?.(body as GroupDetail | GroupListResponse | GroupToken);
+        })
+        .catch(() => {
+          setError("Aktion konnte nicht ausgefuehrt werden");
+        });
+    });
+  }
+
+  if (error && !group) {
+    return <div className="alert alert-error">{error}</div>;
+  }
+
+  if (!group) {
+    return <div className="soft-panel">Lade Gruppe...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link className="btn btn-ghost" href={"/groups" as Route}>
+          Zur Gruppenuebersicht
+        </Link>
+        <span className={`badge ${group.isCurrentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
+          {group.isCurrentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
+        </span>
+      </div>
+
+      {error ? <div className="alert alert-error">{error}</div> : null}
+      {successMessage ? <div className="alert alert-success">{successMessage}</div> : null}
+
+      <section className="brand-card grid gap-6 p-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            performAction(
+              () =>
+                fetch(`/api/groups/${groupId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, description })
+                }),
+              () => setSuccessMessage("Gruppe aktualisiert")
+            );
+          }}
+        >
+          <div className="section-intro">
+            <p className="section-title">Gruppendetails</p>
+            <h1 className="section-headline sm:text-[2.5rem]">{group.name}</h1>
+            <p className="subheadline">Erstellt am {formatDate(group.createdAt)}</p>
+          </div>
+
+          <Field disabled={!group.isCurrentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
+          <Field disabled={!group.isCurrentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
+
+          {group.isCurrentUserAdmin ? (
+            <button className="btn btn-primary" disabled={isPending} type="submit">
+              {isPending ? "Speichere..." : "Aenderungen speichern"}
+            </button>
+          ) : null}
+        </form>
+
+        <div className="soft-panel space-y-4">
+          <div className="section-intro">
+            <p className="section-title">Mitgliedschaft</p>
+            <h2 className="section-headline text-[2rem]">Dein Status</h2>
+          </div>
+          <p className="body-copy text-sm">{membershipLabel(group.currentMembershipStatus)}</p>
+          {group.currentMembershipStatus === "INVITED" && group.currentMembershipId ? (
+            <button
+              className="btn btn-primary"
+              disabled={isPending}
+              onClick={() =>
+                performAction(
+                  () => fetch(`/api/groups/${groupId}/members/${group.currentMembershipId}/accept`, { method: "POST" }),
+                  () => setSuccessMessage("Einladung angenommen")
+                )}
+              type="button"
+            >
+              Einladung annehmen
+            </button>
+          ) : null}
+          {group.currentMembershipStatus === "ACTIVE" ? (
+            <button
+              className="btn btn-outline btn-primary"
+              disabled={isPending}
+              onClick={() =>
+                performAction(
+                  () => fetch(`/api/groups/${groupId}/leave`, { method: "POST" }),
+                  () => {
+                    setSuccessMessage("Gruppe verlassen");
+                    window.location.assign("/groups");
+                  }
+                )}
+              type="button"
+            >
+              Gruppe verlassen
+            </button>
+          ) : null}
+          {group.isCurrentUserAdmin ? (
+            <button
+              className="btn btn-outline btn-error"
+              disabled={isPending}
+              onClick={() =>
+                performAction(
+                  () => fetch(`/api/groups/${groupId}`, { method: "DELETE" }),
+                  () => {
+                    setSuccessMessage("Gruppe aufgeloest");
+                    window.location.assign("/groups");
+                  }
+                )}
+              type="button"
+            >
+              Gruppe aufloesen
+            </button>
+          ) : null}
+        </div>
+      </section>
+
+      {group.isCurrentUserAdmin ? (
+        <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+          <form
+            className="soft-panel space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              performAction(
+                () =>
+                  fetch(`/api/groups/${groupId}/members/invite`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nicknameOrEmail: inviteTarget })
+                  }),
+                () => {
+                  setInviteTarget("");
+                  setSuccessMessage("Einladung versendet");
+                }
+              );
+            }}
+          >
+            <div className="section-intro">
+              <p className="section-title">Einladen</p>
+              <h2 className="section-headline text-[2rem]">Mitglieder per Nickname oder E-Mail</h2>
+            </div>
+            <Field label="Nickname oder Email-Adresse" onChange={setInviteTarget} value={inviteTarget} />
+            <button className="btn btn-primary" disabled={isPending} type="submit">
+              {isPending ? "Sende..." : "Mitglied einladen"}
+            </button>
+          </form>
+
+          <div className="soft-panel space-y-4">
+            <div className="section-intro">
+              <p className="section-title">Token</p>
+              <h2 className="section-headline text-[2rem]">Einladungstoken generieren</h2>
+            </div>
+            <button
+              className="btn btn-outline btn-primary"
+              disabled={isPending}
+              onClick={() =>
+                performAction(
+                  () => fetch(`/api/groups/${groupId}/tokens`, { method: "POST" }),
+                  (body) => {
+                    setLatestToken(body as GroupToken);
+                    setSuccessMessage("Token erstellt");
+                    void loadGroup();
+                  }
+                )}
+              type="button"
+            >
+              {isPending ? "Erzeuge..." : "Token erzeugen"}
+            </button>
+            {latestToken?.token ? (
+              <div className="result-surface">
+                <pre>{latestToken.token}</pre>
+              </div>
+            ) : null}
+            <div className="space-y-3">
+              {group.tokens.map((token) => (
+                <div key={token.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
+                  <p className="subsection-title">Token #{token.id}</p>
+                  <p className="helper-text">Gueltig bis {formatDate(token.expiresAt)}</p>
+                  <p className="helper-text">{token.usedAt ? `Eingeloest am ${formatDate(token.usedAt)}` : "Noch nicht verwendet"}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="brand-card card">
+          <div className="card-body gap-4">
+            <div className="section-intro">
+              <p className="section-title">Mitglieder</p>
+              <h2 className="section-headline text-[2rem]">Mitglieder und Rollen</h2>
+            </div>
+
+            <div className="space-y-4">
+              {group.members.map((member) => (
+                <div key={member.id} className="rounded-2xl border border-base-300 bg-white/88 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="subsection-title">{member.displayName}</p>
+                      <p className="helper-text">
+                        {membershipLabel(member.status)}
+                        {member.inviteEmail ? ` - ${member.inviteEmail}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {member.isAdmin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
+                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && !member.isAdmin ? (
+                        <button
+                          className="btn btn-xs btn-outline btn-primary"
+                          disabled={isPending}
+                          onClick={() =>
+                            performAction(
+                              () => fetch(`/api/groups/${groupId}/admins/${member.id}/grant`, { method: "POST" }),
+                              () => setSuccessMessage("Adminrechte vergeben")
+                            )}
+                          type="button"
+                        >
+                          Admin machen
+                        </button>
+                      ) : null}
+                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && member.isAdmin ? (
+                        <button
+                          className="btn btn-xs btn-outline"
+                          disabled={isPending}
+                          onClick={() =>
+                            performAction(
+                              () => fetch(`/api/groups/${groupId}/admins/${member.id}/revoke`, { method: "POST" }),
+                              () => setSuccessMessage("Adminrechte entzogen")
+                            )}
+                          type="button"
+                        >
+                          Admin entziehen
+                        </button>
+                      ) : null}
+                      {group.isCurrentUserAdmin ? (
+                        <button
+                          className="btn btn-xs btn-outline btn-error"
+                          disabled={isPending}
+                          onClick={() =>
+                            performAction(
+                              () => fetch(`/api/groups/${groupId}/members/${member.id}`, { method: "DELETE" }),
+                              () => setSuccessMessage("Mitglied entfernt")
+                            )}
+                          type="button"
+                        >
+                          Entfernen
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {group.isCurrentUserAdmin ? (
+            <section className="soft-panel space-y-4">
+              <div className="section-intro">
+                <p className="section-title">Antraege</p>
+                <h2 className="section-headline text-[2rem]">Offene Mitgliedschaftsantraege</h2>
+              </div>
+              {group.joinRequests.map((request) => (
+                <div key={request.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
+                  <p className="subsection-title">{request.requestedByDisplayName}</p>
+                  {request.comment ? <p className="body-copy mt-2 text-sm">{request.comment}</p> : null}
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <button
+                      className="btn btn-sm btn-primary"
+                      disabled={isPending}
+                      onClick={() =>
+                        performAction(
+                          () =>
+                            fetch(`/api/groups/${groupId}/membership-requests/${request.id}/approve`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({})
+                            }),
+                          () => setSuccessMessage("Antrag genehmigt")
+                        )}
+                      type="button"
+                    >
+                      Genehmigen
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline"
+                      disabled={isPending}
+                      onClick={() =>
+                        performAction(
+                          () =>
+                            fetch(`/api/groups/${groupId}/membership-requests/${request.id}/reject`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({})
+                            }),
+                          () => setSuccessMessage("Antrag abgelehnt")
+                        )}
+                      type="button"
+                    >
+                      Ablehnen
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {!group.joinRequests.length ? <p className="helper-text">Keine offenen Antraege.</p> : null}
+            </section>
+          ) : null}
+
+          <section className="soft-panel space-y-4">
+            <div className="section-intro">
+              <p className="section-title">Einladungen</p>
+              <h2 className="section-headline text-[2rem]">Versendete Einladungen</h2>
+            </div>
+            {group.invitations.map((invitation) => (
+              <div key={invitation.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
+                <p className="subsection-title">{invitation.targetLabel}</p>
+                <p className="helper-text">
+                  {invitation.channel.toLowerCase()} - {invitation.mailType.toLowerCase()}
+                </p>
+                <p className="helper-text">Erstellt am {formatDate(invitation.createdAt)}</p>
+              </div>
+            ))}
+            {!group.invitations.length ? <p className="helper-text">Noch keine Einladungen.</p> : null}
+          </section>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+type FieldProps = {
+  disabled?: boolean;
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+};
+
+function Field({ disabled = false, label, onChange, value }: FieldProps) {
+  return (
+    <label className="form-control w-full gap-2">
+      <span className="label-text font-medium">{label}</span>
+      <input
+        className="input input-bordered w-full"
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      />
+    </label>
+  );
+}

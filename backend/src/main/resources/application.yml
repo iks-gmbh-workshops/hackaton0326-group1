@@ -59,6 +59,10 @@ app:
     realm: ${APP_KEYCLOAK_REALM:heuermannplus}
     admin-client-id: ${APP_KEYCLOAK_ADMIN_CLIENT_ID:heuermannplus-registration-service}
     admin-client-secret: ${APP_KEYCLOAK_ADMIN_CLIENT_SECRET:heuermannplus-registration-secret}
+  group:
+    frontend-base-url: ${APP_GROUP_FRONTEND_BASE_URL:http://localhost:3000}
+    invitation-ttl: ${APP_GROUP_INVITATION_TTL:24h}
+    email-from: ${APP_GROUP_EMAIL_FROM:no-reply@heuermannplus.local}
 
 management:
   endpoint:

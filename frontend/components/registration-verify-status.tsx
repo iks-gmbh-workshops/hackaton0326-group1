@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -71,10 +72,10 @@ export function RegistrationVerifyStatus() {
       {state.status === "error" ? <div className="alert alert-error">{state.message}</div> : null}
 
       <div className="flex flex-wrap gap-3">
-        <Link className="btn btn-primary" href="/">
+        <Link className="btn btn-primary" href={"/" as Route}>
           Zur Anmeldung
         </Link>
-        <Link className="btn btn-ghost" href="/register">
+        <Link className="btn btn-ghost" href={"/register" as Route}>
           Neue Registrierung
         </Link>
       </div>

@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import type { Route } from "next";
 import Link from "next/link";
 import { AuthControls } from "@/components/auth-controls";
 import { ProtectedApiDemo } from "@/components/protected-api-demo";
@@ -49,10 +50,14 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-center gap-3">
               <AuthControls authenticated={authenticated} />
               {!authenticated ? (
-                <Link className="btn btn-outline btn-primary" href="/register">
+                <Link className="btn btn-outline btn-primary" href={"/register" as Route}>
                   Jetzt registrieren
                 </Link>
-              ) : null}
+              ) : (
+                <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
+                  Zu den Gruppen
+                </Link>
+              )}
               <a className="btn btn-ghost" href="#architecture">
                 Architektur ansehen
               </a>
