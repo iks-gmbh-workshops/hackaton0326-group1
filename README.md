@@ -42,10 +42,10 @@ docker compose up --build
 - Keycloak: `http://localhost:8081`
 - Mailpit UI: `http://localhost:8025`
 
-## Demo-Zugang
+## Lokale Zugange
 
 - Keycloak Admin: `admin` / `Admin123!`
-- Demo-User: `demo@heuermannplus.local` / `Demo123!`
+- Anwendungsnutzer: lokal ueber die Registrierungsstrecke im Frontend anlegen
 
 ## Auth-Demo
 
