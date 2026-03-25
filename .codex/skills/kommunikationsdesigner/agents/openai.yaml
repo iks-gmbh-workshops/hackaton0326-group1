@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kommunikationsdesigner"
+  short_description: "Create product-facing landing page and UI copy for HeuermannPlus"
+  default_prompt: "Use $kommunikationsdesigner to write or refine HeuermannPlus landing page copy, CTA text, helper text, labels, states, and other product-facing UI microcopy with clear tone, documented product scope, and strong CTA hierarchy."
