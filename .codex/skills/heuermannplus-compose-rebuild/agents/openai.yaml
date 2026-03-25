@@ -1,0 +1,4 @@
+interface:
+  display_name: "HeuermannPlus Compose Rebuild"
+  short_description: "Rebuild the HeuermannPlus Docker stack"
+  default_prompt: "Use $heuermannplus-compose-rebuild to recreate the HeuermannPlus Docker Compose stack with a safe rebuild."
