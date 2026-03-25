@@ -2,9 +2,19 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import type { RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
-import { formatDate, membershipLabel, type GroupDetail, type GroupError, type GroupListResponse, type GroupToken } from "@/lib/group";
+import {
+  fetchGroupInviteSuggestions,
+  formatDate,
+  membershipLabel,
+  type GroupDetail,
+  type GroupError,
+  type GroupInviteSuggestion,
+  type GroupListResponse,
+  type GroupToken
+} from "@/lib/group";
 
 type GroupDetailProps = {
   groupId: number;
@@ -15,10 +25,16 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [inviteTarget, setInviteTarget] = useState("");
+  const [inviteSuggestions, setInviteSuggestions] = useState<GroupInviteSuggestion[]>([]);
+  const [inviteSuggestionsLoading, setInviteSuggestionsLoading] = useState(false);
+  const [inviteSuggestionsOpen, setInviteSuggestionsOpen] = useState(false);
+  const [inviteSuggestionsError, setInviteSuggestionsError] = useState<string | null>(null);
   const [latestToken, setLatestToken] = useState<GroupToken | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const inviteFieldRef = useRef<HTMLDivElement | null>(null);
+  const inviteSuggestionRequest = useRef(0);
 
   const loadGroup = useCallback(async () => {
     const response = await authenticatedBackendFetch(`/api/private/groups/${groupId}`, { cache: "no-store" });
@@ -39,6 +55,60 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
       setError(loadError instanceof Error ? loadError.message : "Gruppe konnte nicht geladen werden");
     });
   }, [loadGroup]);
+
+  useEffect(() => {
+    if (!group?.currentUserAdmin || !inviteSuggestionsOpen) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const requestId = inviteSuggestionRequest.current + 1;
+      inviteSuggestionRequest.current = requestId;
+      setInviteSuggestionsLoading(true);
+      setInviteSuggestionsError(null);
+
+      void fetchGroupInviteSuggestions(groupId, inviteTarget)
+        .then((suggestions) => {
+          if (inviteSuggestionRequest.current !== requestId) {
+            return;
+          }
+          setInviteSuggestions(suggestions);
+        })
+        .catch(() => {
+          if (inviteSuggestionRequest.current !== requestId) {
+            return;
+          }
+          setInviteSuggestions([]);
+          setInviteSuggestionsError("Vorschlaege konnten nicht geladen werden");
+        })
+        .finally(() => {
+          if (inviteSuggestionRequest.current === requestId) {
+            setInviteSuggestionsLoading(false);
+          }
+        });
+    }, inviteTarget.trim() ? 180 : 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [group?.currentUserAdmin, groupId, inviteSuggestionsOpen, inviteTarget]);
+
+  useEffect(() => {
+    if (!inviteSuggestionsOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!inviteFieldRef.current?.contains(event.target as Node)) {
+        setInviteSuggestionsOpen(false);
+      }
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [inviteSuggestionsOpen]);
 
   function performAction(
     action: () => Promise<Response>,
@@ -87,8 +157,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         <Link className="btn btn-ghost" href={"/groups" as Route}>
           Zur Gruppenuebersicht
         </Link>
-        <span className={`badge ${group.isCurrentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
-          {group.isCurrentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
+        <span className={`badge ${group.currentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
+          {group.currentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
         </span>
       </div>
 
@@ -117,10 +187,10 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
             <p className="subheadline">Erstellt am {formatDate(group.createdAt)}</p>
           </div>
 
-          <Field disabled={!group.isCurrentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
-          <Field disabled={!group.isCurrentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
+          <Field disabled={!group.currentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
+          <Field disabled={!group.currentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
 
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <button className="btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Speichere..." : "Aenderungen speichern"}
             </button>
@@ -164,7 +234,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               Gruppe verlassen
             </button>
           ) : null}
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <button
               className="btn btn-outline btn-error"
               disabled={isPending}
@@ -184,7 +254,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         </div>
       </section>
 
-      {group.isCurrentUserAdmin ? (
+      {group.currentUserAdmin ? (
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <form
             className="soft-panel space-y-4"
@@ -199,6 +269,9 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                   }),
                 () => {
                   setInviteTarget("");
+                  setInviteSuggestions([]);
+                  setInviteSuggestionsError(null);
+                  setInviteSuggestionsOpen(false);
                   setSuccessMessage("Einladung versendet");
                 }
               );
@@ -208,7 +281,21 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               <p className="section-title">Einladen</p>
               <h2 className="section-headline text-[2rem]">Mitglieder per Nickname oder E-Mail</h2>
             </div>
-            <Field label="Nickname oder Email-Adresse" onChange={setInviteTarget} value={inviteTarget} />
+            <InviteSuggestionField
+              label="Nickname oder Email-Adresse"
+              loading={inviteSuggestionsLoading}
+              onChange={setInviteTarget}
+              onFocus={() => setInviteSuggestionsOpen(true)}
+              onSelectSuggestion={(suggestion) => {
+                setInviteTarget(suggestion.nickname);
+                setInviteSuggestionsOpen(false);
+              }}
+              open={inviteSuggestionsOpen}
+              suggestions={inviteSuggestions}
+              suggestionsError={inviteSuggestionsError}
+              value={inviteTarget}
+              wrapperRef={inviteFieldRef}
+            />
             <button className="btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Sende..." : "Mitglied einladen"}
             </button>
@@ -273,8 +360,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {member.isAdmin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
-                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && !member.isAdmin ? (
+                      {member.admin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
+                      {group.currentUserAdmin && member.status === "ACTIVE" && !member.admin ? (
                         <button
                           className="btn btn-xs btn-outline btn-primary"
                           disabled={isPending}
@@ -288,7 +375,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           Admin machen
                         </button>
                       ) : null}
-                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && member.isAdmin ? (
+                      {group.currentUserAdmin && member.status === "ACTIVE" && member.admin ? (
                         <button
                           className="btn btn-xs btn-outline"
                           disabled={isPending}
@@ -302,7 +389,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           Admin entziehen
                         </button>
                       ) : null}
-                      {group.isCurrentUserAdmin ? (
+                      {group.currentUserAdmin ? (
                         <button
                           className="btn btn-xs btn-outline btn-error"
                           disabled={isPending}
@@ -325,7 +412,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         </div>
 
         <div className="space-y-6">
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <section className="soft-panel space-y-4">
               <div className="section-intro">
                 <p className="section-title">Antraege</p>
@@ -417,5 +504,66 @@ function Field({ disabled = false, label, onChange, value }: FieldProps) {
         value={value}
       />
     </label>
+  );
+}
+
+type InviteSuggestionFieldProps = {
+  label: string;
+  loading: boolean;
+  onChange: (value: string) => void;
+  onFocus: () => void;
+  onSelectSuggestion: (suggestion: GroupInviteSuggestion) => void;
+  open: boolean;
+  suggestions: GroupInviteSuggestion[];
+  suggestionsError: string | null;
+  value: string;
+  wrapperRef: RefObject<HTMLDivElement | null>;
+};
+
+function InviteSuggestionField({
+  label,
+  loading,
+  onChange,
+  onFocus,
+  onSelectSuggestion,
+  open,
+  suggestions,
+  suggestionsError,
+  value,
+  wrapperRef
+}: InviteSuggestionFieldProps) {
+  const showEmptyState = open && !loading && !suggestionsError && suggestions.length === 0;
+
+  return (
+    <div ref={wrapperRef} className="form-control w-full gap-2">
+      <label className="w-full">
+        <span className="label-text font-medium">{label}</span>
+        <input
+          className="input input-bordered mt-2 w-full"
+          onChange={(event) => onChange(event.target.value)}
+          onFocus={onFocus}
+          value={value}
+        />
+      </label>
+
+      {open ? (
+        <div className="invite-suggestion-panel">
+          {loading ? <p className="helper-text">Lade Vorschlaege...</p> : null}
+          {suggestionsError ? <p className="helper-text">{suggestionsError}</p> : null}
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion.userId}
+              className="invite-suggestion-row"
+              onClick={() => onSelectSuggestion(suggestion)}
+              type="button"
+            >
+              <span className="subsection-title normal-case tracking-[0.06em]">{suggestion.nickname}</span>
+              <span className="helper-text">{suggestion.email}</span>
+            </button>
+          ))}
+          {showEmptyState ? <p className="helper-text">Keine passenden Benutzer gefunden. Du kannst trotzdem per E-Mail einladen.</p> : null}
+        </div>
+      ) : null}
+    </div>
   );
 }

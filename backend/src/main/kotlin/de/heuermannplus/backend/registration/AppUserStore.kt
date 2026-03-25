@@ -13,6 +13,8 @@ interface AppUserStore {
     fun findByEmail(email: String): AppUser?
 
     fun deleteById(keycloakUserId: String)
+
+    fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser>
 }
 
 @Component
@@ -44,6 +46,13 @@ class JpaAppUserStore(
     override fun deleteById(keycloakUserId: String) {
         repository.deleteById(keycloakUserId)
     }
+
+    override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+        repository.searchInviteSuggestions(query.trim(), excludedUserId)
+            .asSequence()
+            .map { it.toDomain() }
+            .take(limit)
+            .toList()
 
     private fun AppUser.toEntity(createdAt: Instant, updatedAt: Instant): AppUserEntity =
         AppUserEntity(

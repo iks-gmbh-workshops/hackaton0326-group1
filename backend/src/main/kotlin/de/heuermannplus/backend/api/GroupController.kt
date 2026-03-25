@@ -5,6 +5,7 @@ import de.heuermannplus.backend.group.CreateMembershipRequest
 import de.heuermannplus.backend.group.GroupListResponse
 import de.heuermannplus.backend.group.GroupResponse
 import de.heuermannplus.backend.group.GroupService
+import de.heuermannplus.backend.group.GroupInviteSuggestionResponse
 import de.heuermannplus.backend.group.GroupTokenResponse
 import de.heuermannplus.backend.group.InviteGroupMemberRequest
 import de.heuermannplus.backend.group.JoinGroupByTokenRequest
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
@@ -74,6 +76,14 @@ class GroupController(
         authentication: JwtAuthenticationToken
     ): GroupResponse =
         groupService.inviteMember(groupId, request, authentication.toCurrentUser(appUserStore))
+
+    @GetMapping("/{groupId}/invite-suggestions")
+    fun inviteSuggestions(
+        @PathVariable groupId: Long,
+        @RequestParam(required = false) query: String?,
+        authentication: JwtAuthenticationToken
+    ): List<GroupInviteSuggestionResponse> =
+        groupService.inviteSuggestions(groupId, query, authentication.toCurrentUser(appUserStore))
 
     @PostMapping("/{groupId}/members/{membershipId}/accept")
     fun acceptInvitation(

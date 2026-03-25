@@ -132,7 +132,7 @@ data class GroupSummaryResponse(
     val description: String?,
     val createdAt: Instant,
     val membershipStatus: GroupMembershipStatus?,
-    val isCurrentUserAdmin: Boolean,
+    val currentUserAdmin: Boolean,
     val memberCount: Int
 )
 
@@ -164,7 +164,7 @@ data class GroupMemberResponse(
     val displayName: String,
     val inviteEmail: String?,
     val status: GroupMembershipStatus,
-    val isAdmin: Boolean,
+    val admin: Boolean,
     val createdAt: Instant,
     val joinedAt: Instant?
 )
@@ -188,6 +188,12 @@ data class GroupTokenResponse(
     val usedAt: Instant?
 )
 
+data class GroupInviteSuggestionResponse(
+    val userId: String,
+    val nickname: String,
+    val email: String
+)
+
 data class GroupResponse(
     val id: Long,
     val name: String,
@@ -196,7 +202,7 @@ data class GroupResponse(
     val updatedAt: Instant,
     val currentMembershipId: Long?,
     val currentMembershipStatus: GroupMembershipStatus?,
-    val isCurrentUserAdmin: Boolean,
+    val currentUserAdmin: Boolean,
     val members: List<GroupMemberResponse>,
     val invitations: List<GroupInvitationResponse>,
     val joinRequests: List<GroupJoinRequestResponse>,

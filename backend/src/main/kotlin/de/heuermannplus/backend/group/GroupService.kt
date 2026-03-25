@@ -23,6 +23,7 @@ class GroupService(
     private val clock: Clock
 ) {
     private val emailRegex = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    private val inviteSuggestionLimit = 8
 
     @Transactional
     fun list(currentUser: CurrentUser): GroupListResponse {
@@ -67,7 +68,7 @@ class GroupService(
                         description = group.description,
                         createdAt = group.createdAt,
                         membershipStatus = null,
-                        isCurrentUserAdmin = false,
+                        currentUserAdmin = false,
                         memberCount = activeMemberCount(group.id)
                     )
                 }
@@ -140,7 +141,7 @@ class GroupService(
             updatedAt = group.updatedAt,
             currentMembershipId = currentMembership.id,
             currentMembershipStatus = currentMembership.status,
-            isCurrentUserAdmin = isAdmin,
+            currentUserAdmin = isAdmin,
             members = memberships.map { it.toResponse() },
             invitations = invitations.map { it.toResponse() },
             joinRequests = joinRequests.map { it.toResponse(group.name) },
@@ -237,6 +238,30 @@ class GroupService(
         }
 
         return getGroup(groupId, currentUser)
+    }
+
+    @Transactional(readOnly = true)
+    fun inviteSuggestions(groupId: Long, query: String?, currentUser: CurrentUser): List<GroupInviteSuggestionResponse> {
+        requireAdminMembership(groupId, currentUser.userId)
+        requireGroup(groupId)
+        val blockedUserIds = membershipStore.findByGroupId(groupId)
+            .asSequence()
+            .filter { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
+            .mapNotNull { it.userId }
+            .toSet()
+
+        return appUserStore.searchInviteSuggestions(query.orEmpty(), currentUser.userId, inviteSuggestionLimit * 2)
+            .asSequence()
+            .filterNot { it.keycloakUserId in blockedUserIds }
+            .take(inviteSuggestionLimit)
+            .map { user ->
+                GroupInviteSuggestionResponse(
+                    userId = user.keycloakUserId,
+                    nickname = user.nickname,
+                    email = user.email
+                )
+            }
+            .toList()
     }
 
     @Transactional
@@ -594,7 +619,7 @@ class GroupService(
             description = description,
             createdAt = createdAt,
             membershipStatus = membership.status,
-            isCurrentUserAdmin = membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE,
+            currentUserAdmin = membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE,
             memberCount = memberCount
         )
 
@@ -605,7 +630,7 @@ class GroupService(
             displayName = displayName,
             inviteEmail = inviteEmail,
             status = status,
-            isAdmin = isAdmin,
+            admin = isAdmin,
             createdAt = createdAt,
             joinedAt = joinedAt
         )

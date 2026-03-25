@@ -1,3 +1,5 @@
+import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
+
 export type GroupMembershipStatus = "INVITED" | "ACTIVE" | "LEFT" | "REMOVED";
 export type GroupInvitationChannel = "NICKNAME" | "EMAIL" | "TOKEN";
 export type GroupInvitationMailType = "KNOWN_USER" | "UNKNOWN_EMAIL" | "TOKEN";
@@ -15,7 +17,7 @@ export type GroupSummary = {
   description?: string | null;
   createdAt: string;
   membershipStatus?: GroupMembershipStatus | null;
-  isCurrentUserAdmin: boolean;
+  currentUserAdmin: boolean;
   memberCount: number;
 };
 
@@ -47,7 +49,7 @@ export type GroupMember = {
   displayName: string;
   inviteEmail?: string | null;
   status: GroupMembershipStatus;
-  isAdmin: boolean;
+  admin: boolean;
   createdAt: string;
   joinedAt?: string | null;
 };
@@ -71,6 +73,12 @@ export type GroupToken = {
   usedAt?: string | null;
 };
 
+export type GroupInviteSuggestion = {
+  userId: string;
+  nickname: string;
+  email: string;
+};
+
 export type GroupDetail = {
   id: number;
   name: string;
@@ -79,7 +87,7 @@ export type GroupDetail = {
   updatedAt: string;
   currentMembershipId?: number | null;
   currentMembershipStatus?: GroupMembershipStatus | null;
-  isCurrentUserAdmin: boolean;
+  currentUserAdmin: boolean;
   members: GroupMember[];
   invitations: GroupInvitation[];
   joinRequests: GroupJoinRequest[];
@@ -114,6 +122,21 @@ export type JoinByTokenPayload = {
 export type CreateMembershipRequestPayload = {
   comment?: string;
 };
+
+export async function fetchGroupInviteSuggestions(groupId: number, query: string) {
+  const response = await authenticatedBackendFetch(
+    `/api/private/groups/${groupId}/invite-suggestions?${new URLSearchParams({ query }).toString()}`,
+    {
+      method: "GET"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Vorschlaege konnten nicht geladen werden");
+  }
+
+  return (await response.json()) as GroupInviteSuggestion[];
+}
 
 export function formatDate(value: string) {
   return new Intl.DateTimeFormat("de-DE", {

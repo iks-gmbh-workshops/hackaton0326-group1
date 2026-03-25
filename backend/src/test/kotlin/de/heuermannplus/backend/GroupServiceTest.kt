@@ -50,10 +50,10 @@ class GroupServiceTest {
         )
 
         assertEquals("Band 1", response.name)
-        assertTrue(response.isCurrentUserAdmin)
+        assertTrue(response.currentUserAdmin)
         assertEquals(GroupMembershipStatus.ACTIVE, response.currentMembershipStatus)
         assertEquals(1, response.members.size)
-        assertTrue(response.members.single().isAdmin)
+        assertTrue(response.members.single().admin)
     }
 
     @Test
@@ -71,6 +71,49 @@ class GroupServiceTest {
         assertNotNull(invitedMember)
         assertEquals(GroupMembershipStatus.INVITED, invitedMember.status)
         assertEquals(1, fixture.mailService.knownInvites.size)
+    }
+
+    @Test
+    fun `invite suggestions show initial candidates and exclude existing relations`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        fixture.service.inviteMember(
+            groupId,
+            InviteGroupMemberRequest(nicknameOrEmail = "alice"),
+            fixture.owner
+        )
+
+        val suggestions = fixture.service.inviteSuggestions(groupId, "", fixture.owner)
+
+        assertTrue(suggestions.any { it.nickname == "bob" })
+        assertTrue(suggestions.any { it.nickname == "guest" })
+        assertTrue(suggestions.none { it.nickname == "owner" })
+        assertTrue(suggestions.none { it.nickname == "alice" })
+    }
+
+    @Test
+    fun `invite suggestions match nickname and email case insensitive`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val nicknameMatches = fixture.service.inviteSuggestions(groupId, "ALI", fixture.owner)
+        val emailMatches = fixture.service.inviteSuggestions(groupId, "GUEST@", fixture.owner)
+
+        assertEquals(listOf("alice"), nicknameMatches.map { it.nickname })
+        assertEquals(listOf("guest"), emailMatches.map { it.nickname })
+    }
+
+    @Test
+    fun `invite suggestions require admin membership`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.inviteSuggestions(groupId, "", fixture.member)
+        }
+
+        assertEquals("FORBIDDEN_GROUP_ADMIN", exception.code)
     }
 
     @Test
@@ -226,6 +269,21 @@ private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
     override fun findByNickname(nickname: String): AppUser? = records.values.firstOrNull { it.nickname == nickname }
 
     override fun findByEmail(email: String): AppUser? = records.values.firstOrNull { it.email == email }
+
+    override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+        records.values
+            .asSequence()
+            .filter { it.status == AppUserStatus.ACTIVE }
+            .filterNot { it.keycloakUserId.equals(excludedUserId, ignoreCase = true) }
+            .filter {
+                val normalizedQuery = query.trim()
+                normalizedQuery.isBlank() ||
+                    it.nickname.contains(normalizedQuery, ignoreCase = true) ||
+                    it.email.contains(normalizedQuery, ignoreCase = true)
+            }
+            .sortedWith(compareBy<AppUser>({ it.nickname.lowercase() }, { it.email.lowercase() }))
+            .take(limit)
+            .toList()
 }
 
 private class InMemoryGroupStore : GroupStore {
