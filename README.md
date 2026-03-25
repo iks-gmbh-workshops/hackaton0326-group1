@@ -5,7 +5,7 @@ Multilayer-Web-App-Scaffold mit Next.js im Frontend, Spring Boot mit Kotlin im B
 ## Stack
 
 - Frontend: Next.js 15.5.9, React 19.1.1, TypeScript 5.9.2, Tailwind CSS 4.1.13, DaisyUI 5.1.7
-- Backend: Spring Boot 4.0.3, Kotlin 2.2.20, Gradle 9.4.0, Java 25 Runtime mit Bytecode-Target 24
+- Backend: Spring Boot 4.0.3, Kotlin 2.2.20, Gradle 9.4.0, Java 21 Runtime mit Bytecode-Target 21
 - Auth: Keycloak 26.5.5
 - Persistenz: PostgreSQL 18.3 fuer App und Keycloak
 - Lokales Setup: Docker Compose im Repo-Root
@@ -70,7 +70,7 @@ docker compose up --build
 ## Entwicklung ohne Docker
 
 - Frontend: Node.js 24.x LTS und `npm install && npm run dev` in `frontend/`
-- Backend: Java 25 und `./gradlew bootRun` in `backend/`
+- Backend: Java 21 und `./gradlew bootRun` in `backend/`
 
 Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle Abhaengigkeiten damit konsistent hochfahren.
 
@@ -78,7 +78,7 @@ Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle
 
 Ein VS-Code-Dev-Container liegt unter `.devcontainer/` und ist auf diesen Repo-Stack zugeschnitten.
 
-- Vorinstalliert: Node.js 24.x, npm, Java 25, Docker-CLI-Zugriff auf den Host-Daemon und `@openai/codex`
+- Vorinstalliert: Node.js 24.x, npm, Java 21, Docker-CLI-Zugriff auf den Host-Daemon und `@openai/codex`
 - Beim ersten Container-Start werden `frontend`-Dependencies installiert und der Gradle Wrapper in `backend` vorgewaermt
 - Der Root-Stack aus `docker-compose.yml` startet nicht automatisch und bleibt bewusst manuell
 

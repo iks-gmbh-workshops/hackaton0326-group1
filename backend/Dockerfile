@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /workspace
 
 COPY gradlew gradlew.bat settings.gradle build.gradle ./
@@ -7,7 +7,7 @@ COPY src src
 
 RUN chmod +x gradlew && ./gradlew --no-daemon bootJar
 
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring

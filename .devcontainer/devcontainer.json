@@ -6,7 +6,7 @@
       "version": "24"
     },
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "25",
+      "version": "21",
       "installGradle": false,
       "jdkDistro": "tem"
     },
