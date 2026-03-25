@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flyway Postgres Migrations"
+  short_description: "Handle schema changes for the backend safely"
+  default_prompt: "Use $flyway-postgres-migrations to add or review HeuermannPlus Flyway migrations and related persistence changes."

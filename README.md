@@ -42,16 +42,16 @@ docker compose up --build
 - Keycloak: `http://localhost:8081`
 - Mailpit UI: `http://localhost:8025`
 
-## Demo-Zugang
+## Lokale Zugange
 
 - Keycloak Admin: `admin` / `Admin123!`
-- Demo-User: `demo@heuermannplus.local` / `Demo123!`
+- Anwendungsnutzer: lokal ueber die Registrierungsstrecke im Frontend anlegen
 
 ## Auth-Demo
 
 - Das Frontend startet den Login gegen Keycloak.
 - Nach erfolgreichem Login speichert `next-auth` die Session JWT-basiert.
-- Der BFF-Endpoint `frontend/app/api/me/route.ts` leitet den Access Token an das Backend weiter.
+- Geschuetzte Frontend-Calls gehen direkt aus dem Browser an das Backend und senden den Access Token als Bearer-JWT.
 - Das Backend validiert den Bearer-Token gegen Keycloak als OAuth2 Resource Server.
 
 ## Registrierung lokal

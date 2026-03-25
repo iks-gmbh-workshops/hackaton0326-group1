@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
 
 type ProtectedApiDemoProps = {
   authenticated: boolean;
@@ -15,7 +16,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
     setError("");
 
     try {
-      const response = await fetch("/api/me", {
+      const response = await authenticatedBackendFetch("/api/private/me", {
         method: "GET",
         cache: "no-store"
       });
@@ -51,7 +52,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
         <div className="flex items-center justify-between gap-4">
           <div className="section-intro">
             <p className="section-title">Protected API Demo</p>
-            <h2 className="section-headline text-[2rem]">BFF ruft das Spring-Backend auf</h2>
+            <h2 className="section-headline text-[2rem]">Browser ruft das Spring-Backend direkt auf</h2>
           </div>
           <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
             {authenticated ? "angemeldet" : "nicht angemeldet"}
@@ -59,7 +60,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
         </div>
 
         <p className="subheadline max-w-2xl">
-          Der Button laedt ueber den Next.js-Route-Handler `/api/me` die geschuetzten Benutzerdaten aus dem Backend.
+          Der Button laedt die geschuetzten Benutzerdaten direkt aus dem Backend. Der Bearer-Token ist dabei im Browser-Request sichtbar.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">

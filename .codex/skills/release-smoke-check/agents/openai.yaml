@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Smoke Check"
+  short_description: "Validate the HeuermannPlus stack after changes"
+  default_prompt: "Use $release-smoke-check to run the local HeuermannPlus smoke-check workflow after code or config changes."

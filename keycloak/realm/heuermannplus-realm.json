@@ -65,7 +65,8 @@
         "web-origins",
         "roles",
         "profile",
-        "email"
+        "email",
+        "basic"
       ],
       "optionalClientScopes": [
         "address",
@@ -94,24 +95,6 @@
     }
   ],
   "users": [
-    {
-      "username": "demo@heuermannplus.local",
-      "enabled": true,
-      "emailVerified": true,
-      "firstName": "Demo",
-      "lastName": "User",
-      "email": "demo@heuermannplus.local",
-      "realmRoles": [
-        "app-user"
-      ],
-      "credentials": [
-        {
-          "type": "password",
-          "value": "Demo123!",
-          "temporary": false
-        }
-      ]
-    },
     {
       "username": "service-account-heuermannplus-registration-service",
       "enabled": true,
