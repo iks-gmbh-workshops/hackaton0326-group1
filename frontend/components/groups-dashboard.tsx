@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
 import { formatDate, membershipLabel, type GroupDetail, type GroupError, type GroupListResponse } from "@/lib/group";
 
 const initialList: GroupListResponse = {
@@ -25,7 +26,7 @@ export function GroupsDashboard() {
   const [isPending, startTransition] = useTransition();
 
   async function loadData() {
-    const response = await fetch("/api/groups", { cache: "no-store" });
+    const response = await authenticatedBackendFetch("/api/private/groups", { cache: "no-store" });
     const body = (await response.json()) as GroupListResponse & GroupError;
 
     if (!response.ok) {
@@ -48,7 +49,7 @@ export function GroupsDashboard() {
     setSuccessMessage(null);
 
     startTransition(() => {
-      void fetch("/api/groups", {
+      void authenticatedBackendFetch("/api/private/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -80,7 +81,7 @@ export function GroupsDashboard() {
     setSuccessMessage(null);
 
     startTransition(() => {
-      void fetch("/api/groups/join-by-token", {
+      void authenticatedBackendFetch("/api/private/groups/join-by-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: joinToken })
@@ -107,7 +108,7 @@ export function GroupsDashboard() {
     setSuccessMessage(null);
 
     startTransition(() => {
-      void fetch(`/api/groups/${groupId}/members/${membershipId}/accept`, { method: "POST" })
+      void authenticatedBackendFetch(`/api/private/groups/${groupId}/members/${membershipId}/accept`, { method: "POST" })
         .then(async (response) => {
           const body = (await response.json()) as GroupDetail & GroupError;
           if (!response.ok) {
@@ -129,7 +130,7 @@ export function GroupsDashboard() {
     setSuccessMessage(null);
 
     startTransition(() => {
-      void fetch(`/api/groups/${groupId}/membership-requests`, {
+      void authenticatedBackendFetch(`/api/private/groups/${groupId}/membership-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({})

@@ -17,7 +17,7 @@ class PrivateController(
 
     @GetMapping("/me")
     fun me(authentication: JwtAuthenticationToken): ResponseEntity<Any> {
-        val subject = authentication.token.subject
+        val subject = authentication.requiredSubject()
         val user = appUserStore.findById(subject)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(

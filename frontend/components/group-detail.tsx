@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
 import { formatDate, membershipLabel, type GroupDetail, type GroupError, type GroupListResponse, type GroupToken } from "@/lib/group";
 
 type GroupDetailProps = {
@@ -20,7 +21,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
   const [isPending, startTransition] = useTransition();
 
   const loadGroup = useCallback(async () => {
-    const response = await fetch(`/api/groups/${groupId}`, { cache: "no-store" });
+    const response = await authenticatedBackendFetch(`/api/private/groups/${groupId}`, { cache: "no-store" });
     const body = (await response.json()) as GroupDetail & GroupError;
 
     if (!response.ok) {
@@ -101,7 +102,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
             event.preventDefault();
             performAction(
               () =>
-                fetch(`/api/groups/${groupId}`, {
+                authenticatedBackendFetch(`/api/private/groups/${groupId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ name, description })
@@ -138,7 +139,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               disabled={isPending}
               onClick={() =>
                 performAction(
-                  () => fetch(`/api/groups/${groupId}/members/${group.currentMembershipId}/accept`, { method: "POST" }),
+                  () => authenticatedBackendFetch(`/api/private/groups/${groupId}/members/${group.currentMembershipId}/accept`, { method: "POST" }),
                   () => setSuccessMessage("Einladung angenommen")
                 )}
               type="button"
@@ -152,7 +153,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               disabled={isPending}
               onClick={() =>
                 performAction(
-                  () => fetch(`/api/groups/${groupId}/leave`, { method: "POST" }),
+                  () => authenticatedBackendFetch(`/api/private/groups/${groupId}/leave`, { method: "POST" }),
                   () => {
                     setSuccessMessage("Gruppe verlassen");
                     window.location.assign("/groups");
@@ -169,7 +170,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               disabled={isPending}
               onClick={() =>
                 performAction(
-                  () => fetch(`/api/groups/${groupId}`, { method: "DELETE" }),
+                  () => authenticatedBackendFetch(`/api/private/groups/${groupId}`, { method: "DELETE" }),
                   () => {
                     setSuccessMessage("Gruppe aufgeloest");
                     window.location.assign("/groups");
@@ -191,7 +192,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               event.preventDefault();
               performAction(
                 () =>
-                  fetch(`/api/groups/${groupId}/members/invite`, {
+                  authenticatedBackendFetch(`/api/private/groups/${groupId}/members/invite`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ nicknameOrEmail: inviteTarget })
@@ -223,7 +224,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               disabled={isPending}
               onClick={() =>
                 performAction(
-                  () => fetch(`/api/groups/${groupId}/tokens`, { method: "POST" }),
+                  () => authenticatedBackendFetch(`/api/private/groups/${groupId}/tokens`, { method: "POST" }),
                   (body) => {
                     setLatestToken(body as GroupToken);
                     setSuccessMessage("Token erstellt");
@@ -279,7 +280,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           disabled={isPending}
                           onClick={() =>
                             performAction(
-                              () => fetch(`/api/groups/${groupId}/admins/${member.id}/grant`, { method: "POST" }),
+                              () => authenticatedBackendFetch(`/api/private/groups/${groupId}/admins/${member.id}/grant`, { method: "POST" }),
                               () => setSuccessMessage("Adminrechte vergeben")
                             )}
                           type="button"
@@ -293,7 +294,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           disabled={isPending}
                           onClick={() =>
                             performAction(
-                              () => fetch(`/api/groups/${groupId}/admins/${member.id}/revoke`, { method: "POST" }),
+                              () => authenticatedBackendFetch(`/api/private/groups/${groupId}/admins/${member.id}/revoke`, { method: "POST" }),
                               () => setSuccessMessage("Adminrechte entzogen")
                             )}
                           type="button"
@@ -307,7 +308,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           disabled={isPending}
                           onClick={() =>
                             performAction(
-                              () => fetch(`/api/groups/${groupId}/members/${member.id}`, { method: "DELETE" }),
+                              () => authenticatedBackendFetch(`/api/private/groups/${groupId}/members/${member.id}`, { method: "DELETE" }),
                               () => setSuccessMessage("Mitglied entfernt")
                             )}
                           type="button"
@@ -341,7 +342,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                       onClick={() =>
                         performAction(
                           () =>
-                            fetch(`/api/groups/${groupId}/membership-requests/${request.id}/approve`, {
+                            authenticatedBackendFetch(`/api/private/groups/${groupId}/membership-requests/${request.id}/approve`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({})
@@ -358,7 +359,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                       onClick={() =>
                         performAction(
                           () =>
-                            fetch(`/api/groups/${groupId}/membership-requests/${request.id}/reject`, {
+                            authenticatedBackendFetch(`/api/private/groups/${groupId}/membership-requests/${request.id}/reject`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({})
