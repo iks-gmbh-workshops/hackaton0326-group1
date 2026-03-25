@@ -1,5 +1,4 @@
-* group-member und group-admin keine eigenständige keycloak rolle. nur solle innnerhalb einer gruppe.
+* group-member und group-admin keine eigenständige keycloak rollen. da sie pro Gruppe gelten.
 * userdaten in die app-db übernehmen, um diese daten synchron zu halten.
 * welche änderungen müssten gemacht werden, wenn keycloak die e-mail-verifikation übernimmt?
-* pending und user aus keycloak weglassen. Keycloak erst anlegen, wenn die verifizierung über uns erfolgreich war.
-* passworte werden im klartext gesendet.
+* passworte werden im klartext gesendet (weil http)

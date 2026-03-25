@@ -14,6 +14,7 @@ class RegistrationService(
     private val passwordPolicyEvaluator: PasswordPolicyEvaluator,
     private val captchaVerifier: CaptchaVerifier,
     private val keycloakAdminClient: KeycloakAdminClient,
+    private val appUserStore: AppUserStore,
     private val verificationStore: RegistrationVerificationStore,
     private val verificationTokenService: VerificationTokenService,
     private val registrationMailService: RegistrationMailService,
@@ -128,6 +129,21 @@ class RegistrationService(
 
         try {
             keycloakAdminClient.assignRealmRoles(keycloakUserId, setOf(REGISTRATION_PENDING_ROLE))
+            appUserStore.save(
+                AppUser(
+                    keycloakUserId = keycloakUserId,
+                    nickname = nickname,
+                    email = email,
+                    firstName = firstName,
+                    lastName = lastName,
+                    status = AppUserStatus.PENDING,
+                    enabled = false,
+                    emailVerified = false,
+                    keycloakRole = REGISTRATION_PENDING_ROLE,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
 
             val token = verificationTokenService.generateToken()
             val verification = verificationStore.save(
@@ -146,6 +162,11 @@ class RegistrationService(
             logger.info("Created pending registration {} for user {}", verification.id, nickname)
         } catch (exception: Exception) {
             keycloakAdminClient.deleteUser(keycloakUserId)
+            runCatching {
+                markAppUserDeleted(keycloakUserId, now)
+            }.onFailure { cleanupError ->
+                logger.warn("Failed to mark app user {} as deleted after registration rollback", keycloakUserId, cleanupError)
+            }
             throw exception
         }
 
@@ -177,6 +198,28 @@ class RegistrationService(
         }
 
         if (verification.expiresAt.isBefore(now)) {
+            appUserStore.save(
+                appUserStore.findById(verification.keycloakUserId)?.copy(
+                    nickname = verification.nickname,
+                    email = verification.email,
+                    status = AppUserStatus.EXPIRED,
+                    enabled = false,
+                    emailVerified = false,
+                    updatedAt = now
+                ) ?: AppUser(
+                    keycloakUserId = verification.keycloakUserId,
+                    nickname = verification.nickname,
+                    email = verification.email,
+                    firstName = null,
+                    lastName = null,
+                    status = AppUserStatus.EXPIRED,
+                    enabled = false,
+                    emailVerified = false,
+                    keycloakRole = REGISTRATION_PENDING_ROLE,
+                    createdAt = verification.createdAt ?: now,
+                    updatedAt = now
+                )
+            )
             verificationStore.save(
                 verification.copy(status = RegistrationVerificationStatus.EXPIRED)
             )
@@ -192,6 +235,32 @@ class RegistrationService(
         keycloakAdminClient.enableUser(verification.keycloakUserId)
         keycloakAdminClient.removeRealmRoles(verification.keycloakUserId, setOf(REGISTRATION_PENDING_ROLE))
         keycloakAdminClient.assignRealmRoles(verification.keycloakUserId, setOf(APP_USER_ROLE))
+        appUserStore.save(
+            appUserStore.findById(verification.keycloakUserId)?.copy(
+                nickname = verification.nickname,
+                email = verification.email,
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = APP_USER_ROLE,
+                updatedAt = now,
+                verifiedAt = now,
+                deletedAt = null
+            ) ?: AppUser(
+                keycloakUserId = verification.keycloakUserId,
+                nickname = verification.nickname,
+                email = verification.email,
+                firstName = null,
+                lastName = null,
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = APP_USER_ROLE,
+                createdAt = verification.createdAt ?: now,
+                updatedAt = now,
+                verifiedAt = now
+            )
+        )
 
         verificationStore.save(
             verification.copy(
@@ -214,8 +283,45 @@ class RegistrationService(
                 logger.warn("Failed to cleanup expired registration {}", verification.id, error)
             }
 
+            appUserStore.save(
+                appUserStore.findById(verification.keycloakUserId)?.copy(
+                    nickname = verification.nickname,
+                    email = verification.email,
+                    status = AppUserStatus.EXPIRED,
+                    enabled = false,
+                    emailVerified = false,
+                    updatedAt = now,
+                    deletedAt = now
+                ) ?: AppUser(
+                    keycloakUserId = verification.keycloakUserId,
+                    nickname = verification.nickname,
+                    email = verification.email,
+                    firstName = null,
+                    lastName = null,
+                    status = AppUserStatus.EXPIRED,
+                    enabled = false,
+                    emailVerified = false,
+                    keycloakRole = REGISTRATION_PENDING_ROLE,
+                    createdAt = verification.createdAt ?: now,
+                    updatedAt = now,
+                    deletedAt = now
+                )
+            )
             verificationStore.save(verification.copy(status = RegistrationVerificationStatus.EXPIRED))
         }
+    }
+
+    private fun markAppUserDeleted(keycloakUserId: String, now: Instant) {
+        val existing = appUserStore.findById(keycloakUserId) ?: return
+        appUserStore.save(
+            existing.copy(
+                status = AppUserStatus.DELETED,
+                enabled = false,
+                emailVerified = false,
+                updatedAt = now,
+                deletedAt = now
+            )
+        )
     }
 
     private fun suggestNickname(nickname: String): String {
