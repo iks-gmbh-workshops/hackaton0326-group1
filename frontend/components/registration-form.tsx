@@ -13,7 +13,8 @@ const initialForm: RegistrationPayload = {
   email: "",
   captchaToken: "",
   firstName: "",
-  lastName: ""
+  lastName: "",
+  acceptTerms: false
 };
 
 export function RegistrationForm() {
@@ -83,6 +84,15 @@ export function RegistrationForm() {
           code: "INVALID_NICKNAME",
           message: nicknameError,
           field: "nickname"
+        });
+        return;
+      }
+
+      if (!form.acceptTerms) {
+        setSubmitError({
+          code: "TERMS_NOT_ACCEPTED",
+          message: "Bitte die Nutzungsbedingungen akzeptieren",
+          field: "acceptTerms"
         });
         return;
       }
@@ -217,6 +227,34 @@ export function RegistrationForm() {
           value={form.captchaToken}
         />
 
+        <fieldset className="space-y-2">
+          <label className="terms-checkbox-row" htmlFor="acceptTerms">
+            <input
+              checked={form.acceptTerms}
+              className={`checkbox checkbox-sm ${submitError?.field === "acceptTerms" ? "checkbox-error" : "checkbox-primary"}`}
+              id="acceptTerms"
+              name="acceptTerms"
+              onChange={(event) => updateField("acceptTerms", event.target.checked)}
+              required
+              type="checkbox"
+            />
+            <span className="body-copy text-sm leading-7">
+              Ich stimme den{" "}
+              <a
+                className="text-primary underline decoration-[0.08em] underline-offset-3"
+                href={policy.terms.url}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Nutzungsbedingungen
+              </a>{" "}
+              in Version {policy.terms.currentVersion} zu.
+            </span>
+          </label>
+          {submitError?.field === "acceptTerms" ? <p className="text-sm text-error">{submitError.message}</p> : null}
+          <p className="helper-text">Die Registrierung ist nur moeglich, wenn du der aktuell gueltigen Version zustimmst.</p>
+        </fieldset>
+
         {submitError && !submitError.field ? <div className="alert alert-error">{submitError.message}</div> : null}
         {successMessage ? (
           <div className="alert alert-success">
@@ -240,7 +278,7 @@ export function RegistrationForm() {
         <div className="soft-panel">
           <p className="section-title">Ablauf</p>
           <div className="mt-4 space-y-3">
-            <p className="body-copy text-sm">1. Formular ausfuellen und Captcha bestaetigen.</p>
+            <p className="body-copy text-sm">1. Formular ausfuellen, Captcha bestaetigen und der aktuellen AGB-Version zustimmen.</p>
             <p className="body-copy text-sm">2. Verifizierungs-E-Mail oeffnen und Link klicken.</p>
             <p className="body-copy text-sm">3. Nach erfolgreicher Pruefung wird dein Konto freigeschaltet.</p>
           </div>
