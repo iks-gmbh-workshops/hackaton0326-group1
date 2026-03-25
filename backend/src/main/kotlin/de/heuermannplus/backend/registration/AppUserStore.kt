@@ -11,6 +11,8 @@ interface AppUserStore {
     fun findByNickname(nickname: String): AppUser?
 
     fun findByEmail(email: String): AppUser?
+
+    fun deleteById(keycloakUserId: String)
 }
 
 @Component
@@ -38,6 +40,10 @@ class JpaAppUserStore(
 
     override fun findByEmail(email: String): AppUser? =
         repository.findByEmail(email)?.toDomain()
+
+    override fun deleteById(keycloakUserId: String) {
+        repository.deleteById(keycloakUserId)
+    }
 
     private fun AppUser.toEntity(createdAt: Instant, updatedAt: Instant): AppUserEntity =
         AppUserEntity(

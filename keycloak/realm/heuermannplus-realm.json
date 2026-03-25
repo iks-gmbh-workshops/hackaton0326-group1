@@ -7,6 +7,7 @@
   "resetPasswordAllowed": true,
   "rememberMe": true,
   "loginWithEmailAllowed": true,
+  "editUsernameAllowed": true,
   "duplicateEmailsAllowed": false,
   "defaultRoles": [
     "offline_access",

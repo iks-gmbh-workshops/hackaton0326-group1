@@ -16,7 +16,23 @@ interface KeycloakAdminClient {
 
     fun findUserByEmail(email: String): KeycloakUserSummary?
 
+    fun findUserById(userId: String): KeycloakUserRepresentation?
+
     fun createPendingUser(draft: RegistrationUserDraft): String
+
+    fun updateUser(
+        userId: String,
+        username: String,
+        email: String,
+        firstName: String?,
+        lastName: String?,
+        enabled: Boolean,
+        emailVerified: Boolean
+    )
+
+    fun changePassword(userId: String, newPassword: String)
+
+    fun validateUserCredentials(username: String, password: String): Boolean
 
     fun assignRealmRoles(userId: String, roleNames: Set<String>)
 
@@ -61,6 +77,17 @@ class RestKeycloakAdminClient(
             ?.toSummary()
     }
 
+    override fun findUserById(userId: String): KeycloakUserRepresentation? =
+        try {
+            restClient.get()
+                .uri("${adminBaseUrl()}/users/{userId}", userId)
+                .headers { headers -> headers.setBearerAuth(accessToken()) }
+                .retrieve()
+                .body(KeycloakUserRepresentation::class.java)
+        } catch (_: HttpClientErrorException.NotFound) {
+            null
+        }
+
     override fun createPendingUser(draft: RegistrationUserDraft): String {
         try {
             val response = restClient.post()
@@ -99,6 +126,77 @@ class RestKeycloakAdminClient(
             throw mapCreateUserBadRequest(exception)
         }
     }
+
+    override fun updateUser(
+        userId: String,
+        username: String,
+        email: String,
+        firstName: String?,
+        lastName: String?,
+        enabled: Boolean,
+        emailVerified: Boolean
+    ) {
+        try {
+            restClient.put()
+                .uri("${adminBaseUrl()}/users/{userId}", userId)
+                .headers { headers -> headers.setBearerAuth(accessToken()) }
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    KeycloakUpdateUserRequest(
+                        username = username,
+                        email = email,
+                        firstName = firstName,
+                        lastName = lastName,
+                        enabled = enabled,
+                        emailVerified = emailVerified
+                    )
+                )
+                .retrieve()
+                .toBodilessEntity()
+        } catch (exception: HttpClientErrorException.BadRequest) {
+            throw mapUpdateUserBadRequest(exception)
+        }
+    }
+
+    override fun changePassword(userId: String, newPassword: String) {
+        restClient.put()
+            .uri("${adminBaseUrl()}/users/{userId}/reset-password", userId)
+            .headers { headers -> headers.setBearerAuth(accessToken()) }
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(
+                KeycloakCredentialRepresentation(
+                    type = "password",
+                    value = newPassword,
+                    temporary = false
+                )
+            )
+            .retrieve()
+            .toBodilessEntity()
+    }
+
+    override fun validateUserCredentials(username: String, password: String): Boolean =
+        try {
+            val response = restClient.post()
+                .uri("${tokenUrl()}")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(
+                    LinkedMultiValueMap<String, String>().apply {
+                        add("grant_type", "password")
+                        add("client_id", keycloakAdminProperties.adminClientId)
+                        add("client_secret", keycloakAdminProperties.adminClientSecret)
+                        add("username", username)
+                        add("password", password)
+                    }
+                )
+                .retrieve()
+                .body(KeycloakTokenResponse::class.java)
+
+            response?.accessToken.isNullOrBlank().not()
+        } catch (_: HttpClientErrorException.BadRequest) {
+            false
+        } catch (_: HttpClientErrorException.Unauthorized) {
+            false
+        }
 
     override fun assignRealmRoles(userId: String, roleNames: Set<String>) {
         if (roleNames.isEmpty()) {
@@ -177,6 +275,9 @@ class RestKeycloakAdminClient(
 
     private fun adminBaseUrl(): String =
         "${keycloakAdminProperties.serverUrl.trimEnd('/')}/admin/realms/${keycloakAdminProperties.realm}"
+
+    private fun tokenUrl(): String =
+        "${keycloakAdminProperties.serverUrl.trimEnd('/')}/realms/${keycloakAdminProperties.realm}/protocol/openid-connect/token"
 
     private fun resolveRole(roleName: String): KeycloakRoleRepresentation {
         try {
@@ -285,6 +386,32 @@ class RestKeycloakAdminClient(
         )
     }
 
+    private fun mapUpdateUserBadRequest(exception: HttpClientErrorException.BadRequest): RegistrationException {
+        val validationError = runCatching {
+            objectMapper.readValue(exception.responseBodyAsByteArray, KeycloakValidationErrorResponse::class.java)
+        }.getOrNull()
+
+        if (validationError?.field == "username") {
+            return RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "INVALID_USERNAME",
+                message = "Username ist ungueltig",
+                field = "username"
+            )
+        }
+
+        logger.warn(
+            "Keycloak rejected user update in realm {}: {}",
+            keycloakAdminProperties.realm,
+            exception.responseBodyAsString
+        )
+        return RegistrationException(
+            status = HttpStatus.BAD_GATEWAY,
+            code = "KEYCLOAK_UPDATE_FAILED",
+            message = "Profil konnte nicht aktualisiert werden"
+        )
+    }
+
     private fun accessToken(): String {
         try {
             val response = restClient.post()
@@ -354,6 +481,15 @@ data class KeycloakCreateUserRequest(
     val enabled: Boolean,
     val emailVerified: Boolean,
     val credentials: List<KeycloakCredentialRepresentation>
+)
+
+data class KeycloakUpdateUserRequest(
+    val username: String,
+    val email: String,
+    val firstName: String?,
+    val lastName: String?,
+    val enabled: Boolean,
+    val emailVerified: Boolean
 )
 
 data class KeycloakCredentialRepresentation(

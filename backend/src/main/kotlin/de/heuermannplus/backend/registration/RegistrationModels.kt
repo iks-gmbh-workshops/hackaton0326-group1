@@ -107,3 +107,29 @@ data class KeycloakUserSummary(
     val enabled: Boolean,
     val emailVerified: Boolean
 )
+
+data class ProfileResponse(
+    val username: String,
+    val email: String,
+    val firstName: String?,
+    val lastName: String?
+)
+
+data class UpdateProfileRequest(
+    val username: String?,
+    val firstName: String? = null,
+    val lastName: String? = null
+)
+
+data class ChangePasswordRequest(
+    val newPassword: String?,
+    val newPasswordRepeat: String?
+)
+
+data class DeleteAccountRequest(
+    val confirmation: String?
+)
+
+data class MessageResponse(
+    val message: String
+)

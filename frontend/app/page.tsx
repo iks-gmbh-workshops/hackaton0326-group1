@@ -54,9 +54,14 @@ export default async function HomePage() {
                   Jetzt registrieren
                 </Link>
               ) : (
-                <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
-                  Zu den Gruppen
-                </Link>
+                <>
+                  <Link className="btn btn-outline btn-primary" href={"/profile" as Route}>
+                    Profil verwalten
+                  </Link>
+                  <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
+                    Zu den Gruppen
+                  </Link>
+                </>
               )}
               <a className="btn btn-ghost" href="#architecture">
                 Architektur ansehen
