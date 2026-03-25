@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import Link from "next/link";
 import { AuthControls } from "@/components/auth-controls";
 import { ProtectedApiDemo } from "@/components/protected-api-demo";
 import { authOptions } from "@/lib/auth";
@@ -9,14 +10,15 @@ const highlights = [
   "Mobile-first Layout mit Next.js App Router",
   "DaisyUI-Komponenten auf Tailwind CSS 4",
   "Keycloak Login ueber serverseitige Session",
-  "Spring Boot Resource Server mit JWT-Validierung"
+  "Spring Boot Resource Server mit JWT-Validierung",
+  "App-eigene Registrierung mit E-Mail-Verifizierung"
 ];
 
 const steps = [
-  "Frontend startet den Login ueber Keycloak.",
+  "Neue Nutzer registrieren sich ueber das Frontend und bestaetigen ihre E-Mail.",
+  "Keycloak verwaltet die Identitaet und Rollen fuer verifizierte Nutzer.",
   "next-auth speichert die Session im Frontend.",
-  "Der Route-Handler `/api/me` fungiert als BFF.",
-  "Das Backend validiert den Bearer-Token gegen Keycloak."
+  "Der Route-Handler `/api/me` fungiert als BFF zum Backend."
 ];
 
 export default async function HomePage() {
@@ -24,23 +26,21 @@ export default async function HomePage() {
   const authenticated = Boolean(session?.user);
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
-      <div className="ambient-glow ambient-glow-top" />
-      <div className="ambient-glow ambient-glow-bottom" />
-
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <main className="page-shell">
+      <div className="page-container">
         <section className="hero-panel">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-xs uppercase tracking-[0.3em] text-accent-content/80">
-              HeuermannPlus
-              <span className="badge badge-accent badge-sm">Scaffold</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="brand-kicker">HeuermannPlus</div>
+              <span className="badge badge-primary badge-outline">Scaffold</span>
             </div>
 
             <div className="max-w-3xl space-y-4">
-              <h1 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <p className="subheadline">Responsives Frontend fuer Authentifizierung, Registrierung und BFF-Zugriffe.</p>
+              <h1 className="headline">
                 Multilayer-Web-App mit klarer Trennung zwischen UI, API und IAM.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
+              <p className="body-copy max-w-2xl">
                 Dieses Grundgeruest verbindet ein responsives Next.js-Frontend, ein Kotlin/Spring-Boot-Backend
                 und Keycloak als Identity-Layer. Die lokale Entwicklung startet komplett ueber Docker Compose.
               </p>
@@ -48,66 +48,96 @@ export default async function HomePage() {
 
             <div className="flex flex-wrap items-center gap-3">
               <AuthControls authenticated={authenticated} />
-              <a className="btn btn-ghost text-white hover:bg-white/10" href="#architecture">
+              {!authenticated ? (
+                <Link className="btn btn-outline btn-primary" href="/register">
+                  Jetzt registrieren
+                </Link>
+              ) : null}
+              <a className="btn btn-ghost" href="#architecture">
                 Architektur ansehen
               </a>
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-black/20 p-5 shadow-2xl backdrop-blur">
+          <div className="soft-panel grid gap-5">
             <div className="flex items-center justify-between">
-              <p className="text-sm uppercase tracking-[0.25em] text-white/60">Session Status</p>
-              <span className={`badge ${authenticated ? "badge-success" : "badge-ghost"} badge-lg`}>
+              <p className="section-title">Session Status</p>
+              <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
                 {authenticated ? "aktiv" : "inaktiv"}
               </span>
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white">
+              <h2 className="section-headline text-3xl">
                 {authenticated ? `Willkommen ${session?.user?.name ?? "zurueck"}` : "Bereit fuer den ersten Login"}
               </h2>
-              <p className="text-sm leading-6 text-white/65">
+              <p className="subheadline">
                 {authenticated
                   ? "Die Session liegt serverseitig vor und kann jetzt ueber den BFF sicher an das Backend weitergegeben werden."
-                  : "Starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
+                  : "Registriere dich oder starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-              <p className="font-medium text-white">Aktueller Benutzer</p>
+            <div className="rounded-2xl border border-base-300 bg-white/90 p-4 text-sm text-base-content">
+              <p className="subsection-title">Aktueller Benutzer</p>
               <p>{session?.user?.email ?? "Nicht angemeldet"}</p>
+            </div>
+
+            <div className="brand-divider" />
+
+            <div className="status-list">
+              <div className="status-row">
+                <span className="status-dot" />
+                <p className="body-copy text-sm">Linksbuendige Informationsbloecke sorgen fuer klare Lesefuehrung.</p>
+              </div>
+              <div className="status-row">
+                <span className="status-dot" />
+                <p className="body-copy text-sm">DaisyUI-Komponenten bleiben erhalten und werden nur gestalterisch neu gefasst.</p>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {highlights.map((highlight) => (
-            <article
-              key={highlight}
-              className="rounded-[1.75rem] border border-base-200 bg-base-100/90 p-5 shadow-lg backdrop-blur"
-            >
-              <p className="text-sm leading-6 text-base-content/75">{highlight}</p>
-            </article>
-          ))}
+        <section className="page-section">
+          <div className="section-intro">
+            <p className="section-title">Schwerpunkte</p>
+            <h2 className="section-headline">Was das Grundgeruest heute schon abdeckt</h2>
+            <p className="subheadline">
+              Die wichtigsten Funktionsbausteine sind in eigenstaendige Themenbloecke gegliedert und auf Wiederverwendbarkeit ausgelegt.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {highlights.map((highlight) => (
+              <article
+                key={highlight}
+                className="feature-card rounded-[1.5rem] border border-base-300 bg-white/92"
+              >
+                <p className="section-title">Feature</p>
+                <p className="body-copy text-[0.98rem]">{highlight}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]" id="architecture">
+        <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]" id="architecture">
           <ProtectedApiDemo authenticated={authenticated} />
 
-          <div className="card border border-base-200 bg-base-100 shadow-xl">
+          <div className="brand-card card">
             <div className="card-body gap-5">
-              <div>
-                <p className="text-sm uppercase tracking-[0.25em] text-secondary">Flow</p>
-                <h2 className="text-2xl font-semibold">Wie die Demo zusammenspielt</h2>
+              <div className="section-intro">
+                <p className="section-title">Flow</p>
+                <h2 className="section-headline">Wie die Demo zusammenspielt</h2>
+                <p className="subheadline">
+                  Die Architektur bleibt sichtbar getrennt, damit Rollen, Session und Backend-Aufrufe nachvollziehbar bleiben.
+                </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="info-grid">
                 {steps.map((step, index) => (
-                  <div key={step} className="flex gap-4 rounded-2xl border border-base-200 bg-base-200/40 p-4">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-secondary-content">
-                      {index + 1}
-                    </span>
-                    <p className="text-sm leading-6 text-base-content/75">{step}</p>
+                  <div key={step} className="step-row">
+                    <span className="step-index">{index + 1}</span>
+                    <p className="body-copy text-sm">{step}</p>
                   </div>
                 ))}
               </div>

@@ -19,12 +19,46 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  mail:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:false}
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/heuermannplus}
           jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:8081/realms/heuermannplus/protocol/openid-connect/certs}
+
+app:
+  registration:
+    frontend-base-url: ${APP_REGISTRATION_FRONTEND_BASE_URL:http://localhost:3000}
+    verification-ttl: ${APP_REGISTRATION_VERIFICATION_TTL:24h}
+    cleanup-cron: ${APP_REGISTRATION_CLEANUP_CRON:0 0 * * * *}
+    email-from: ${APP_REGISTRATION_EMAIL_FROM:no-reply@heuermannplus.local}
+    password:
+      min-length: ${APP_REGISTRATION_PASSWORD_MIN_LENGTH:8}
+      min-upper-case: ${APP_REGISTRATION_PASSWORD_MIN_UPPER_CASE:1}
+      min-lower-case: ${APP_REGISTRATION_PASSWORD_MIN_LOWER_CASE:1}
+      min-digits: ${APP_REGISTRATION_PASSWORD_MIN_DIGITS:1}
+      min-special-chars: ${APP_REGISTRATION_PASSWORD_MIN_SPECIAL_CHARS:1}
+    captcha:
+      mode: ${APP_REGISTRATION_CAPTCHA_MODE:mock}
+      mock-pass-token: ${APP_REGISTRATION_CAPTCHA_MOCK_PASS_TOKEN:test-pass}
+      turnstile-site-key: ${APP_REGISTRATION_CAPTCHA_TURNSTILE_SITE_KEY:}
+      turnstile-secret: ${APP_REGISTRATION_CAPTCHA_TURNSTILE_SECRET:}
+  keycloak:
+    server-url: ${APP_KEYCLOAK_SERVER_URL:http://keycloak:8080}
+    realm: ${APP_KEYCLOAK_REALM:heuermannplus}
+    admin-client-id: ${APP_KEYCLOAK_ADMIN_CLIENT_ID:heuermannplus-registration-service}
+    admin-client-secret: ${APP_KEYCLOAK_ADMIN_CLIENT_SECRET:heuermannplus-registration-secret}
 
 management:
   endpoint:

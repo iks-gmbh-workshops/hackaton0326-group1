@@ -46,41 +46,39 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
   }
 
   return (
-    <div className="card border border-base-200 bg-base-100 shadow-xl">
+    <div className="brand-card card">
       <div className="card-body gap-4">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-accent">Protected API Demo</p>
-            <h2 className="text-2xl font-semibold text-base-content">BFF ruft das Spring-Backend auf</h2>
+          <div className="section-intro">
+            <p className="section-title">Protected API Demo</p>
+            <h2 className="section-headline text-[2rem]">BFF ruft das Spring-Backend auf</h2>
           </div>
-          <span className={`badge ${authenticated ? "badge-success" : "badge-ghost"} badge-lg`}>
+          <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
             {authenticated ? "angemeldet" : "nicht angemeldet"}
           </span>
         </div>
 
-        <p className="max-w-2xl text-sm leading-6 text-base-content/70">
+        <p className="subheadline max-w-2xl">
           Der Button laedt ueber den Next.js-Route-Handler `/api/me` die geschuetzten Benutzerdaten aus dem Backend.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
           <button
-            className="btn btn-secondary"
+            className="btn btn-primary"
             disabled={!authenticated || isPending}
             onClick={handleFetch}
           >
             {isPending ? "Lade..." : "Geschuetzten Call ausfuehren"}
           </button>
           {!authenticated ? (
-            <span className="text-sm text-base-content/60">
+            <span className="helper-text">
               Melde Dich zuerst an, um den Endpoint aufzurufen.
             </span>
           ) : null}
         </div>
 
-        <div className="min-h-44 rounded-2xl border border-base-200 bg-neutral text-neutral-content">
-          <pre className="h-full overflow-x-auto p-4 text-sm leading-6">
-            {error || payload || "{\n  \"hint\": \"Noch keine Antwort geladen\"\n}"}
-          </pre>
+        <div className="result-surface">
+          <pre>{error || payload || "{\n  \"hint\": \"Noch keine Antwort geladen\"\n}"}</pre>
         </div>
       </div>
     </div>

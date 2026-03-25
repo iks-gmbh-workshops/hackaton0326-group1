@@ -3,20 +3,36 @@
   "enabled": true,
   "displayName": "HeuermannPlus",
   "registrationAllowed": false,
+  "passwordPolicy": "length(8) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)",
   "resetPasswordAllowed": true,
   "rememberMe": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "defaultRoles": [
     "offline_access",
-    "uma_authorization",
-    "app-user"
+    "uma_authorization"
   ],
   "roles": {
     "realm": [
       {
+        "name": "registration-pending",
+        "description": "User completed registration but has not verified the email yet."
+      },
+      {
         "name": "app-user",
-        "description": "Default role for the scaffold demo user."
+        "description": "Base role for verified application users."
+      },
+      {
+        "name": "group-member",
+        "description": "Role for users that belong to a group."
+      },
+      {
+        "name": "group-admin",
+        "description": "Role for users that manage a group."
+      },
+      {
+        "name": "app-admin",
+        "description": "Administrative role for the whole application."
       }
     ]
   },
@@ -58,6 +74,18 @@
       ]
     },
     {
+      "clientId": "heuermannplus-registration-service",
+      "name": "HeuermannPlus Registration Service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "heuermannplus-registration-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "frontchannelLogout": false
+    },
+    {
       "clientId": "heuermannplus-backend",
       "name": "HeuermannPlus Backend",
       "enabled": true,
@@ -83,6 +111,21 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "username": "service-account-heuermannplus-registration-service",
+      "enabled": true,
+      "serviceAccountClientId": "heuermannplus-registration-service",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "query-users",
+          "query-clients",
+          "view-realm",
+          "view-users",
+          "view-clients"
+        ]
+      }
     }
   ]
 }
