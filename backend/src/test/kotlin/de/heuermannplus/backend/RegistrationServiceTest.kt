@@ -1,5 +1,8 @@
 package de.heuermannplus.backend
 
+import de.heuermannplus.backend.registration.AppUser
+import de.heuermannplus.backend.registration.AppUserStatus
+import de.heuermannplus.backend.registration.AppUserStore
 import de.heuermannplus.backend.registration.CaptchaMode
 import de.heuermannplus.backend.registration.CaptchaProperties
 import de.heuermannplus.backend.registration.CaptchaVerifier
@@ -27,6 +30,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RegistrationServiceTest {
@@ -53,6 +57,12 @@ class RegistrationServiceTest {
         assertNotNull(pendingUser)
         assertFalse(pendingUser.enabled)
         assertTrue("registration-pending" in fixture.keycloakClient.rolesFor(pendingUser.id))
+        val pendingAppUser = fixture.appUserStore.findById(pendingUser.id)
+        assertNotNull(pendingAppUser)
+        assertEquals(AppUserStatus.PENDING, pendingAppUser.status)
+        assertEquals("registration-pending", pendingAppUser.keycloakRole)
+        assertEquals("Max", pendingAppUser.firstName)
+        assertEquals("Mustermann", pendingAppUser.lastName)
 
         val token = fixture.mailService.lastToken()
         val verifyResponse = fixture.service.verify(RegistrationVerifyRequest(token = token))
@@ -65,6 +75,13 @@ class RegistrationServiceTest {
         assertTrue(activatedUser.emailVerified)
         assertTrue("app-user" in fixture.keycloakClient.rolesFor(activatedUser.id))
         assertFalse("registration-pending" in fixture.keycloakClient.rolesFor(activatedUser.id))
+        val activeAppUser = fixture.appUserStore.findById(activatedUser.id)
+        assertNotNull(activeAppUser)
+        assertEquals(AppUserStatus.ACTIVE, activeAppUser.status)
+        assertEquals("app-user", activeAppUser.keycloakRole)
+        assertTrue(activeAppUser.enabled)
+        assertTrue(activeAppUser.emailVerified)
+        assertNotNull(activeAppUser.verifiedAt)
     }
 
     @Test
@@ -253,9 +270,42 @@ class RegistrationServiceTest {
         }
 
         assertEquals("Der Verifizierungslink ist abgelaufen", exception.message)
+        val pendingUser = fixture.keycloakClient.findUserByUsername("drummer")
+        assertNotNull(pendingUser)
+        val expiredAppUser = fixture.appUserStore.findById(pendingUser.id)
+        assertNotNull(expiredAppUser)
+        assertEquals(AppUserStatus.EXPIRED, expiredAppUser.status)
+        assertEquals("registration-pending", expiredAppUser.keycloakRole)
+        assertNull(expiredAppUser.deletedAt)
     }
 
-    private fun registrationFixture(): RegistrationFixture {
+    @Test
+    fun `register rollback marks local app user as deleted`() {
+        val fixture = registrationFixture(mailShouldFail = true)
+
+        assertFailsWith<IllegalStateException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    firstName = "Max",
+                    lastName = "Mustermann"
+                )
+            )
+        }
+
+        assertNull(fixture.keycloakClient.findUserByUsername("drummer"))
+        val appUser = fixture.appUserStore.findByNickname("drummer")
+        assertNotNull(appUser)
+        assertEquals(AppUserStatus.DELETED, appUser.status)
+        assertEquals("registration-pending", appUser.keycloakRole)
+        assertNotNull(appUser.deletedAt)
+    }
+
+    private fun registrationFixture(mailShouldFail: Boolean = false): RegistrationFixture {
         val properties = RegistrationProperties(
             frontendBaseUrl = "http://localhost:3000",
             verificationTtl = java.time.Duration.ofHours(24),
@@ -269,14 +319,16 @@ class RegistrationServiceTest {
         )
         val clock = MutableClock(Instant.parse("2026-03-24T12:00:00Z"))
         val keycloakClient = FakeKeycloakAdminClient()
+        val appUserStore = InMemoryAppUserStore(clock)
         val verificationStore = InMemoryRegistrationVerificationStore(clock)
-        val mailService = FakeRegistrationMailService()
+        val mailService = FakeRegistrationMailService(shouldFail = mailShouldFail)
 
         val service = RegistrationService(
             registrationProperties = properties,
             passwordPolicyEvaluator = PasswordPolicyEvaluator(properties),
             captchaVerifier = CaptchaVerifier { token -> token == "test-pass" },
             keycloakAdminClient = keycloakClient,
+            appUserStore = appUserStore,
             verificationStore = verificationStore,
             verificationTokenService = VerificationTokenService(),
             registrationMailService = mailService,
@@ -286,6 +338,7 @@ class RegistrationServiceTest {
         return RegistrationFixture(
             service = service,
             keycloakClient = keycloakClient,
+            appUserStore = appUserStore,
             mailService = mailService,
             clock = clock
         )
@@ -295,6 +348,7 @@ class RegistrationServiceTest {
 private data class RegistrationFixture(
     val service: RegistrationService,
     val keycloakClient: FakeKeycloakAdminClient,
+    val appUserStore: InMemoryAppUserStore,
     val mailService: FakeRegistrationMailService,
     val clock: MutableClock
 )
@@ -309,10 +363,15 @@ private class MutableClock(
     override fun instant(): Instant = currentInstant
 }
 
-private class FakeRegistrationMailService : RegistrationMailService {
+private class FakeRegistrationMailService(
+    private val shouldFail: Boolean = false
+) : RegistrationMailService {
     private val sentMessages = mutableListOf<Triple<String, String, String>>()
 
     override fun sendVerificationEmail(email: String, nickname: String, token: String) {
+        if (shouldFail) {
+            throw IllegalStateException("Mail delivery failed")
+        }
         sentMessages += Triple(email, nickname, token)
     }
 
@@ -338,6 +397,30 @@ private class InMemoryRegistrationVerificationStore(
 
     override fun findExpiredPending(now: Instant): List<RegistrationVerification> =
         records.values.filter { it.status == RegistrationVerificationStatus.PENDING && it.expiresAt.isBefore(now) }
+}
+
+private class InMemoryAppUserStore(
+    private val clock: Clock
+) : AppUserStore {
+    private val records = linkedMapOf<String, AppUser>()
+
+    override fun save(user: AppUser): AppUser {
+        val existing = records[user.keycloakUserId]
+        val persisted = user.copy(
+            createdAt = user.createdAt ?: existing?.createdAt ?: Instant.now(clock),
+            updatedAt = user.updatedAt ?: Instant.now(clock)
+        )
+        records[persisted.keycloakUserId] = persisted
+        return persisted
+    }
+
+    override fun findById(keycloakUserId: String): AppUser? = records[keycloakUserId]
+
+    override fun findByNickname(nickname: String): AppUser? =
+        records.values.firstOrNull { it.nickname == nickname }
+
+    override fun findByEmail(email: String): AppUser? =
+        records.values.firstOrNull { it.email == email }
 }
 
 private class FakeKeycloakAdminClient : KeycloakAdminClient {
