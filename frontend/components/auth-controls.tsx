@@ -18,7 +18,28 @@ export function AuthControls({ authenticated }: AuthControlsProps) {
 
   function handleLogout() {
     startTransition(() => {
-      void signOut({ callbackUrl: "/" });
+      void (async () => {
+        const response = await fetch("/api/auth/federated-logout", {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if (response.ok === false) {
+          await signOut({ callbackUrl: "/" });
+          return;
+        }
+
+        const { logoutUrl } = (await response.json()) as { logoutUrl?: string };
+
+        await signOut({ redirect: false });
+
+        if (logoutUrl) {
+          window.location.assign(logoutUrl);
+          return;
+        }
+
+        window.location.assign("/");
+      })();
     });
   }
 

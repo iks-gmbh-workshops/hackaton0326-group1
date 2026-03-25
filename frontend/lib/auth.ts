@@ -25,6 +25,8 @@ const internalBaseUrl =
 const issuer = process.env.KEYCLOAK_ISSUER ?? toIssuerUrl(publicBaseUrl);
 const clientId = process.env.KEYCLOAK_CLIENT_ID ?? "heuermannplus-frontend";
 const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET ?? "heuermannplus-frontend-secret";
+export const postLogoutRedirectUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+export const keycloakLogoutUrl = `${publicBaseUrl}/logout`;
 
 const keycloakProvider: OAuthConfig<KeycloakProfile> = {
   id: "keycloak",
@@ -68,10 +70,15 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = account.access_token;
       }
 
+      if (account?.id_token) {
+        token.idToken = account.id_token;
+      }
+
       return token;
     },
     async session({ session, token }) {
       session.accessToken = typeof token.accessToken === "string" ? token.accessToken : undefined;
+      session.idToken = typeof token.idToken === "string" ? token.idToken : undefined;
 
       if (session.user) {
         session.user.id = typeof token.sub === "string" ? token.sub : undefined;
