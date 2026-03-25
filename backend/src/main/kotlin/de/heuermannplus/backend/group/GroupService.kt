@@ -23,6 +23,7 @@ class GroupService(
     private val clock: Clock
 ) {
     private val emailRegex = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    private val inviteSuggestionLimit = 8
 
     @Transactional
     fun list(currentUser: CurrentUser): GroupListResponse {
@@ -237,6 +238,30 @@ class GroupService(
         }
 
         return getGroup(groupId, currentUser)
+    }
+
+    @Transactional(readOnly = true)
+    fun inviteSuggestions(groupId: Long, query: String?, currentUser: CurrentUser): List<GroupInviteSuggestionResponse> {
+        requireAdminMembership(groupId, currentUser.userId)
+        requireGroup(groupId)
+        val blockedUserIds = membershipStore.findByGroupId(groupId)
+            .asSequence()
+            .filter { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
+            .mapNotNull { it.userId }
+            .toSet()
+
+        return appUserStore.searchInviteSuggestions(query.orEmpty(), currentUser.userId, inviteSuggestionLimit * 2)
+            .asSequence()
+            .filterNot { it.keycloakUserId in blockedUserIds }
+            .take(inviteSuggestionLimit)
+            .map { user ->
+                GroupInviteSuggestionResponse(
+                    userId = user.keycloakUserId,
+                    nickname = user.nickname,
+                    email = user.email
+                )
+            }
+            .toList()
     }
 
     @Transactional

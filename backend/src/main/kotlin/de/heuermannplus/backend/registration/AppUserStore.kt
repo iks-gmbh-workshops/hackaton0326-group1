@@ -11,6 +11,8 @@ interface AppUserStore {
     fun findByNickname(nickname: String): AppUser?
 
     fun findByEmail(email: String): AppUser?
+
+    fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser>
 }
 
 @Component
@@ -38,6 +40,13 @@ class JpaAppUserStore(
 
     override fun findByEmail(email: String): AppUser? =
         repository.findByEmail(email)?.toDomain()
+
+    override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+        repository.searchInviteSuggestions(query.trim(), excludedUserId)
+            .asSequence()
+            .map { it.toDomain() }
+            .take(limit)
+            .toList()
 
     private fun AppUser.toEntity(createdAt: Instant, updatedAt: Instant): AppUserEntity =
         AppUserEntity(

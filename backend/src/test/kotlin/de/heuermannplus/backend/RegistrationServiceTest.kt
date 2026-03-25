@@ -558,6 +558,18 @@ private class InMemoryAppUserStore(
 
     override fun findByEmail(email: String): AppUser? =
         records.values.firstOrNull { it.email == email }
+
+    override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+        records.values
+            .asSequence()
+            .filterNot { it.keycloakUserId == excludedUserId }
+            .filter {
+                query.isBlank() ||
+                    it.nickname.contains(query, ignoreCase = true) ||
+                    it.email.contains(query, ignoreCase = true)
+            }
+            .take(limit)
+            .toList()
 }
 
 private class FakeKeycloakAdminClient : KeycloakAdminClient {

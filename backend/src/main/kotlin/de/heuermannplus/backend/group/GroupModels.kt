@@ -188,6 +188,12 @@ data class GroupTokenResponse(
     val usedAt: Instant?
 )
 
+data class GroupInviteSuggestionResponse(
+    val userId: String,
+    val nickname: String,
+    val email: String
+)
+
 data class GroupResponse(
     val id: Long,
     val name: String,

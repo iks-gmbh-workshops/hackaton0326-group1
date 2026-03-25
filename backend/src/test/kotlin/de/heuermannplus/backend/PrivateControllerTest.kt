@@ -137,4 +137,14 @@ private class FakeAppUserStore(
 
     override fun findByEmail(email: String): AppUser? =
         users.firstOrNull { it.email == email }
+
+    override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+        users.asList()
+            .filterNot { it.keycloakUserId == excludedUserId }
+            .filter {
+                query.isBlank() ||
+                    it.nickname.contains(query, ignoreCase = true) ||
+                    it.email.contains(query, ignoreCase = true)
+            }
+            .take(limit)
 }
