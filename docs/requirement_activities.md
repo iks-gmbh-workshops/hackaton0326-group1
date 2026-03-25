@@ -107,5 +107,3 @@ Das Mitglied erhält visuell einen Hinweis, in welchem Status jede Aktivität in
 # 17 - Als Gruppenverwalter möchte ich einzelne Mitglieder aus einer Aktivität entfernen können.
 
 # 18 - Als Gruppenverwalter möchte ich, dass ein Mitglied nur einmal zu einer Aktivität hinzugefügt werden kann, so dass das Mitglied nicht mehrfach zusagen muss.
-
-# 19 - 

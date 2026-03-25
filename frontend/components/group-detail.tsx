@@ -6,6 +6,13 @@ import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
 import {
+  activityStatusBadgeClass,
+  fetchGroupActivities,
+  formatActivityDateTime,
+  formatActivityStatus,
+  type ActivityListResponse
+} from "@/lib/activity";
+import {
   fetchGroupInviteSuggestions,
   formatDate,
   membershipLabel,
@@ -22,6 +29,7 @@ type GroupDetailProps = {
 
 export function GroupDetailView({ groupId }: GroupDetailProps) {
   const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [activities, setActivities] = useState<ActivityListResponse>({ activities: [] });
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [inviteTarget, setInviteTarget] = useState("");
@@ -55,6 +63,16 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
       setError(loadError instanceof Error ? loadError.message : "Gruppe konnte nicht geladen werden");
     });
   }, [loadGroup]);
+
+  useEffect(() => {
+    void fetchGroupActivities(groupId)
+      .then((response) => {
+        setActivities(response);
+      })
+      .catch(() => {
+        setActivities({ activities: [] });
+      });
+  }, [groupId]);
 
   useEffect(() => {
     if (!group?.currentUserAdmin || !inviteSuggestionsOpen) {
@@ -185,6 +203,17 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
             <p className="section-title">Gruppendetails</p>
             <h1 className="section-headline sm:text-[2.5rem]">{group.name}</h1>
             <p className="subheadline">Erstellt am {formatDate(group.createdAt)}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
+              Meine Aktivitaeten
+            </Link>
+            {group.currentUserAdmin ? (
+              <Link className="btn btn-primary" href={`/groups/${groupId}/activities/new` as Route}>
+                Aktivitaet erstellen
+              </Link>
+            ) : null}
           </div>
 
           <Field disabled={!group.currentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
@@ -341,6 +370,44 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
       ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="brand-card card">
+          <div className="card-body gap-4">
+            <div className="section-intro">
+              <p className="section-title">Aktivitaeten</p>
+              <h2 className="section-headline text-[2rem]">Anstehende Gruppentermine</h2>
+            </div>
+
+            <div className="space-y-4">
+              {activities.activities.map((activity) => (
+                <div key={activity.id} className="rounded-2xl border border-base-300 bg-white/88 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="subsection-title">{activity.description}</p>
+                      <p className="helper-text">{formatActivityDateTime(activity.scheduledAt)}</p>
+                      <p className="helper-text">{activity.location}</p>
+                    </div>
+                    <span className={`badge ${activityStatusBadgeClass(activity.currentUserResponseStatus)} badge-outline`}>
+                      {formatActivityStatus(activity.currentUserResponseStatus)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span className="badge badge-info badge-outline">{activity.participantCounts.open} offen</span>
+                    <span className="badge badge-success badge-outline">{activity.participantCounts.accepted} zugesagt</span>
+                    <span className="badge badge-error badge-outline">{activity.participantCounts.declined} abgesagt</span>
+                    <span className="badge badge-warning badge-outline">{activity.participantCounts.maybe} vielleicht</span>
+                  </div>
+
+                  <Link className="btn btn-sm btn-primary mt-3" href={`/groups/${groupId}/activities/${activity.id}` as Route}>
+                    Aktivitaet ansehen
+                  </Link>
+                </div>
+              ))}
+            </div>
+            {!activities.activities.length ? <p className="helper-text">Noch keine anstehenden Aktivitaeten.</p> : null}
+          </div>
+        </div>
+
         <div className="brand-card card">
           <div className="card-body gap-4">
             <div className="section-intro">
