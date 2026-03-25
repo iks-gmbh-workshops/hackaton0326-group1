@@ -15,6 +15,11 @@ export type RegistrationPolicy = {
     mockPassToken?: string | null;
     turnstileSiteKey?: string | null;
   };
+  terms: {
+    currentVersion: string;
+    contentSlug: string;
+    url: string;
+  };
 };
 
 export type RegistrationPayload = {
@@ -25,6 +30,7 @@ export type RegistrationPayload = {
   captchaToken: string;
   firstName?: string;
   lastName?: string;
+  acceptTerms: boolean;
 };
 
 export type RegistrationError = {

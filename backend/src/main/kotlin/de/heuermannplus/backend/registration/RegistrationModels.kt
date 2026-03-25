@@ -5,7 +5,8 @@ import java.time.Instant
 data class RegistrationPolicyResponse(
     val nickname: NicknamePolicyResponse,
     val password: PasswordPolicyResponse,
-    val captcha: CaptchaPolicyResponse
+    val captcha: CaptchaPolicyResponse,
+    val terms: TermsPolicyResponse
 )
 
 data class NicknamePolicyResponse(
@@ -27,6 +28,12 @@ data class CaptchaPolicyResponse(
     val turnstileSiteKey: String?
 )
 
+data class TermsPolicyResponse(
+    val currentVersion: String,
+    val contentSlug: String,
+    val url: String
+)
+
 data class RegistrationRequest(
     val nickname: String?,
     val password: String?,
@@ -34,7 +41,8 @@ data class RegistrationRequest(
     val email: String?,
     val captchaToken: String?,
     val firstName: String? = null,
-    val lastName: String? = null
+    val lastName: String? = null,
+    val acceptTerms: Boolean? = null
 )
 
 data class RegistrationAcceptedResponse(

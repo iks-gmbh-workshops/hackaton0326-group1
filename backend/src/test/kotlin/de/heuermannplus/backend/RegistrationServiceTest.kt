@@ -21,6 +21,11 @@ import de.heuermannplus.backend.registration.RegistrationVerification
 import de.heuermannplus.backend.registration.RegistrationVerificationStatus
 import de.heuermannplus.backend.registration.RegistrationVerificationStore
 import de.heuermannplus.backend.registration.RegistrationVerifyRequest
+import de.heuermannplus.backend.registration.TermsConsent
+import de.heuermannplus.backend.registration.TermsConsentStore
+import de.heuermannplus.backend.registration.TermsConsentType
+import de.heuermannplus.backend.registration.TermsVersion
+import de.heuermannplus.backend.registration.TermsVersionStore
 import de.heuermannplus.backend.registration.VerificationTokenService
 import java.time.Clock
 import java.time.Instant
@@ -47,7 +52,8 @@ class RegistrationServiceTest {
                 email = "drummer@example.org",
                 captchaToken = "test-pass",
                 firstName = "Max",
-                lastName = "Mustermann"
+                lastName = "Mustermann",
+                acceptTerms = true
             )
         )
 
@@ -63,6 +69,10 @@ class RegistrationServiceTest {
         assertEquals("registration-pending", pendingAppUser.keycloakRole)
         assertEquals("Max", pendingAppUser.firstName)
         assertEquals("Mustermann", pendingAppUser.lastName)
+        val consent = fixture.termsConsentStore.findByKeycloakUserId(pendingUser.id).single()
+        assertEquals(TermsConsentType.EXPLICIT_YES, consent.consentType)
+        assertEquals(fixture.termsVersionStore.findCurrent()?.id, consent.termsVersionId)
+        assertEquals(fixture.clock.currentInstant, consent.consentedAt)
 
         val token = fixture.mailService.lastToken()
         val verifyResponse = fixture.service.verify(RegistrationVerifyRequest(token = token))
@@ -82,6 +92,7 @@ class RegistrationServiceTest {
         assertTrue(activeAppUser.enabled)
         assertTrue(activeAppUser.emailVerified)
         assertNotNull(activeAppUser.verifiedAt)
+        assertEquals(1, fixture.termsConsentStore.findByKeycloakUserId(activatedUser.id).size)
     }
 
     @Test
@@ -95,7 +106,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum123!",
                     email = "drummer@example.org",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -114,7 +126,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum123!",
                     email = "sfsd",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -133,7 +146,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum123!",
                     email = "drummer@example.org",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -172,7 +186,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum123!",
                     email = "new@example.org",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -192,7 +207,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum124!",
                     email = "drummer@example.org",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -211,7 +227,8 @@ class RegistrationServiceTest {
                     password = "weak",
                     passwordRepeat = "weak",
                     email = "drummer@example.org",
-                    captchaToken = "test-pass"
+                    captchaToken = "test-pass",
+                    acceptTerms = true
                 )
             )
         }
@@ -230,7 +247,8 @@ class RegistrationServiceTest {
                     password = "Drum123!",
                     passwordRepeat = "Drum123!",
                     email = "drummer@example.org",
-                    captchaToken = "wrong"
+                    captchaToken = "wrong",
+                    acceptTerms = true
                 )
             )
         }
@@ -250,6 +268,27 @@ class RegistrationServiceTest {
     }
 
     @Test
+    fun `register rejects missing terms acceptance`() {
+        val fixture = registrationFixture()
+
+        val exception = assertFailsWith<RegistrationException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    acceptTerms = false
+                )
+            )
+        }
+
+        assertEquals("Bitte die Nutzungsbedingungen akzeptieren", exception.message)
+        assertEquals("acceptTerms", exception.field)
+    }
+
+    @Test
     fun `verify rejects expired token`() {
         val fixture = registrationFixture()
 
@@ -259,7 +298,8 @@ class RegistrationServiceTest {
                 password = "Drum123!",
                 passwordRepeat = "Drum123!",
                 email = "drummer@example.org",
-                captchaToken = "test-pass"
+                captchaToken = "test-pass",
+                acceptTerms = true
             )
         )
 
@@ -292,7 +332,8 @@ class RegistrationServiceTest {
                     email = "drummer@example.org",
                     captchaToken = "test-pass",
                     firstName = "Max",
-                    lastName = "Mustermann"
+                    lastName = "Mustermann",
+                    acceptTerms = true
                 )
             )
         }
@@ -303,9 +344,71 @@ class RegistrationServiceTest {
         assertEquals(AppUserStatus.DELETED, appUser.status)
         assertEquals("registration-pending", appUser.keycloakRole)
         assertNotNull(appUser.deletedAt)
+        assertTrue(fixture.termsConsentStore.findByKeycloakUserId("user-1").isEmpty())
     }
 
-    private fun registrationFixture(mailShouldFail: Boolean = false): RegistrationFixture {
+    @Test
+    fun `policy exposes current terms metadata`() {
+        val fixture = registrationFixture()
+
+        val policy = fixture.service.policy()
+
+        assertEquals("2026-03", policy.terms.currentVersion)
+        assertEquals("drumdibum-agb-2026-03", policy.terms.contentSlug)
+        assertEquals("/terms/drumdibum-agb-2026-03", policy.terms.url)
+    }
+
+    @Test
+    fun `register fails when no active terms version exists`() {
+        val fixture = registrationFixture(activeTermsVersions = emptyList())
+
+        val exception = assertFailsWith<IllegalStateException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    acceptTerms = true
+                )
+            )
+        }
+
+        assertEquals("Keine aktive AGB-Version konfiguriert", exception.message)
+    }
+
+    @Test
+    fun `register fails when multiple active terms versions exist`() {
+        val fixture = registrationFixture(
+            activeTermsVersions = listOf(
+                TermsVersion(id = 1, version = "2026-03", contentSlug = "drumdibum-agb-2026-03", isActive = true),
+                TermsVersion(id = 2, version = "2026-05", contentSlug = "drumdibum-agb-2026-05", isActive = true)
+            )
+        )
+
+        val exception = assertFailsWith<IllegalStateException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    acceptTerms = true
+                )
+            )
+        }
+
+        assertEquals("Mehrere aktive AGB-Versionen konfiguriert", exception.message)
+    }
+
+    private fun registrationFixture(
+        mailShouldFail: Boolean = false,
+        activeTermsVersions: List<TermsVersion> = listOf(
+            TermsVersion(id = 1, version = "2026-03", contentSlug = "drumdibum-agb-2026-03", isActive = true)
+        )
+    ): RegistrationFixture {
         val properties = RegistrationProperties(
             frontendBaseUrl = "http://localhost:3000",
             verificationTtl = java.time.Duration.ofHours(24),
@@ -320,6 +423,8 @@ class RegistrationServiceTest {
         val clock = MutableClock(Instant.parse("2026-03-24T12:00:00Z"))
         val keycloakClient = FakeKeycloakAdminClient()
         val appUserStore = InMemoryAppUserStore(clock)
+        val termsVersionStore = InMemoryTermsVersionStore(activeTermsVersions)
+        val termsConsentStore = InMemoryTermsConsentStore()
         val verificationStore = InMemoryRegistrationVerificationStore(clock)
         val mailService = FakeRegistrationMailService(shouldFail = mailShouldFail)
 
@@ -329,6 +434,8 @@ class RegistrationServiceTest {
             captchaVerifier = CaptchaVerifier { token -> token == "test-pass" },
             keycloakAdminClient = keycloakClient,
             appUserStore = appUserStore,
+            termsVersionStore = termsVersionStore,
+            termsConsentStore = termsConsentStore,
             verificationStore = verificationStore,
             verificationTokenService = VerificationTokenService(),
             registrationMailService = mailService,
@@ -339,6 +446,8 @@ class RegistrationServiceTest {
             service = service,
             keycloakClient = keycloakClient,
             appUserStore = appUserStore,
+            termsVersionStore = termsVersionStore,
+            termsConsentStore = termsConsentStore,
             mailService = mailService,
             clock = clock
         )
@@ -349,6 +458,8 @@ private data class RegistrationFixture(
     val service: RegistrationService,
     val keycloakClient: FakeKeycloakAdminClient,
     val appUserStore: InMemoryAppUserStore,
+    val termsVersionStore: InMemoryTermsVersionStore,
+    val termsConsentStore: InMemoryTermsConsentStore,
     val mailService: FakeRegistrationMailService,
     val clock: MutableClock
 )
@@ -397,6 +508,32 @@ private class InMemoryRegistrationVerificationStore(
 
     override fun findExpiredPending(now: Instant): List<RegistrationVerification> =
         records.values.filter { it.status == RegistrationVerificationStatus.PENDING && it.expiresAt.isBefore(now) }
+}
+
+private class InMemoryTermsVersionStore(
+    private val activeVersions: List<TermsVersion>
+) : TermsVersionStore {
+    override fun findCurrent(): TermsVersion? = activeVersions.singleOrNull()
+
+    override fun findActive(): List<TermsVersion> = activeVersions.toList()
+}
+
+private class InMemoryTermsConsentStore : TermsConsentStore {
+    private val records = mutableListOf<TermsConsent>()
+    private var sequence = 1L
+
+    override fun save(consent: TermsConsent): TermsConsent {
+        val persisted = consent.copy(id = consent.id ?: sequence++)
+        records += persisted
+        return persisted
+    }
+
+    override fun findByKeycloakUserId(keycloakUserId: String): List<TermsConsent> =
+        records.filter { it.keycloakUserId == keycloakUserId }.sortedBy { it.consentedAt }
+
+    override fun deleteByKeycloakUserId(keycloakUserId: String) {
+        records.removeAll { it.keycloakUserId == keycloakUserId }
+    }
 }
 
 private class InMemoryAppUserStore(
