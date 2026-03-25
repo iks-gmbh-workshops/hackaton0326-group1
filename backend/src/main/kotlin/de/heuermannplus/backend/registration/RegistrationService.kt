@@ -15,6 +15,8 @@ class RegistrationService(
     private val captchaVerifier: CaptchaVerifier,
     private val keycloakAdminClient: KeycloakAdminClient,
     private val appUserStore: AppUserStore,
+    private val termsVersionStore: TermsVersionStore,
+    private val termsConsentStore: TermsConsentStore,
     private val verificationStore: RegistrationVerificationStore,
     private val verificationTokenService: VerificationTokenService,
     private val registrationMailService: RegistrationMailService,
@@ -37,13 +39,21 @@ class RegistrationService(
                 turnstileSiteKey = registrationProperties.captcha.turnstileSiteKey.takeIf {
                     registrationProperties.captcha.mode == CaptchaMode.TURNSTILE
                 }
-            )
+            ),
+            terms = currentTermsVersion().let { termsVersion ->
+                TermsPolicyResponse(
+                    currentVersion = termsVersion.version,
+                    contentSlug = termsVersion.contentSlug,
+                    url = "/terms/${termsVersion.contentSlug}"
+                )
+            }
         )
 
     @Transactional
     fun register(request: RegistrationRequest): RegistrationAcceptedResponse {
         val now = Instant.now(clock)
         cleanupExpiredPendingRegistrations(now)
+        val currentTermsVersion = currentTermsVersion()
 
         val nickname = request.nickname.requireField("nickname", "Bitte Nickname eingeben")
         val password = request.password.requireField("password", "Bitte Passwort eingeben")
@@ -98,6 +108,15 @@ class RegistrationService(
             )
         }
 
+        if (request.acceptTerms != true) {
+            throw RegistrationException(
+                status = HttpStatus.BAD_REQUEST,
+                code = "TERMS_NOT_ACCEPTED",
+                message = "Bitte die Nutzungsbedingungen akzeptieren",
+                field = "acceptTerms"
+            )
+        }
+
         if (keycloakAdminClient.findUserByUsername(nickname) != null) {
             throw RegistrationException(
                 status = HttpStatus.CONFLICT,
@@ -144,6 +163,15 @@ class RegistrationService(
                     updatedAt = now
                 )
             )
+            termsConsentStore.save(
+                TermsConsent(
+                    keycloakUserId = keycloakUserId,
+                    termsVersionId = currentTermsVersion.id
+                        ?: throw IllegalStateException("Aktive AGB-Version hat keine ID"),
+                    consentType = TermsConsentType.EXPLICIT_YES,
+                    consentedAt = now
+                )
+            )
 
             val token = verificationTokenService.generateToken()
             val verification = verificationStore.save(
@@ -162,6 +190,7 @@ class RegistrationService(
             logger.info("Created pending registration {} for user {}", verification.id, nickname)
         } catch (exception: Exception) {
             keycloakAdminClient.deleteUser(keycloakUserId)
+            termsConsentStore.deleteByKeycloakUserId(keycloakUserId)
             runCatching {
                 markAppUserDeleted(keycloakUserId, now)
             }.onFailure { cleanupError ->
@@ -352,6 +381,16 @@ class RegistrationService(
 
     private fun String?.normalizeOptional(): String? =
         this?.trim()?.takeIf(StringUtils::hasText)
+
+    private fun currentTermsVersion(): TermsVersion {
+        val activeVersions = termsVersionStore.findActive()
+
+        return when (activeVersions.size) {
+            1 -> activeVersions.single()
+            0 -> throw IllegalStateException("Keine aktive AGB-Version konfiguriert")
+            else -> throw IllegalStateException("Mehrere aktive AGB-Versionen konfiguriert")
+        }
+    }
 
     companion object {
         private val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")

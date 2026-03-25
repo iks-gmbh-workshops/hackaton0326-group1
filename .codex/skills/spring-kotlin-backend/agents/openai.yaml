@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Kotlin Backend"
+  short_description: "Work with the repo's Spring Boot backend"
+  default_prompt: "Use $spring-kotlin-backend to implement or review backend changes in the HeuermannPlus Spring Boot and Kotlin codebase."

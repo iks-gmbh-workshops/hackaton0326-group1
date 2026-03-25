@@ -1,0 +1,4 @@
+interface:
+  display_name: "Keycloak Auth Debug"
+  short_description: "Trace auth and registration issues across frontend, backend, and Keycloak"
+  default_prompt: "Use $keycloak-auth-debug to debug or change HeuermannPlus login, registration, token, or Keycloak realm behavior."
