@@ -9,9 +9,11 @@ import de.heuermannplus.backend.registration.AppUserStore
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.web.server.ResponseStatusException
 
 class PrivateControllerTest {
 
@@ -79,8 +81,22 @@ class PrivateControllerTest {
         )
     }
 
+    @Test
+    fun `me returns unauthorized when jwt subject is missing`() {
+        val controller = PrivateController(
+            appUserStore = FakeAppUserStore()
+        )
+
+        val exception = assertFailsWith<ResponseStatusException> {
+            controller.me(authenticationToken(subject = null))
+        }
+
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
+        assertEquals("401 UNAUTHORIZED \"JWT enthaelt keinen Subject-Claim\"", exception.message)
+    }
+
     private fun authenticationToken(
-        subject: String,
+        subject: String?,
         email: String? = null,
         name: String? = null,
         preferredUsername: String? = null
@@ -92,11 +108,17 @@ class PrivateControllerTest {
         }
 
         return JwtAuthenticationToken(
-            Jwt.withTokenValue("token")
-                .header("alg", "none")
-                .subject(subject)
-                .claims { it.putAll(claims) }
-                .build()
+            Jwt(
+                "token",
+                Instant.parse("2026-03-24T12:00:00Z"),
+                Instant.parse("2026-03-24T13:00:00Z"),
+                mapOf("alg" to "none"),
+                buildMap {
+                    put("iss", "http://localhost:8081/realms/heuermannplus")
+                    subject?.let { value -> put("sub", value) }
+                    putAll(claims)
+                }
+            )
         )
     }
 }

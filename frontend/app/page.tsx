@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import type { Route } from "next";
 import Link from "next/link";
 import { AuthControls } from "@/components/auth-controls";
 import { ProtectedApiDemo } from "@/components/protected-api-demo";
@@ -18,7 +19,7 @@ const steps = [
   "Neue Nutzer registrieren sich ueber das Frontend und bestaetigen ihre E-Mail.",
   "Keycloak verwaltet die Identitaet und Rollen fuer verifizierte Nutzer.",
   "next-auth speichert die Session im Frontend.",
-  "Der Route-Handler `/api/me` fungiert als BFF zum Backend."
+  "Der Browser ruft das Backend direkt mit Bearer-Token auf."
 ];
 
 export default async function HomePage() {
@@ -36,7 +37,7 @@ export default async function HomePage() {
             </div>
 
             <div className="max-w-3xl space-y-4">
-              <p className="subheadline">Responsives Frontend fuer Authentifizierung, Registrierung und BFF-Zugriffe.</p>
+              <p className="subheadline">Responsives Frontend fuer Authentifizierung, Registrierung und direkte Backend-Zugriffe.</p>
               <h1 className="headline">
                 Multilayer-Web-App mit klarer Trennung zwischen UI, API und IAM.
               </h1>
@@ -49,10 +50,14 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-center gap-3">
               <AuthControls authenticated={authenticated} />
               {!authenticated ? (
-                <Link className="btn btn-outline btn-primary" href="/register">
+                <Link className="btn btn-outline btn-primary" href={"/register" as Route}>
                   Jetzt registrieren
                 </Link>
-              ) : null}
+              ) : (
+                <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
+                  Zu den Gruppen
+                </Link>
+              )}
               <a className="btn btn-ghost" href="#architecture">
                 Architektur ansehen
               </a>
@@ -73,7 +78,7 @@ export default async function HomePage() {
               </h2>
               <p className="subheadline">
                 {authenticated
-                  ? "Die Session liegt serverseitig vor und kann jetzt ueber den BFF sicher an das Backend weitergegeben werden."
+                  ? "Die Session ist aktiv und kann jetzt fuer direkte Browser-Calls mit Bearer-Token an das Backend genutzt werden."
                   : "Registriere dich oder starte den Login ueber Keycloak, um den geschuetzten Backend-Endpoint live aus dem Frontend aufzurufen."}
               </p>
             </div>
