@@ -67,7 +67,7 @@ class GroupService(
                         description = group.description,
                         createdAt = group.createdAt,
                         membershipStatus = null,
-                        isCurrentUserAdmin = false,
+                        currentUserAdmin = false,
                         memberCount = activeMemberCount(group.id)
                     )
                 }
@@ -140,7 +140,7 @@ class GroupService(
             updatedAt = group.updatedAt,
             currentMembershipId = currentMembership.id,
             currentMembershipStatus = currentMembership.status,
-            isCurrentUserAdmin = isAdmin,
+            currentUserAdmin = isAdmin,
             members = memberships.map { it.toResponse() },
             invitations = invitations.map { it.toResponse() },
             joinRequests = joinRequests.map { it.toResponse(group.name) },
@@ -594,7 +594,7 @@ class GroupService(
             description = description,
             createdAt = createdAt,
             membershipStatus = membership.status,
-            isCurrentUserAdmin = membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE,
+            currentUserAdmin = membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE,
             memberCount = memberCount
         )
 
@@ -605,7 +605,7 @@ class GroupService(
             displayName = displayName,
             inviteEmail = inviteEmail,
             status = status,
-            isAdmin = isAdmin,
+            admin = isAdmin,
             createdAt = createdAt,
             joinedAt = joinedAt
         )

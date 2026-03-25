@@ -87,8 +87,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         <Link className="btn btn-ghost" href={"/groups" as Route}>
           Zur Gruppenuebersicht
         </Link>
-        <span className={`badge ${group.isCurrentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
-          {group.isCurrentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
+        <span className={`badge ${group.currentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
+          {group.currentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
         </span>
       </div>
 
@@ -117,10 +117,10 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
             <p className="subheadline">Erstellt am {formatDate(group.createdAt)}</p>
           </div>
 
-          <Field disabled={!group.isCurrentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
-          <Field disabled={!group.isCurrentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
+          <Field disabled={!group.currentUserAdmin} label="Gruppenname" onChange={setName} value={name} />
+          <Field disabled={!group.currentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
 
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <button className="btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Speichere..." : "Aenderungen speichern"}
             </button>
@@ -164,7 +164,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               Gruppe verlassen
             </button>
           ) : null}
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <button
               className="btn btn-outline btn-error"
               disabled={isPending}
@@ -184,7 +184,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         </div>
       </section>
 
-      {group.isCurrentUserAdmin ? (
+      {group.currentUserAdmin ? (
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <form
             className="soft-panel space-y-4"
@@ -273,8 +273,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {member.isAdmin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
-                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && !member.isAdmin ? (
+                      {member.admin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
+                      {group.currentUserAdmin && member.status === "ACTIVE" && !member.admin ? (
                         <button
                           className="btn btn-xs btn-outline btn-primary"
                           disabled={isPending}
@@ -288,7 +288,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           Admin machen
                         </button>
                       ) : null}
-                      {group.isCurrentUserAdmin && member.status === "ACTIVE" && member.isAdmin ? (
+                      {group.currentUserAdmin && member.status === "ACTIVE" && member.admin ? (
                         <button
                           className="btn btn-xs btn-outline"
                           disabled={isPending}
@@ -302,7 +302,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                           Admin entziehen
                         </button>
                       ) : null}
-                      {group.isCurrentUserAdmin ? (
+                      {group.currentUserAdmin ? (
                         <button
                           className="btn btn-xs btn-outline btn-error"
                           disabled={isPending}
@@ -325,7 +325,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         </div>
 
         <div className="space-y-6">
-          {group.isCurrentUserAdmin ? (
+          {group.currentUserAdmin ? (
             <section className="soft-panel space-y-4">
               <div className="section-intro">
                 <p className="section-title">Antraege</p>

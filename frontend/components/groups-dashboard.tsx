@@ -227,7 +227,7 @@ export function GroupsDashboard() {
                       <p className="subsection-title">{group.name}</p>
                       <p className="helper-text">{membershipLabel(group.membershipStatus)}</p>
                     </div>
-                    {group.isCurrentUserAdmin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
+                    {group.currentUserAdmin ? <span className="badge badge-primary badge-outline">Admin</span> : null}
                   </div>
                   <p className="body-copy text-sm">{group.description || "Keine Beschreibung hinterlegt."}</p>
                   <p className="helper-text">{group.memberCount} aktive Mitglieder</p>

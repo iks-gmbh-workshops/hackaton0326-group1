@@ -15,7 +15,7 @@ export type GroupSummary = {
   description?: string | null;
   createdAt: string;
   membershipStatus?: GroupMembershipStatus | null;
-  isCurrentUserAdmin: boolean;
+  currentUserAdmin: boolean;
   memberCount: number;
 };
 
@@ -47,7 +47,7 @@ export type GroupMember = {
   displayName: string;
   inviteEmail?: string | null;
   status: GroupMembershipStatus;
-  isAdmin: boolean;
+  admin: boolean;
   createdAt: string;
   joinedAt?: string | null;
 };
@@ -79,7 +79,7 @@ export type GroupDetail = {
   updatedAt: string;
   currentMembershipId?: number | null;
   currentMembershipStatus?: GroupMembershipStatus | null;
-  isCurrentUserAdmin: boolean;
+  currentUserAdmin: boolean;
   members: GroupMember[];
   invitations: GroupInvitation[];
   joinRequests: GroupJoinRequest[];
