@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+body {
+    font-family: "Segoe UI", sans-serif;
+}
+
+.kcHeader {
+    @apply text-3xl font-bold ml-8;
+}
+
+.kcButtonClass {
+    border-radius: 100px;
+    background-color: #005578 !important;
+}
+
+.kcLoginClass {
+    background: white;
+    height: 100vh;
+}
+
+a{
+    color: #005578 !important;
+}
+
+.kcFormCardClass{
+    @apply border-2 rounded-lg shadow-sm p-6;
+    border-color: #005578 !important;
+}
+
+.kcInputClass{
+    background-color: #EAF4FC7F;
+}
+
+.kcFormPasswordVisibilityButtonClass{
+    background: rgba(234, 244, 252, 0.5) !important;
+    border-color: #005578 !important;
+}
+
+.kcLabelClass{
+    color: #005578 !important;
+}
+
+.kcFormHeaderClass{
+    color: #005578 !important;
+}
+
+.kc-form-options{
+    color: #005578 !important;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.mt-05 {
+    margin-top: 0.5em;
+}
+
+/* === Header === */
+.chat-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    z-index: 10; /* baseline */
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Layout container */
+.chat-header__inner {
+    display: flex;
+    flex-direction: column; /* 📱 mobile-first: stack brand + actions */
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 90%;
+    max-width: 1120px;
+    margin: 0;
+    padding: 12px 20px;
+}
+
+/* --- Brand (logo + tagline) --- */
+
+
+.brand__logo {
+    display: block;
+    width: auto;
+    height: 50px; /* base size for mobile */
+    max-height: 50px;
+    margin-right: auto;
+}
+
+.brand__tagline {
+    margin: 0;
+    color: #005477;
+    line-height: 1.25;
+    font-size: 0.9rem;
+}
+
+/* --- Actions (icon buttons) --- */
+.actions {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start; /* aligns with left edge of brand */
+}
+
+.icon-btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    color: #005477;
+    font: 2rem/2.4rem 'Roboto', sans-serif;
+    font-size: 1rem;
+    font-weight: 100;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 158, 227, 0.08);
+}
+
+.icon-btn img,
+.icon-btn svg {
+    width: 32px;
+    height: 32px;
+}
+
+@media (max-width: 767px) {
+    .chat-header__inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+    }
+    .actions {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-self: center;
+        width: 100%;
+    }
+}
+
+/* --- Tablet ≥768px --- */
+@media (min-width: 768px) {
+    .brand {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .chat-header__inner {
+        flex-direction: row; /* brand left, actions right */
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 16px 0;
+    }
+
+    .brand__logo {
+        height: 120px;
+    }
+
+    .brand__tagline {
+        font-size: 1rem;
+    }
+
+    .actions {
+        align-items: flex-end; /* buttons line up with bottom of logo */
+        gap: 10%;
+    }
+
+    .icon-btn {
+        height: 48px;
+    }
+
+
+}
+
+/* --- Desktop ≥1024px --- */
+@media (min-width: 1024px) {
+    .chat-header__inner {
+        padding: 20px 0;
+    }
+
+    .brand__logo {
+        height: 133px; /* full size logo */
+    }
+
+    .brand__tagline {
+        font-size: 1.1rem;
+        margin-left: 20px;
+    }
+}
+
+/* --- Large desktop ≥1280px --- */
+@media (min-width: 1280px) {
+    .chat-header__inner {
+        max-width: 1200px;
+        gap: 32px;
+    }
+
+    .brand__tagline {
+        font-size: 1.2rem;
+    }
+}
+

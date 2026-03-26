@@ -1,5 +1,7 @@
 package de.heuermannplus.backend.group
 
+import de.heuermannplus.backend.activity.Activity
+import de.heuermannplus.backend.activity.ActivityStore
 import de.heuermannplus.backend.registration.AppUserStore
 import de.heuermannplus.backend.registration.VerificationTokenService
 import java.time.Clock
@@ -8,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.StringUtils
+import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 class GroupService(
@@ -16,6 +19,7 @@ class GroupService(
     private val invitationStore: GroupInvitationStore,
     private val tokenStore: GroupInvitationTokenStore,
     private val joinRequestStore: GroupJoinRequestStore,
+    private val activityStore: ActivityStore,
     private val appUserStore: AppUserStore,
     private val groupMailService: GroupMailService,
     private val tokenService: VerificationTokenService,
@@ -120,7 +124,7 @@ class GroupService(
         val group = requireGroup(groupId)
         val currentMembership = membershipStore.findByGroupIdAndUserId(groupId, currentUser.userId)
             ?.takeIf { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
-            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_MEMBER", "Gruppendetails können nur für Mitglieder angezeigt werden")
+            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_MEMBER", "Gruppendetails koennen nur fuer Mitglieder angezeigt werden")
         val memberships = membershipStore.findByGroupId(groupId)
             .filter { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
             .sortedWith(compareByDescending<GroupMembership> { it.isAdmin }.thenBy { it.displayName.lowercase() })
@@ -216,11 +220,26 @@ class GroupService(
             )
         )
 
+        val personalToken = appUser
+            ?.takeIf { it.email.isNotBlank() }
+            ?.let {
+                val tokenValue = tokenService.generateToken()
+                tokenStore.save(
+                    GroupInvitationToken(
+                        groupId = groupId,
+                        createdByUserId = currentUser.userId,
+                        tokenHash = tokenService.hash(tokenValue),
+                        createdAt = now,
+                        expiresAt = now.plus(groupProperties.invitationTtl)
+                    )
+                ) to tokenValue
+            }
+
         invitationStore.save(
             GroupInvitation(
                 groupId = groupId,
                 membershipId = membership.id,
-                tokenId = null,
+                tokenId = personalToken?.first?.id,
                 invitedByUserId = currentUser.userId,
                 channel = if (byEmail) GroupInvitationChannel.EMAIL else GroupInvitationChannel.NICKNAME,
                 mailType = if (appUser != null) GroupInvitationMailType.KNOWN_USER else GroupInvitationMailType.UNKNOWN_EMAIL,
@@ -232,7 +251,18 @@ class GroupService(
         )
 
         if (appUser != null && appUser.email.isNotBlank()) {
-            groupMailService.sendKnownUserInvitation(appUser.email, appUser.nickname, group.name, currentUser.nickname)
+            groupMailService.sendKnownUserInvitation(
+                GroupKnownUserInvitationMail(
+                    email = appUser.email,
+                    inviteeName = appUser.nickname,
+                    groupName = group.name,
+                    groupDescription = group.description,
+                    inviterName = currentUser.nickname,
+                    acceptUrl = buildInvitationActionUrl(personalToken!!.second, GroupInvitationDecision.ACCEPT),
+                    declineUrl = buildInvitationActionUrl(personalToken.second, GroupInvitationDecision.DECLINE),
+                    nextActivity = findNextActivity(groupId, now)?.toMailResponse()
+                )
+            )
         } else if (byEmail) {
             groupMailService.sendUnknownEmailInvitation(target.trim(), group.name, currentUser.nickname)
         }
@@ -272,15 +302,52 @@ class GroupService(
         }
 
         val now = Instant.now(clock)
-        membershipStore.save(
-            membership.copy(
-                status = GroupMembershipStatus.ACTIVE,
-                updatedAt = now,
-                joinedAt = now
-            )
-        )
+        acceptMembershipInvitation(membership, now)
 
         return getGroup(groupId, currentUser)
+    }
+
+    @Transactional
+    fun respondToInvitation(request: RespondToGroupInvitationRequest): GroupInvitationResultResponse {
+        val tokenValue = request.token.normalizeOptional()
+            ?: return invalidInvitationResult()
+        val decision = request.decision ?: return invalidInvitationResult()
+        val now = Instant.now(clock)
+        val invitationToken = tokenStore.findByTokenHash(tokenService.hash(tokenValue))
+            ?: return invalidInvitationResult()
+        val invitation = resolvePersonalInvitation(invitationToken) ?: return invalidInvitationResult()
+        val group = groupStore.findActiveById(invitation.groupId) ?: return invalidInvitationResult()
+        val membershipId = invitation.membershipId ?: return invalidInvitationResult()
+        val membership = membershipStore.findById(membershipId) ?: return invalidInvitationResult()
+        val inviterName = resolveInviterName(invitation.invitedByUserId)
+        val nextActivity = findNextActivity(group.id!!, now)
+
+        if (membership.status == GroupMembershipStatus.ACTIVE) {
+            ensureInvitationMarkedResolved(invitation, invitationToken, membership, now)
+            return buildInvitationResult(GroupInvitationResponseStatus.ALREADY_ACCEPTED, group, inviterName, nextActivity)
+        }
+        if (membership.status == GroupMembershipStatus.DECLINED) {
+            ensureInvitationMarkedResolved(invitation, invitationToken, membership, now)
+            return buildInvitationResult(GroupInvitationResponseStatus.ALREADY_DECLINED, group, inviterName, nextActivity)
+        }
+        if (membership.status != GroupMembershipStatus.INVITED) {
+            return invalidInvitationResult()
+        }
+        if (invitationToken.expiresAt.isBefore(now)) {
+            return buildInvitationResult(GroupInvitationResponseStatus.EXPIRED, group, inviterName, nextActivity)
+        }
+
+        return when (decision) {
+            GroupInvitationDecision.ACCEPT -> {
+                acceptMembershipInvitation(membership, now)
+                buildInvitationResult(GroupInvitationResponseStatus.ACCEPTED, group, inviterName, nextActivity)
+            }
+
+            GroupInvitationDecision.DECLINE -> {
+                declineMembershipInvitation(membership, now)
+                buildInvitationResult(GroupInvitationResponseStatus.DECLINED, group, inviterName, nextActivity)
+            }
+        }
     }
 
     @Transactional
@@ -435,10 +502,14 @@ class GroupService(
         val token = request.token.requireField("token", "Bitte Gruppeneinladungstoken eingeben")
         val now = Instant.now(clock)
         val invitationToken = tokenStore.findByTokenHash(tokenService.hash(token))
-            ?: throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungültig", "token")
+            ?: throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungueltig", "token")
+        val tokenInvitations = invitationStore.findByTokenId(invitationToken.id!!)
+        if (tokenInvitations.none { it.mailType == GroupInvitationMailType.TOKEN && it.membershipId == null }) {
+            throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungueltig", "token")
+        }
 
         if (invitationToken.usedAt != null) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungültig", "token")
+            throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungueltig", "token")
         }
         if (invitationToken.expiresAt.isBefore(now)) {
             throw GroupException(HttpStatus.BAD_REQUEST, "TOKEN_EXPIRED", "Gruppeneinladungstoken ist abgelaufen", "token")
@@ -510,7 +581,7 @@ class GroupService(
         requireAdminMembership(groupId, currentUser.userId)
         val membership = requireMembership(groupId, membershipId)
         if (membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte können nur aktiven Mitgliedern gegeben werden")
+            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte koennen nur aktiven Mitgliedern gegeben werden")
         }
         membershipStore.save(membership.copy(isAdmin = true, updatedAt = Instant.now(clock)))
         return getGroup(groupId, currentUser)
@@ -521,7 +592,7 @@ class GroupService(
         requireAdminMembership(groupId, currentUser.userId)
         val membership = requireMembership(groupId, membershipId)
         if (membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte können nur aktiven Mitgliedern entzogen werden")
+            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte koennen nur aktiven Mitgliedern entzogen werden")
         }
         if (membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE && activeAdminCount(groupId) <= 1) {
             throw GroupException(HttpStatus.BAD_REQUEST, "LAST_ADMIN_REQUIRED", "Mindestens ein Gruppenverwalter muss erhalten bleiben")
@@ -554,9 +625,9 @@ class GroupService(
 
     private fun requireAdminMembership(groupId: Long, userId: String): GroupMembership {
         val membership = membershipStore.findByGroupIdAndUserId(groupId, userId)
-            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur für Gruppenverwalter erlaubt")
+            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur fuer Gruppenverwalter erlaubt")
         if (!membership.isAdmin || membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur für Gruppenverwalter erlaubt")
+            throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur fuer Gruppenverwalter erlaubt")
         }
         return membership
     }
@@ -592,6 +663,118 @@ class GroupService(
                 }
             }
     }
+
+    private fun acceptMembershipInvitation(membership: GroupMembership, now: Instant) {
+        membershipStore.save(
+            membership.copy(
+                status = GroupMembershipStatus.ACTIVE,
+                updatedAt = now,
+                joinedAt = membership.joinedAt ?: now
+            )
+        )
+        markInvitationArtifactsResolved(membership, now)
+    }
+
+    private fun declineMembershipInvitation(membership: GroupMembership, now: Instant) {
+        membershipStore.save(
+            membership.copy(
+                status = GroupMembershipStatus.DECLINED,
+                updatedAt = now
+            )
+        )
+        markInvitationArtifactsResolved(membership, now)
+    }
+
+    private fun markInvitationArtifactsResolved(membership: GroupMembership, now: Instant) {
+        invitationStore.findByMembershipId(membership.id!!).forEach { invitation ->
+            if (invitation.claimedAt == null || invitation.claimedByUserId == null) {
+                invitationStore.save(
+                    invitation.copy(
+                        claimedAt = invitation.claimedAt ?: now,
+                        claimedByUserId = invitation.claimedByUserId ?: membership.userId
+                    )
+                )
+            }
+            val tokenId = invitation.tokenId ?: return@forEach
+            val token = tokenStore.findById(tokenId) ?: return@forEach
+            if (token.usedAt == null || token.usedByUserId == null) {
+                tokenStore.save(
+                    token.copy(
+                        usedAt = token.usedAt ?: now,
+                        usedByUserId = token.usedByUserId ?: membership.userId
+                    )
+                )
+            }
+        }
+    }
+
+    private fun ensureInvitationMarkedResolved(
+        invitation: GroupInvitation,
+        invitationToken: GroupInvitationToken,
+        membership: GroupMembership,
+        now: Instant
+    ) {
+        if (invitation.claimedAt == null || invitation.claimedByUserId == null) {
+            invitationStore.save(
+                invitation.copy(
+                    claimedAt = invitation.claimedAt ?: now,
+                    claimedByUserId = invitation.claimedByUserId ?: membership.userId
+                )
+            )
+        }
+        if (invitationToken.usedAt == null || invitationToken.usedByUserId == null) {
+            tokenStore.save(
+                invitationToken.copy(
+                    usedAt = invitationToken.usedAt ?: now,
+                    usedByUserId = invitationToken.usedByUserId ?: membership.userId
+                )
+            )
+        }
+    }
+
+    private fun resolvePersonalInvitation(token: GroupInvitationToken): GroupInvitation? =
+        invitationStore.findByTokenId(token.id!!)
+            .firstOrNull { it.mailType == GroupInvitationMailType.KNOWN_USER && it.membershipId != null }
+
+    private fun resolveInviterName(userId: String): String =
+        appUserStore.findById(userId)?.nickname ?: "Ein Mitglied"
+
+    private fun findNextActivity(groupId: Long, now: Instant): Activity? =
+        activityStore.findAllActiveByGroupId(groupId).firstOrNull { !it.scheduledAt.isBefore(now) }
+
+    private fun buildInvitationActionUrl(token: String, decision: GroupInvitationDecision): String =
+        UriComponentsBuilder.fromUriString(groupProperties.frontendBaseUrl.trimEnd('/'))
+            .path("/group-invitations/respond")
+            .queryParam("token", token)
+            .queryParam("decision", decision.name.lowercase())
+            .build(true)
+            .toUriString()
+
+    private fun buildInvitationResult(
+        status: GroupInvitationResponseStatus,
+        group: Group,
+        inviterName: String,
+        nextActivity: Activity?
+    ): GroupInvitationResultResponse =
+        GroupInvitationResultResponse(
+            status = status,
+            groupId = group.id,
+            groupName = group.name,
+            groupDescription = group.description,
+            inviterName = inviterName,
+            nextActivity = nextActivity?.toInvitationResultResponse(),
+            loginTargetPath = if (status == GroupInvitationResponseStatus.ACCEPTED || status == GroupInvitationResponseStatus.ALREADY_ACCEPTED) {
+                "/groups/${group.id}"
+            } else {
+                "/"
+            }
+        )
+
+    private fun invalidInvitationResult(): GroupInvitationResultResponse =
+        GroupInvitationResultResponse(
+            status = GroupInvitationResponseStatus.INVALID,
+            loginTargetPath = "/"
+        )
 
     private fun ensureNoOpenRelation(groupId: Long, userId: String?, normalizedEmail: String?) {
         if (userId != null) {
@@ -668,6 +851,20 @@ class GroupService(
             reviewComment = reviewComment,
             createdAt = createdAt,
             reviewedAt = reviewedAt
+        )
+
+    private fun Activity.toMailResponse(): GroupInvitationMailNextActivity =
+        GroupInvitationMailNextActivity(
+            description = description,
+            location = location,
+            scheduledAt = scheduledAt
+        )
+
+    private fun Activity.toInvitationResultResponse(): GroupInvitationResultNextActivityResponse =
+        GroupInvitationResultNextActivityResponse(
+            description = description,
+            location = location,
+            scheduledAt = scheduledAt
         )
 
     private fun String?.requireField(field: String, message: String): String {

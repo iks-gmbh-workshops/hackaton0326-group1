@@ -36,10 +36,51 @@ jobs:
       - name: Run backend tests
         run: ./gradlew test
 
+      - name: Summarize backend coverage
+        if: always()
+        run: |
+          report="build/reports/jacoco/test/jacocoTestReport.xml"
+          if [ ! -f "$report" ]; then
+            echo "Coverage report not found at $report" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          line_counter=$(grep '<counter type="LINE"' "$report" | tail -n 1)
+          missed=$(echo "$line_counter" | sed -E 's/.*missed="([0-9]+)".*/\1/')
+          covered=$(echo "$line_counter" | sed -E 's/.*covered="([0-9]+)".*/\1/')
+          total=$((missed + covered))
+
+          if [ "$total" -eq 0 ]; then
+            echo "No executable lines found for coverage reporting." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          percentage=$(awk -v covered="$covered" -v total="$total" 'BEGIN { printf "%.2f", (covered / total) * 100 }')
+
+          {
+            echo "## Backend Coverage"
+            echo
+            echo "| Metric | Value |"
+            echo "| --- | ---: |"
+            echo "| Line coverage | ${percentage}% |"
+            echo "| Covered lines | ${covered} |"
+            echo "| Missed lines | ${missed} |"
+            echo
+            echo "HTML report: artifact \`backend-coverage-report\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload backend test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-report
           path: backend/build/reports/tests/test/
+          if-no-files-found: warn
+
+      - name: Upload backend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/build/reports/jacoco/test/
           if-no-files-found: warn

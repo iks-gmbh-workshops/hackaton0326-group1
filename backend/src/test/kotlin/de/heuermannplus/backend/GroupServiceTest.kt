@@ -1,13 +1,17 @@
 package de.heuermannplus.backend
 
+import de.heuermannplus.backend.activity.Activity
 import de.heuermannplus.backend.group.CreateGroupRequest
 import de.heuermannplus.backend.group.CreateMembershipRequest
 import de.heuermannplus.backend.group.CurrentUser
 import de.heuermannplus.backend.group.Group
 import de.heuermannplus.backend.group.GroupException
 import de.heuermannplus.backend.group.GroupInvitation
+import de.heuermannplus.backend.group.GroupInvitationDecision
+import de.heuermannplus.backend.group.GroupInvitationResponseStatus
 import de.heuermannplus.backend.group.GroupInvitationChannel
 import de.heuermannplus.backend.group.GroupInvitationMailType
+import de.heuermannplus.backend.group.GroupKnownUserInvitationMail
 import de.heuermannplus.backend.group.GroupInvitationStore
 import de.heuermannplus.backend.group.GroupInvitationSummaryResponse
 import de.heuermannplus.backend.group.GroupInvitationToken
@@ -25,6 +29,7 @@ import de.heuermannplus.backend.group.GroupStore
 import de.heuermannplus.backend.group.InviteGroupMemberRequest
 import de.heuermannplus.backend.group.JoinGroupByTokenRequest
 import de.heuermannplus.backend.group.MembershipDecisionRequest
+import de.heuermannplus.backend.group.RespondToGroupInvitationRequest
 import de.heuermannplus.backend.registration.AppUser
 import de.heuermannplus.backend.registration.AppUserStatus
 import de.heuermannplus.backend.registration.AppUserStore
@@ -71,6 +76,11 @@ class GroupServiceTest {
         assertNotNull(invitedMember)
         assertEquals(GroupMembershipStatus.INVITED, invitedMember.status)
         assertEquals(1, fixture.mailService.knownInvites.size)
+        val invite = fixture.mailService.knownInvites.single()
+        assertEquals("alice@example.org", invite.email)
+        assertTrue(invite.acceptUrl.contains("/group-invitations/respond?"))
+        assertTrue(invite.acceptUrl.contains("decision=accept"))
+        assertTrue(invite.declineUrl.contains("decision=decline"))
     }
 
     @Test
@@ -150,6 +160,157 @@ class GroupServiceTest {
 
         assertEquals(GroupMembershipStatus.ACTIVE, response.currentMembershipStatus)
         assertTrue(response.members.any { it.displayName == "bob" && it.status == GroupMembershipStatus.ACTIVE })
+    }
+
+    @Test
+    fun `known user invitation mail contains next activity and group description`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(
+            CreateGroupRequest(name = "Band 1", description = "Probegruppe"),
+            fixture.owner
+        ).id
+        fixture.activityStore.save(
+            Activity(
+                groupId = groupId,
+                description = "Naechste Probe",
+                details = null,
+                location = "Studio",
+                scheduledAt = Instant.parse("2026-03-26T18:30:00Z"),
+                createdByUserId = fixture.owner.userId,
+                createdAt = Instant.parse("2026-03-25T08:00:00Z"),
+                updatedAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+
+        val invite = fixture.mailService.knownInvites.single()
+        assertEquals("Probegruppe", invite.groupDescription)
+        assertEquals("Naechste Probe", invite.nextActivity?.description)
+    }
+
+    @Test
+    fun `known user invitation can be accepted via public token response`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+
+        val token = fixture.mailService.knownInvites.single().acceptUrl.substringAfter("token=").substringBefore("&")
+        val response = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.ACCEPTED, response.status)
+        assertEquals("/groups/$groupId", response.loginTargetPath)
+        val savedToken = fixture.tokenStore.findByGroupId(groupId).single()
+        assertNotNull(savedToken.usedAt)
+        assertEquals("known-1", savedToken.usedByUserId)
+        val detail = fixture.service.getGroup(groupId, CurrentUser("known-1", "alice", "alice@example.org"))
+        assertEquals(GroupMembershipStatus.ACTIVE, detail.currentMembershipStatus)
+    }
+
+    @Test
+    fun `known user invitation can be declined via public token response`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+
+        val token = fixture.mailService.knownInvites.single().declineUrl.substringAfter("token=").substringBefore("&")
+        val response = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.DECLINE)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.DECLINED, response.status)
+        assertEquals("/", response.loginTargetPath)
+        val savedToken = fixture.tokenStore.findByGroupId(groupId).single()
+        assertNotNull(savedToken.usedAt)
+        assertEquals("known-1", savedToken.usedByUserId)
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.getGroup(groupId, CurrentUser("known-1", "alice", "alice@example.org"))
+        }
+        assertEquals("FORBIDDEN_GROUP_MEMBER", exception.code)
+    }
+
+    @Test
+    fun `repeated accepted invitation link reports already accepted`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+
+        val token = fixture.mailService.knownInvites.single().acceptUrl.substringAfter("token=").substringBefore("&")
+        fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        val repeated = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.ALREADY_ACCEPTED, repeated.status)
+        assertEquals("/groups/$groupId", repeated.loginTargetPath)
+    }
+
+    @Test
+    fun `repeated declined invitation link reports already declined`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+
+        val token = fixture.mailService.knownInvites.single().declineUrl.substringAfter("token=").substringBefore("&")
+        fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.DECLINE)
+        )
+
+        val repeated = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.DECLINE)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.ALREADY_DECLINED, repeated.status)
+        assertEquals("/", repeated.loginTargetPath)
+    }
+
+    @Test
+    fun `expired invitation token returns expired status`() {
+        val fixture = groupFixture(
+            now = Instant.parse("2026-03-25T08:00:00Z")
+        )
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "alice"), fixture.owner)
+        val savedToken = fixture.tokenStore.findByGroupId(groupId).single()
+        fixture.tokenStore.save(savedToken.copy(expiresAt = Instant.parse("2026-03-24T08:00:00Z")))
+
+        val token = fixture.mailService.knownInvites.single().acceptUrl.substringAfter("token=").substringBefore("&")
+        val response = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token, decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.EXPIRED, response.status)
+    }
+
+    @Test
+    fun `unknown email invitation stays outside public response flow`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "someone@example.org"), fixture.owner)
+
+        val response = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = "missing", decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.INVALID, response.status)
+    }
+
+    @Test
+    fun `generic join token is invalid for public invitation flow`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+
+        val response = fixture.service.respondToInvitation(
+            RespondToGroupInvitationRequest(token = token.token, decision = GroupInvitationDecision.ACCEPT)
+        )
+
+        assertEquals(GroupInvitationResponseStatus.INVALID, response.status)
     }
 
     @Test
@@ -236,8 +397,8 @@ class GroupServiceTest {
         assertEquals("LAST_ADMIN_REQUIRED", revokeException.code)
     }
 
-    private fun groupFixture(): GroupFixture {
-        val clock = Clock.fixed(Instant.parse("2026-03-25T08:00:00Z"), ZoneId.of("UTC"))
+    private fun groupFixture(now: Instant = Instant.parse("2026-03-25T08:00:00Z")): GroupFixture {
+        val clock = Clock.fixed(now, ZoneId.of("UTC"))
         val appUserStore = GroupTestAppUserStore(
             listOf(
                 appUser("owner-1", "owner", "owner@example.org"),
@@ -247,12 +408,15 @@ class GroupServiceTest {
             )
         )
         val mailService = FakeGroupMailService()
+        val activityStore = InMemoryActivityStore()
+        val tokenStore = InMemoryGroupTokenStore()
         val service = GroupService(
             groupStore = InMemoryGroupStore(),
             membershipStore = InMemoryGroupMembershipStore(),
             invitationStore = InMemoryGroupInvitationStore(),
-            tokenStore = InMemoryGroupTokenStore(),
+            tokenStore = tokenStore,
             joinRequestStore = InMemoryGroupJoinRequestStore(),
+            activityStore = activityStore,
             appUserStore = appUserStore,
             groupMailService = mailService,
             tokenService = VerificationTokenService(),
@@ -265,7 +429,9 @@ class GroupServiceTest {
             owner = CurrentUser("owner-1", "owner", "owner@example.org"),
             member = CurrentUser("member-1", "bob", "bob@example.org"),
             guest = CurrentUser("guest-1", "guest", "guest@example.org"),
-            mailService = mailService
+            mailService = mailService,
+            activityStore = activityStore,
+            tokenStore = tokenStore
         )
     }
 
@@ -288,15 +454,17 @@ private data class GroupFixture(
     val owner: CurrentUser,
     val member: CurrentUser,
     val guest: CurrentUser,
-    val mailService: FakeGroupMailService
+    val mailService: FakeGroupMailService,
+    val activityStore: InMemoryActivityStore,
+    val tokenStore: InMemoryGroupTokenStore
 )
 
 private class FakeGroupMailService : GroupMailService {
-    val knownInvites = mutableListOf<String>()
+    val knownInvites = mutableListOf<GroupKnownUserInvitationMail>()
     val unknownInvites = mutableListOf<String>()
 
-    override fun sendKnownUserInvitation(email: String, inviteeName: String, groupName: String, inviterName: String) {
-        knownInvites += "$email:$groupName"
+    override fun sendKnownUserInvitation(invitation: GroupKnownUserInvitationMail) {
+        knownInvites += invitation
     }
 
     override fun sendUnknownEmailInvitation(email: String, groupName: String, inviterName: String) {
@@ -304,7 +472,7 @@ private class FakeGroupMailService : GroupMailService {
     }
 }
 
-private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
+internal class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
     private val records = users.associateBy { it.keycloakUserId }.toMutableMap()
 
     override fun save(user: AppUser): AppUser {
@@ -338,7 +506,7 @@ private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
             .toList()
 }
 
-private class InMemoryGroupStore : GroupStore {
+internal class InMemoryGroupStore : GroupStore {
     private val records = linkedMapOf<Long, Group>()
     private var nextId = 1L
 
@@ -357,7 +525,7 @@ private class InMemoryGroupStore : GroupStore {
     override fun findAllActive(): List<Group> = records.values.filter { it.deletedAt == null }.sortedBy { it.name }
 }
 
-private class InMemoryGroupMembershipStore : GroupMembershipStore {
+internal class InMemoryGroupMembershipStore : GroupMembershipStore {
     private val records = linkedMapOf<Long, GroupMembership>()
     private var nextId = 1L
 
@@ -373,7 +541,7 @@ private class InMemoryGroupMembershipStore : GroupMembershipStore {
     override fun findByGroupId(groupId: Long): List<GroupMembership> = records.values.filter { it.groupId == groupId }
 
     override fun findByGroupIdAndUserId(groupId: Long, userId: String): GroupMembership? =
-        records.values.firstOrNull { it.groupId == groupId && it.userId == userId }
+        records.values.lastOrNull { it.groupId == groupId && it.userId == userId }
 
     override fun findByUserIdAndStatuses(userId: String, statuses: Set<GroupMembershipStatus>): List<GroupMembership> =
         records.values.filter { it.userId == userId && it.status in statuses }
@@ -397,7 +565,7 @@ private class InMemoryGroupMembershipStore : GroupMembershipStore {
         }
 }
 
-private class InMemoryGroupInvitationStore : GroupInvitationStore {
+internal class InMemoryGroupInvitationStore : GroupInvitationStore {
     private val records = linkedMapOf<Long, GroupInvitation>()
     private var nextId = 1L
 
@@ -421,7 +589,7 @@ private class InMemoryGroupInvitationStore : GroupInvitationStore {
         records.values.filter { it.tokenId == tokenId }
 }
 
-private class InMemoryGroupTokenStore : GroupInvitationTokenStore {
+internal class InMemoryGroupTokenStore : GroupInvitationTokenStore {
     private val records = linkedMapOf<Long, GroupInvitationToken>()
     private var nextId = 1L
 
@@ -432,6 +600,8 @@ private class InMemoryGroupTokenStore : GroupInvitationTokenStore {
         return saved
     }
 
+    override fun findById(id: Long): GroupInvitationToken? = records[id]
+
     override fun findByGroupId(groupId: Long): List<GroupInvitationToken> =
         records.values.filter { it.groupId == groupId }.sortedByDescending { it.createdAt }
 
@@ -439,7 +609,7 @@ private class InMemoryGroupTokenStore : GroupInvitationTokenStore {
         records.values.firstOrNull { it.tokenHash == tokenHash }
 }
 
-private class InMemoryGroupJoinRequestStore : GroupJoinRequestStore {
+internal class InMemoryGroupJoinRequestStore : GroupJoinRequestStore {
     private val records = linkedMapOf<Long, GroupJoinRequest>()
     private var nextId = 1L
 

@@ -1,9 +1,16 @@
 import { authenticatedBackendFetch } from "@/lib/authenticated-backend-client";
 
-export type GroupMembershipStatus = "INVITED" | "ACTIVE" | "LEFT" | "REMOVED";
+export type GroupMembershipStatus = "INVITED" | "ACTIVE" | "DECLINED" | "LEFT" | "REMOVED";
 export type GroupInvitationChannel = "NICKNAME" | "EMAIL" | "TOKEN";
 export type GroupInvitationMailType = "KNOWN_USER" | "UNKNOWN_EMAIL" | "TOKEN";
 export type GroupJoinRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type GroupInvitationResultStatus =
+  | "ACCEPTED"
+  | "ALREADY_ACCEPTED"
+  | "DECLINED"
+  | "ALREADY_DECLINED"
+  | "EXPIRED"
+  | "INVALID";
 
 export type GroupError = {
   code: string;
@@ -79,6 +86,22 @@ export type GroupInviteSuggestion = {
   email: string;
 };
 
+export type GroupInvitationResultNextActivity = {
+  description: string;
+  location: string;
+  scheduledAt: string;
+};
+
+export type GroupInvitationResult = {
+  status: GroupInvitationResultStatus;
+  groupId?: number | null;
+  groupName?: string | null;
+  groupDescription?: string | null;
+  inviterName?: string | null;
+  nextActivity?: GroupInvitationResultNextActivity | null;
+  loginTargetPath: string;
+};
+
 export type GroupDetail = {
   id: number;
   name: string;
@@ -151,6 +174,8 @@ export function membershipLabel(status: GroupMembershipStatus | null | undefined
       return "eingeladen";
     case "ACTIVE":
       return "aktiv";
+    case "DECLINED":
+      return "abgelehnt";
     case "LEFT":
       return "abgemeldet";
     case "REMOVED":

@@ -22,7 +22,7 @@ export type ActivityParticipant = {
   displayName: string;
   inviteEmail?: string | null;
   admin: boolean;
-  membershipStatus: "INVITED" | "ACTIVE" | "LEFT" | "REMOVED";
+  membershipStatus: "INVITED" | "ACTIVE" | "DECLINED" | "LEFT" | "REMOVED";
   responseStatus: ActivityResponseStatus;
   responseNote?: string | null;
   respondedAt?: string | null;

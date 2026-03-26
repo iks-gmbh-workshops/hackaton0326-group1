@@ -5,6 +5,7 @@ import java.time.Instant
 enum class GroupMembershipStatus {
     INVITED,
     ACTIVE,
+    DECLINED,
     LEFT,
     REMOVED
 }
@@ -25,6 +26,20 @@ enum class GroupJoinRequestStatus {
     PENDING,
     APPROVED,
     REJECTED
+}
+
+enum class GroupInvitationDecision {
+    ACCEPT,
+    DECLINE
+}
+
+enum class GroupInvitationResponseStatus {
+    ACCEPTED,
+    ALREADY_ACCEPTED,
+    DECLINED,
+    ALREADY_DECLINED,
+    EXPIRED,
+    INVALID
 }
 
 data class CurrentUser(
@@ -118,6 +133,11 @@ data class JoinGroupByTokenRequest(
     val token: String?
 )
 
+data class RespondToGroupInvitationRequest(
+    val token: String?,
+    val decision: GroupInvitationDecision?
+)
+
 data class CreateMembershipRequest(
     val comment: String? = null
 )
@@ -192,6 +212,39 @@ data class GroupInviteSuggestionResponse(
     val userId: String,
     val nickname: String,
     val email: String
+)
+
+data class GroupInvitationMailNextActivity(
+    val description: String,
+    val location: String,
+    val scheduledAt: Instant
+)
+
+data class GroupKnownUserInvitationMail(
+    val email: String,
+    val inviteeName: String,
+    val groupName: String,
+    val groupDescription: String?,
+    val inviterName: String,
+    val acceptUrl: String,
+    val declineUrl: String,
+    val nextActivity: GroupInvitationMailNextActivity?
+)
+
+data class GroupInvitationResultNextActivityResponse(
+    val description: String,
+    val location: String,
+    val scheduledAt: Instant
+)
+
+data class GroupInvitationResultResponse(
+    val status: GroupInvitationResponseStatus,
+    val groupId: Long? = null,
+    val groupName: String? = null,
+    val groupDescription: String? = null,
+    val inviterName: String? = null,
+    val nextActivity: GroupInvitationResultNextActivityResponse? = null,
+    val loginTargetPath: String = "/"
 )
 
 data class GroupResponse(

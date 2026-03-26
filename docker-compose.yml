@@ -39,7 +39,8 @@ services:
 
   keycloak:
     build:
-      context: ./keycloak
+      context: .
+      dockerfile: keycloak/Dockerfile
     restart: unless-stopped
     command:
       - start-dev
