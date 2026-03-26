@@ -472,7 +472,7 @@ private class FakeGroupMailService : GroupMailService {
     }
 }
 
-private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
+internal class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
     private val records = users.associateBy { it.keycloakUserId }.toMutableMap()
 
     override fun save(user: AppUser): AppUser {
@@ -506,7 +506,7 @@ private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
             .toList()
 }
 
-private class InMemoryGroupStore : GroupStore {
+internal class InMemoryGroupStore : GroupStore {
     private val records = linkedMapOf<Long, Group>()
     private var nextId = 1L
 
@@ -525,7 +525,7 @@ private class InMemoryGroupStore : GroupStore {
     override fun findAllActive(): List<Group> = records.values.filter { it.deletedAt == null }.sortedBy { it.name }
 }
 
-private class InMemoryGroupMembershipStore : GroupMembershipStore {
+internal class InMemoryGroupMembershipStore : GroupMembershipStore {
     private val records = linkedMapOf<Long, GroupMembership>()
     private var nextId = 1L
 
@@ -565,7 +565,7 @@ private class InMemoryGroupMembershipStore : GroupMembershipStore {
         }
 }
 
-private class InMemoryGroupInvitationStore : GroupInvitationStore {
+internal class InMemoryGroupInvitationStore : GroupInvitationStore {
     private val records = linkedMapOf<Long, GroupInvitation>()
     private var nextId = 1L
 
@@ -589,7 +589,7 @@ private class InMemoryGroupInvitationStore : GroupInvitationStore {
         records.values.filter { it.tokenId == tokenId }
 }
 
-private class InMemoryGroupTokenStore : GroupInvitationTokenStore {
+internal class InMemoryGroupTokenStore : GroupInvitationTokenStore {
     private val records = linkedMapOf<Long, GroupInvitationToken>()
     private var nextId = 1L
 
@@ -609,7 +609,7 @@ private class InMemoryGroupTokenStore : GroupInvitationTokenStore {
         records.values.firstOrNull { it.tokenHash == tokenHash }
 }
 
-private class InMemoryGroupJoinRequestStore : GroupJoinRequestStore {
+internal class InMemoryGroupJoinRequestStore : GroupJoinRequestStore {
     private val records = linkedMapOf<Long, GroupJoinRequest>()
     private var nextId = 1L
 

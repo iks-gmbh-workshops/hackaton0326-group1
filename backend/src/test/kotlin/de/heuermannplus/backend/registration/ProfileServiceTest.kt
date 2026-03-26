@@ -6,6 +6,7 @@ import java.time.ZoneId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
@@ -75,7 +76,7 @@ class ProfileServiceTest {
     fun `updateProfile updates nickname when not conflicting`() {
         val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
         val appStore = InMemoryAppUserStore(listOf(appUser))
-        val keycloakClient = FakeKeycloakAdminClient()
+        val keycloakClient = RecordingKeycloakAdminClient()
         val service = ProfileService(
             passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
             keycloakAdminClient = keycloakClient,
@@ -87,6 +88,51 @@ class ProfileServiceTest {
         val updated = service.updateProfile(authentication, UpdateProfileRequest(username = "newrob"))
 
         assertEquals("newrob", updated.username)
+        assertEquals("newrob", keycloakClient.updatedUsername)
+    }
+
+    @Test
+    fun `updateProfile rejects username conflict from local store`() {
+        val currentUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val conflictingUser = appUser(keycloakUserId = "kc-alice", nickname = "alice")
+        val service = profileService(appUsers = listOf(currentUser, conflictingUser))
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.updateProfile(authentication(subject = "kc-rob"), UpdateProfileRequest(username = "alice"))
+        }
+
+        assertEquals(HttpStatus.CONFLICT, exception.status)
+        assertEquals("USERNAME_ALREADY_EXISTS", exception.code)
+        assertEquals("username", exception.field)
+    }
+
+    @Test
+    fun `updateProfile rejects username conflict from keycloak`() {
+        val currentUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val keycloakClient = RecordingKeycloakAdminClient(
+            usernameLookup = mapOf(
+                "alice" to KeycloakUserSummary(
+                    id = "kc-alice",
+                    username = "alice",
+                    email = "alice@example.com",
+                    enabled = true,
+                    emailVerified = true
+                )
+            )
+        )
+        val service = ProfileService(
+            passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
+            keycloakAdminClient = keycloakClient,
+            appUserStore = InMemoryAppUserStore(listOf(currentUser)),
+            clock = Clock.fixed(Instant.parse("2026-03-25T11:30:00Z"), ZoneId.of("UTC"))
+        )
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.updateProfile(authentication(subject = "kc-rob"), UpdateProfileRequest(username = "alice"))
+        }
+
+        assertEquals(HttpStatus.CONFLICT, exception.status)
+        assertEquals("USERNAME_ALREADY_EXISTS", exception.code)
     }
 
     @Test
@@ -110,6 +156,50 @@ class ProfileServiceTest {
     }
 
     @Test
+    fun `changePassword updates keycloak when password matches policy`() {
+        val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val keycloakClient = RecordingKeycloakAdminClient()
+        val service = ProfileService(
+            passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
+            keycloakAdminClient = keycloakClient,
+            appUserStore = InMemoryAppUserStore(listOf(appUser)),
+            clock = Clock.fixed(Instant.parse("2026-03-25T11:30:00Z"), ZoneId.of("UTC"))
+        )
+
+        val response = service.changePassword(
+            authentication(subject = "kc-rob"),
+            ChangePasswordRequest(
+                newPassword = "NewSecurePass123!",
+                newPasswordRepeat = "NewSecurePass123!"
+            )
+        )
+
+        assertEquals("Passwort wurde geaendert", response.message)
+        assertEquals("kc-rob", keycloakClient.changedPasswordUserId)
+        assertEquals("NewSecurePass123!", keycloakClient.changedPassword)
+    }
+
+    @Test
+    fun `changePassword rejects passwords that fail policy`() {
+        val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val service = profileService(appUsers = listOf(appUser))
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.changePassword(
+                authentication(subject = "kc-rob"),
+                ChangePasswordRequest(
+                    newPassword = "weak",
+                    newPasswordRepeat = "weak"
+                )
+            )
+        }
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.status)
+        assertEquals("PASSWORD_POLICY_FAILED", exception.code)
+        assertEquals("newPassword", exception.field)
+    }
+
+    @Test
     fun `deleteAccount rejects when confirmation is wrong`() {
         val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
         val service = profileService(appUsers = listOf(appUser))
@@ -121,6 +211,25 @@ class ProfileServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.status)
         assertEquals("DELETE_CONFIRMATION_MISMATCH", exception.code)
+    }
+
+    @Test
+    fun `deleteAccount removes local and keycloak user when confirmed`() {
+        val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val appStore = InMemoryAppUserStore(listOf(appUser))
+        val keycloakClient = RecordingKeycloakAdminClient()
+        val service = ProfileService(
+            passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
+            keycloakAdminClient = keycloakClient,
+            appUserStore = appStore,
+            clock = Clock.fixed(Instant.parse("2026-03-25T11:30:00Z"), ZoneId.of("UTC"))
+        )
+
+        val response = service.deleteAccount(authentication(subject = "kc-rob"), DeleteAccountRequest(confirmation = "rob"))
+
+        assertEquals("Konto wurde geloescht", response.message)
+        assertEquals("kc-rob", keycloakClient.deletedUserId)
+        assertNull(appStore.findById("kc-rob"))
     }
 
     @Test
@@ -139,10 +248,22 @@ class ProfileServiceTest {
         assertEquals("r.schlottmann@example.com", profile.email)
     }
 
+    @Test
+    fun `profile returns not found when token identifies missing user`() {
+        val service = profileService()
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.profile(authentication(subject = "missing-id"))
+        }
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.status)
+        assertEquals("PROFILE_NOT_FOUND", exception.code)
+    }
+
     private fun profileService(appUsers: List<AppUser> = emptyList()): ProfileService =
         ProfileService(
             passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
-            keycloakAdminClient = FakeKeycloakAdminClient(),
+            keycloakAdminClient = RecordingKeycloakAdminClient(),
             appUserStore = InMemoryAppUserStore(appUsers),
             clock = Clock.fixed(Instant.parse("2026-03-25T11:30:00Z"), ZoneId.of("UTC"))
         )
@@ -239,8 +360,20 @@ class ProfileServiceTest {
                 .take(limit)
     }
 
-    private class FakeKeycloakAdminClient : KeycloakAdminClient {
-        override fun findUserByUsername(username: String): KeycloakUserSummary? = null
+    private class RecordingKeycloakAdminClient(
+        private val usernameLookup: Map<String, KeycloakUserSummary> = emptyMap()
+    ) : KeycloakAdminClient {
+        var updatedUsername: String? = null
+            private set
+        var changedPasswordUserId: String? = null
+            private set
+        var changedPassword: String? = null
+            private set
+        var deletedUserId: String? = null
+            private set
+
+        override fun findUserByUsername(username: String): KeycloakUserSummary? =
+            usernameLookup[username]
 
         override fun findUserByEmail(email: String): KeycloakUserSummary? = null
 
@@ -256,9 +389,14 @@ class ProfileServiceTest {
             lastName: String?,
             enabled: Boolean,
             emailVerified: Boolean
-        ) = Unit
+        ) {
+            updatedUsername = username
+        }
 
-        override fun changePassword(userId: String, newPassword: String) = Unit
+        override fun changePassword(userId: String, newPassword: String) {
+            changedPasswordUserId = userId
+            changedPassword = newPassword
+        }
 
         override fun validateUserCredentials(username: String, password: String): Boolean = true
 
@@ -268,6 +406,8 @@ class ProfileServiceTest {
 
         override fun enableUser(userId: String) = Unit
 
-        override fun deleteUser(userId: String) = Unit
+        override fun deleteUser(userId: String) {
+            deletedUserId = userId
+        }
     }
 }

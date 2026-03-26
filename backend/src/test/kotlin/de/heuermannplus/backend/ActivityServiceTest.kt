@@ -125,6 +125,34 @@ class ActivityServiceTest {
     }
 
     @Test
+    fun `add participant validates membership selection and active status`() {
+        val fixture = activityFixture()
+        val detail = fixture.createDefaultActivity()
+        val invitedMembership = fixture.memberships.first { it.displayName == "invited" }
+
+        val missingMembership = assertFailsWith<ActivityException> {
+            fixture.service.addParticipant(
+                fixture.groupId,
+                detail.id,
+                AddActivityParticipantRequest(groupMembershipId = null),
+                fixture.owner
+            )
+        }
+        assertEquals("FIELD_REQUIRED", missingMembership.code)
+        assertEquals("groupMembershipId", missingMembership.field)
+
+        val inactiveMembership = assertFailsWith<ActivityException> {
+            fixture.service.addParticipant(
+                fixture.groupId,
+                detail.id,
+                AddActivityParticipantRequest(groupMembershipId = invitedMembership.id),
+                fixture.owner
+            )
+        }
+        assertEquals("GROUP_MEMBER_NOT_ACTIVE", inactiveMembership.code)
+    }
+
+    @Test
     fun `non assigned active member can view but not respond`() {
         val fixture = activityFixture()
         val detail = fixture.createDefaultActivity()
@@ -145,6 +173,24 @@ class ActivityServiceTest {
         }
 
         assertEquals("FORBIDDEN_ACTIVITY_RESPONSE", exception.code)
+    }
+
+    @Test
+    fun `respond validates response status`() {
+        val fixture = activityFixture()
+        val detail = fixture.createDefaultActivity()
+
+        val exception = assertFailsWith<ActivityException> {
+            fixture.service.respond(
+                fixture.groupId,
+                detail.id,
+                ActivityResponseRequest(responseStatus = null, responseNote = "Spaeter"),
+                fixture.member
+            )
+        }
+
+        assertEquals("FIELD_REQUIRED", exception.code)
+        assertEquals("responseStatus", exception.field)
     }
 
     @Test
@@ -236,6 +282,17 @@ class ActivityServiceTest {
             fixture.service.deleteActivity(fixture.groupId, detail.id, fixture.member)
         }
         assertEquals("FORBIDDEN_ACTIVITY_ADMIN", deleteException.code)
+    }
+
+    @Test
+    fun `delete activity removes it from future listings`() {
+        val fixture = activityFixture()
+        val detail = fixture.createDefaultActivity()
+
+        fixture.service.deleteActivity(fixture.groupId, detail.id, fixture.owner)
+
+        assertTrue(fixture.service.listGroupActivities(fixture.groupId, fixture.owner).activities.isEmpty())
+        assertTrue(fixture.service.listUpcomingForCurrentUser(fixture.member).activities.isEmpty())
     }
 
     private fun activityFixture(): ActivityFixture {

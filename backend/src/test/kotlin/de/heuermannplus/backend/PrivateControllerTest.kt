@@ -27,6 +27,7 @@ import java.time.ZoneId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
@@ -115,6 +116,153 @@ class PrivateControllerTest {
         assertEquals("401 UNAUTHORIZED \"JWT enthaelt keinen Subject-Claim\"", exception.message)
     }
 
+    @Test
+    fun `profile returns current profile from service`() {
+        val appUserStore = FakeAppUserStore(
+            AppUser(
+                keycloakUserId = "user-123",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                firstName = "Max",
+                lastName = "Mustermann",
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = "app-user",
+                createdAt = Instant.parse("2026-03-24T12:00:00Z"),
+                updatedAt = Instant.parse("2026-03-24T12:05:00Z")
+            )
+        )
+        val controller = PrivateController(
+            appUserStore = appUserStore,
+            profileService = stubProfileService(appUserStore = appUserStore)
+        )
+
+        val response = controller.profile(authenticationToken(subject = "user-123"))
+
+        assertEquals(
+            ProfileResponse(
+                username = "drummer",
+                email = "drummer@example.org",
+                firstName = "Max",
+                lastName = "Mustermann"
+            ),
+            response
+        )
+    }
+
+    @Test
+    fun `update profile persists normalized names and changed username`() {
+        val appUserStore = FakeAppUserStore(
+            AppUser(
+                keycloakUserId = "user-123",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                firstName = "Max",
+                lastName = "Mustermann",
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = "app-user",
+                createdAt = Instant.parse("2026-03-24T12:00:00Z"),
+                updatedAt = Instant.parse("2026-03-24T12:05:00Z")
+            )
+        )
+        val keycloakClient = FakePrivateKeycloakAdminClient()
+        val controller = PrivateController(
+            appUserStore = appUserStore,
+            profileService = stubProfileService(
+                appUserStore = appUserStore,
+                keycloakAdminClient = keycloakClient
+            )
+        )
+
+        val response = controller.updateProfile(
+            authentication = authenticationToken(subject = "user-123"),
+            request = UpdateProfileRequest(
+                username = "new-drummer",
+                firstName = "  Erika  ",
+                lastName = "   "
+            )
+        )
+
+        assertEquals("new-drummer", response.username)
+        assertEquals("Erika", response.firstName)
+        assertNull(response.lastName)
+        assertEquals("new-drummer", appUserStore.findById("user-123")?.nickname)
+        assertEquals("new-drummer", keycloakClient.lastUpdatedUsername)
+    }
+
+    @Test
+    fun `change password delegates to keycloak and returns success message`() {
+        val appUserStore = FakeAppUserStore(
+            AppUser(
+                keycloakUserId = "user-123",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                firstName = "Max",
+                lastName = "Mustermann",
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = "app-user"
+            )
+        )
+        val keycloakClient = FakePrivateKeycloakAdminClient()
+        val controller = PrivateController(
+            appUserStore = appUserStore,
+            profileService = stubProfileService(
+                appUserStore = appUserStore,
+                keycloakAdminClient = keycloakClient
+            )
+        )
+
+        val response = controller.changePassword(
+            authentication = authenticationToken(subject = "user-123"),
+            request = ChangePasswordRequest(
+                newPassword = "NewPass123!",
+                newPasswordRepeat = "NewPass123!"
+            )
+        )
+
+        assertEquals(MessageResponse("Passwort wurde geaendert"), response)
+        assertEquals("user-123" to "NewPass123!", keycloakClient.lastPasswordChange)
+    }
+
+    @Test
+    fun `delete profile removes current user after confirmation`() {
+        val appUserStore = FakeAppUserStore(
+            AppUser(
+                keycloakUserId = "user-123",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                firstName = "Max",
+                lastName = "Mustermann",
+                status = AppUserStatus.ACTIVE,
+                enabled = true,
+                emailVerified = true,
+                keycloakRole = "app-user"
+            )
+        )
+        val keycloakClient = FakePrivateKeycloakAdminClient()
+        val controller = PrivateController(
+            appUserStore = appUserStore,
+            profileService = stubProfileService(
+                appUserStore = appUserStore,
+                keycloakAdminClient = keycloakClient
+            )
+        )
+
+        val response = controller.deleteProfile(
+            authentication = authenticationToken(subject = "user-123"),
+            request = DeleteAccountRequest(confirmation = "drummer")
+        )
+
+        assertEquals(MessageResponse("Konto wurde geloescht"), response)
+        assertEquals(listOf("user-123"), keycloakClient.deletedUsers)
+        assertNull(appUserStore.findById("user-123"))
+    }
+
     private fun authenticationToken(
         subject: String?,
         email: String? = null,
@@ -142,7 +290,10 @@ class PrivateControllerTest {
         )
     }
 
-    private fun stubProfileService(): ProfileService =
+    private fun stubProfileService(
+        appUserStore: AppUserStore = FakeAppUserStore(),
+        keycloakAdminClient: KeycloakAdminClient = FakePrivateKeycloakAdminClient()
+    ): ProfileService =
         ProfileService(
             passwordPolicyEvaluator = PasswordPolicyEvaluator(
                 RegistrationProperties(
@@ -163,8 +314,8 @@ class PrivateControllerTest {
                     )
                 )
             ),
-            keycloakAdminClient = FakePrivateKeycloakAdminClient(),
-            appUserStore = FakeAppUserStore(),
+            keycloakAdminClient = keycloakAdminClient,
+            appUserStore = appUserStore,
             clock = Clock.fixed(Instant.parse("2026-03-24T12:00:00Z"), ZoneId.of("UTC"))
         )
 }
@@ -172,23 +323,30 @@ class PrivateControllerTest {
 private class FakeAppUserStore(
     private vararg val users: AppUser
 ) : AppUserStore {
+    private val records = linkedMapOf<String, AppUser>().apply {
+        users.forEach { put(it.keycloakUserId, it) }
+    }
 
-    override fun save(user: AppUser): AppUser = user
+    override fun save(user: AppUser): AppUser {
+        records[user.keycloakUserId] = user
+        return user
+    }
 
     override fun findById(keycloakUserId: String): AppUser? =
-        users.firstOrNull { it.keycloakUserId == keycloakUserId }
+        records[keycloakUserId]
 
     override fun findByNickname(nickname: String): AppUser? =
-        users.firstOrNull { it.nickname == nickname }
+        records.values.firstOrNull { it.nickname == nickname }
 
     override fun findByEmail(email: String): AppUser? =
-        users.firstOrNull { it.email == email }
+        records.values.firstOrNull { it.email == email }
 
     override fun deleteById(keycloakUserId: String) {
+        records.remove(keycloakUserId)
     }
 
     override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
-        users.asList()
+        records.values
             .filterNot { it.keycloakUserId == excludedUserId }
             .filter {
                 query.isBlank() ||
@@ -199,6 +357,12 @@ private class FakeAppUserStore(
 }
 
 private class FakePrivateKeycloakAdminClient : KeycloakAdminClient {
+    var lastUpdatedUsername: String? = null
+        private set
+    var lastPasswordChange: Pair<String, String>? = null
+        private set
+    val deletedUsers = mutableListOf<String>()
+
     override fun findUserByUsername(username: String): KeycloakUserSummary? = null
 
     override fun findUserByEmail(email: String): KeycloakUserSummary? = null
@@ -216,9 +380,11 @@ private class FakePrivateKeycloakAdminClient : KeycloakAdminClient {
         enabled: Boolean,
         emailVerified: Boolean
     ) {
+        lastUpdatedUsername = username
     }
 
     override fun changePassword(userId: String, newPassword: String) {
+        lastPasswordChange = userId to newPassword
     }
 
     override fun validateUserCredentials(username: String, password: String): Boolean = true
@@ -233,5 +399,6 @@ private class FakePrivateKeycloakAdminClient : KeycloakAdminClient {
     }
 
     override fun deleteUser(userId: String) {
+        deletedUsers += userId
     }
 }
