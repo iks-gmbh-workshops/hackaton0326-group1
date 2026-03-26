@@ -223,7 +223,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             <div className="status-row">
               <span className="status-dot" />
               <p className="body-copy text-sm">
-                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit spaeter echte Aktivitäten ohne
+                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit später echte Aktivitäten ohne
                 Bedeutungsbruch eingebunden werden können.
               </p>
             </div>

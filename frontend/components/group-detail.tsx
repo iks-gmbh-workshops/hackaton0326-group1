@@ -207,11 +207,11 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
 
           <div className="flex flex-wrap gap-3">
             <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
-              Meine Aktivitaeten
+              Meine Aktivitäten
             </Link>
             {group.currentUserAdmin ? (
               <Link className="btn btn-primary" href={`/groups/${groupId}/activities/new` as Route}>
-                Aktivitaet erstellen
+                Aktivität erstellen
               </Link>
             ) : null}
           </div>
@@ -399,12 +399,12 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                   </div>
 
                   <Link className="btn btn-sm btn-primary mt-3" href={`/groups/${groupId}/activities/${activity.id}` as Route}>
-                    Aktivitaet ansehen
+                    Aktivität ansehen
                   </Link>
                 </div>
               ))}
             </div>
-            {!activities.activities.length ? <p className="helper-text">Noch keine anstehenden Aktivitaeten.</p> : null}
+            {!activities.activities.length ? <p className="helper-text">Noch keine anstehenden Aktivitäten.</p> : null}
           </div>
         </div>
 

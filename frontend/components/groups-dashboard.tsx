@@ -186,7 +186,7 @@ export function GroupsDashboard() {
               {isPending ? "Speichere..." : "Gruppe erstellen"}
             </button>
             <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
-              Meine Aktivitaeten
+              Meine Aktivitäten
             </Link>
             <Link className="btn btn-ghost" href={"/" as Route}>
               Zur Startseite

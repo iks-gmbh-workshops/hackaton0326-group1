@@ -90,7 +90,7 @@ export function formatActivityStatus(status: ActivityResponseStatus | null | und
     case "DECLINED":
       return "abgesagt";
     case "MAYBE":
-      return "weiss ich noch nicht";
+      return "weiß ich noch nicht";
     case "OPEN":
       return "offen";
     default:
@@ -143,7 +143,7 @@ export async function fetchGroupActivities(groupId: number) {
   const response = await authenticatedBackendFetch(`/api/private/groups/${groupId}/activities`, { method: "GET" });
 
   if (!response.ok) {
-    throw new Error("Aktivitaeten konnten nicht geladen werden");
+    throw new Error("Aktivitäten konnten nicht geladen werden");
   }
 
   return (await response.json()) as ActivityListResponse;
