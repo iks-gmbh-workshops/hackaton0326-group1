@@ -77,7 +77,7 @@ class RegistrationControllerTest {
             RegistrationVerifyRequest(token = fixture.mailService.lastToken())
         )
 
-        assertEquals("Die Registrierung wurde erfolgreich bestaetigt", verified.message)
+        assertEquals("Die Registrierung wurde erfolgreich bestätigt", verified.message)
         val activeUser = fixture.appUserStore.findById(pendingUser.id)
         assertNotNull(activeUser)
         assertEquals(AppUserStatus.ACTIVE, activeUser.status)
