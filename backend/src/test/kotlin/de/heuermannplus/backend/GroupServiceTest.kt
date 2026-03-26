@@ -30,6 +30,7 @@ import de.heuermannplus.backend.group.InviteGroupMemberRequest
 import de.heuermannplus.backend.group.JoinGroupByTokenRequest
 import de.heuermannplus.backend.group.MembershipDecisionRequest
 import de.heuermannplus.backend.group.RespondToGroupInvitationRequest
+import de.heuermannplus.backend.group.UpdateGroupRequest
 import de.heuermannplus.backend.registration.AppUser
 import de.heuermannplus.backend.registration.AppUserStatus
 import de.heuermannplus.backend.registration.AppUserStore
@@ -62,6 +63,18 @@ class GroupServiceTest {
     }
 
     @Test
+    fun `create group rejects duplicate normalized name`() {
+        val fixture = groupFixture()
+        fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner)
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.createGroup(CreateGroupRequest(name = "  band 1  "), fixture.owner)
+        }
+
+        assertEquals("GROUP_NAME_ALREADY_EXISTS", exception.code)
+    }
+
+    @Test
     fun `invite known user creates invited membership and known mail`() {
         val fixture = groupFixture()
         val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
@@ -81,6 +94,39 @@ class GroupServiceTest {
         assertTrue(invite.acceptUrl.contains("/group-invitations/respond?"))
         assertTrue(invite.acceptUrl.contains("decision=accept"))
         assertTrue(invite.declineUrl.contains("decision=decline"))
+    }
+
+    @Test
+    fun `invite unknown nickname is rejected`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.inviteMember(
+                groupId,
+                InviteGroupMemberRequest(nicknameOrEmail = "missing-user"),
+                fixture.owner
+            )
+        }
+
+        assertEquals("INVITEE_NOT_FOUND", exception.code)
+    }
+
+    @Test
+    fun `invite unknown email sends fallback invitation mail`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val response = fixture.service.inviteMember(
+            groupId,
+            InviteGroupMemberRequest(nicknameOrEmail = "newperson@example.org"),
+            fixture.owner
+        )
+
+        assertEquals(listOf("newperson@example.org:Band 1"), fixture.mailService.unknownInvites)
+        assertTrue(fixture.mailService.knownInvites.isEmpty())
+        assertTrue(fixture.tokenStore.findByGroupId(groupId).isEmpty())
+        assertTrue(response.members.any { it.displayName == "newperson@example.org" && it.status == GroupMembershipStatus.INVITED })
     }
 
     @Test
@@ -147,6 +193,85 @@ class GroupServiceTest {
     }
 
     @Test
+    fun `claiming invitations updates only unclaimed invitation records for active groups`() {
+        val fixture = groupFixture()
+        val activeGroupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val deletedGroupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 2"), fixture.owner).id
+        val activeMembership = fixture.membershipStore.save(
+            GroupMembership(
+                groupId = activeGroupId,
+                userId = null,
+                inviteEmail = fixture.guest.email,
+                normalizedInviteEmail = fixture.guest.email?.lowercase(),
+                displayName = "guest@example.org",
+                status = GroupMembershipStatus.INVITED,
+                isAdmin = false,
+                createdAt = Instant.parse("2026-03-25T08:00:00Z"),
+                updatedAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+        val deletedMembership = fixture.membershipStore.save(
+            GroupMembership(
+                groupId = deletedGroupId,
+                userId = null,
+                inviteEmail = fixture.guest.email,
+                normalizedInviteEmail = fixture.guest.email?.lowercase(),
+                displayName = "guest@example.org",
+                status = GroupMembershipStatus.INVITED,
+                isAdmin = false,
+                createdAt = Instant.parse("2026-03-25T08:00:00Z"),
+                updatedAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+        fixture.invitationStore.save(
+            GroupInvitation(
+                groupId = activeGroupId,
+                membershipId = activeMembership.id,
+                tokenId = null,
+                invitedByUserId = fixture.owner.userId,
+                channel = GroupInvitationChannel.EMAIL,
+                mailType = GroupInvitationMailType.UNKNOWN_EMAIL,
+                targetLabel = fixture.guest.email!!,
+                targetEmail = fixture.guest.email,
+                normalizedTargetEmail = fixture.guest.email?.lowercase(),
+                createdAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+        fixture.invitationStore.save(
+            GroupInvitation(
+                groupId = deletedGroupId,
+                membershipId = deletedMembership.id,
+                tokenId = null,
+                invitedByUserId = fixture.owner.userId,
+                channel = GroupInvitationChannel.EMAIL,
+                mailType = GroupInvitationMailType.UNKNOWN_EMAIL,
+                targetLabel = fixture.guest.email!!,
+                targetEmail = fixture.guest.email,
+                normalizedTargetEmail = fixture.guest.email?.lowercase(),
+                createdAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+        fixture.service.deleteGroup(deletedGroupId, fixture.owner)
+
+        val activeInvitation = fixture.invitationStore.findByGroupId(activeGroupId).single()
+        val deletedInvitation = fixture.invitationStore.findByMembershipId(deletedMembership.id!!).single()
+        fixture.invitationStore.save(
+            activeInvitation.copy(
+                claimedAt = Instant.parse("2026-03-24T08:00:00Z")
+            )
+        )
+
+        val listed = fixture.service.list(fixture.guest)
+
+        assertEquals(1, listed.invitations.size)
+        val claimedActiveInvitation = fixture.invitationStore.findByGroupId(activeGroupId).single()
+        val untouchedDeletedInvitation = fixture.invitationStore.findByMembershipId(deletedInvitation.membershipId!!).single()
+        assertEquals(fixture.guest.userId, claimedActiveInvitation.claimedByUserId)
+        assertEquals(Instant.parse("2026-03-25T08:00:00Z"), claimedActiveInvitation.claimedAt)
+        assertEquals(null, untouchedDeletedInvitation.claimedByUserId)
+    }
+
+    @Test
     fun `token join adds user as active member`() {
         val fixture = groupFixture()
         val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
@@ -160,6 +285,50 @@ class GroupServiceTest {
 
         assertEquals(GroupMembershipStatus.ACTIVE, response.currentMembershipStatus)
         assertTrue(response.members.any { it.displayName == "bob" && it.status == GroupMembershipStatus.ACTIVE })
+    }
+
+    @Test
+    fun `token join activates an invited membership for the same user`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "bob"), fixture.owner)
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+
+        val response = fixture.service.joinByToken(
+            JoinGroupByTokenRequest(token = token.token),
+            fixture.member
+        )
+
+        assertEquals(GroupMembershipStatus.ACTIVE, response.currentMembershipStatus)
+        assertEquals(1, response.members.count { it.userId == fixture.member.userId })
+    }
+
+    @Test
+    fun `token join rejects users with pending membership request`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+        fixture.service.requestMembership(groupId, CreateMembershipRequest(comment = "Bitte aufnehmen"), fixture.member)
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.joinByToken(JoinGroupByTokenRequest(token = token.token), fixture.member)
+        }
+
+        assertEquals("REQUEST_ALREADY_EXISTS", exception.code)
+    }
+
+    @Test
+    fun `token join rejects a token that was already used`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+        fixture.service.joinByToken(JoinGroupByTokenRequest(token = token.token), fixture.member)
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.joinByToken(JoinGroupByTokenRequest(token = token.token), fixture.guest)
+        }
+
+        assertEquals("INVALID_GROUP_TOKEN", exception.code)
     }
 
     @Test
@@ -333,6 +502,74 @@ class GroupServiceTest {
     }
 
     @Test
+    fun `membership request duplicate is rejected and hidden from available groups`() {
+        val fixture = groupFixture()
+        val openGroupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.createGroup(CreateGroupRequest(name = "Band 2"), fixture.owner)
+
+        val afterRequest = fixture.service.requestMembership(
+            openGroupId,
+            CreateMembershipRequest(comment = "Ich moechte mitspielen"),
+            fixture.member
+        )
+
+        assertEquals(listOf(openGroupId), afterRequest.joinRequests.map { it.groupId })
+        assertTrue(afterRequest.availableGroups.none { it.id == openGroupId })
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.requestMembership(
+                openGroupId,
+                CreateMembershipRequest(comment = "Noch einmal"),
+                fixture.member
+            )
+        }
+
+        assertEquals("REQUEST_ALREADY_EXISTS", exception.code)
+    }
+
+    @Test
+    fun `approving an already invited requester activates existing membership`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val invitedMembership = fixture.membershipStore.save(
+            GroupMembership(
+                groupId = groupId,
+                userId = fixture.member.userId,
+                inviteEmail = fixture.member.email,
+                normalizedInviteEmail = fixture.member.email?.lowercase(),
+                displayName = fixture.member.nickname,
+                status = GroupMembershipStatus.INVITED,
+                isAdmin = false,
+                createdAt = Instant.parse("2026-03-25T08:00:00Z"),
+                updatedAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+        val joinRequest = fixture.joinRequestStore.save(
+            GroupJoinRequest(
+                groupId = groupId,
+                requestedByUserId = fixture.member.userId,
+                requestedByDisplayName = fixture.member.nickname,
+                status = GroupJoinRequestStatus.PENDING,
+                comment = "Ich bin schon eingeladen",
+                reviewComment = null,
+                reviewedByUserId = null,
+                createdAt = Instant.parse("2026-03-25T08:00:00Z")
+            )
+        )
+
+        val response = fixture.service.approveJoinRequest(
+            groupId,
+            joinRequest.id!!,
+            MembershipDecisionRequest(comment = "Passt"),
+            fixture.owner
+        )
+
+        val savedMembership = fixture.membershipStore.findById(invitedMembership.id!!)!!
+        assertEquals(GroupMembershipStatus.ACTIVE, savedMembership.status)
+        assertTrue(response.members.any { it.userId == fixture.member.userId && it.status == GroupMembershipStatus.ACTIVE })
+    }
+
+    @Test
     fun `group details are visible to invited members`() {
         val fixture = groupFixture()
         val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
@@ -348,6 +585,21 @@ class GroupServiceTest {
         assertEquals(GroupMembershipStatus.INVITED, detail.currentMembershipStatus)
         assertEquals(2, detail.members.size)
         assertEquals(false, detail.currentUserAdmin)
+    }
+
+    @Test
+    fun `admin group details include invitations join requests and tokens`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        fixture.service.inviteMember(groupId, InviteGroupMemberRequest(nicknameOrEmail = "guest@example.org"), fixture.owner)
+        fixture.service.requestMembership(groupId, CreateMembershipRequest(comment = "Bitte aufnehmen"), fixture.member)
+        fixture.service.createInvitationToken(groupId, fixture.owner)
+
+        val detail = fixture.service.getGroup(groupId, fixture.owner)
+
+        assertEquals(2, detail.invitations.size)
+        assertEquals(1, detail.joinRequests.size)
+        assertEquals(2, detail.tokens.size)
     }
 
     @Test
@@ -397,6 +649,57 @@ class GroupServiceTest {
         assertEquals("LAST_ADMIN_REQUIRED", revokeException.code)
     }
 
+    @Test
+    fun `update group rejects conflicting normalized name`() {
+        val fixture = groupFixture()
+        val firstGroupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val secondGroupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 2"), fixture.owner).id
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.updateGroup(
+                secondGroupId,
+                UpdateGroupRequest(name = "  band 1  "),
+                fixture.owner
+            )
+        }
+
+        assertEquals("GROUP_NAME_ALREADY_EXISTS", exception.code)
+        assertEquals("Band 1", fixture.service.getGroup(firstGroupId, fixture.owner).name)
+    }
+
+    @Test
+    fun `leave group removes active non admin membership from list`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+        fixture.service.joinByToken(JoinGroupByTokenRequest(token = token.token), fixture.member)
+
+        val listed = fixture.service.leaveGroup(groupId, fixture.member)
+
+        assertTrue(listed.groups.none { it.id == groupId })
+        assertTrue(fixture.service.getGroup(groupId, fixture.owner).members.none {
+            it.userId == fixture.member.userId && it.status == GroupMembershipStatus.ACTIVE
+        })
+    }
+
+    @Test
+    fun `grant and revoke admin update member privileges`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+        val token = fixture.service.createInvitationToken(groupId, fixture.owner)
+        fixture.service.joinByToken(JoinGroupByTokenRequest(token = token.token), fixture.member)
+        val memberMembershipId = fixture.service.getGroup(groupId, fixture.owner)
+            .members
+            .first { it.userId == fixture.member.userId }
+            .id
+
+        val granted = fixture.service.grantAdmin(groupId, memberMembershipId, fixture.owner)
+        assertTrue(granted.members.first { it.id == memberMembershipId }.admin)
+
+        val revoked = fixture.service.revokeAdmin(groupId, memberMembershipId, fixture.owner)
+        assertEquals(false, revoked.members.first { it.id == memberMembershipId }.admin)
+    }
+
     private fun groupFixture(now: Instant = Instant.parse("2026-03-25T08:00:00Z")): GroupFixture {
         val clock = Clock.fixed(now, ZoneId.of("UTC"))
         val appUserStore = GroupTestAppUserStore(
@@ -410,12 +713,16 @@ class GroupServiceTest {
         val mailService = FakeGroupMailService()
         val activityStore = InMemoryActivityStore()
         val tokenStore = InMemoryGroupTokenStore()
+        val groupStore = InMemoryGroupStore()
+        val membershipStore = InMemoryGroupMembershipStore()
+        val invitationStore = InMemoryGroupInvitationStore()
+        val joinRequestStore = InMemoryGroupJoinRequestStore()
         val service = GroupService(
-            groupStore = InMemoryGroupStore(),
-            membershipStore = InMemoryGroupMembershipStore(),
-            invitationStore = InMemoryGroupInvitationStore(),
+            groupStore = groupStore,
+            membershipStore = membershipStore,
+            invitationStore = invitationStore,
             tokenStore = tokenStore,
-            joinRequestStore = InMemoryGroupJoinRequestStore(),
+            joinRequestStore = joinRequestStore,
             activityStore = activityStore,
             appUserStore = appUserStore,
             groupMailService = mailService,
@@ -431,7 +738,10 @@ class GroupServiceTest {
             guest = CurrentUser("guest-1", "guest", "guest@example.org"),
             mailService = mailService,
             activityStore = activityStore,
-            tokenStore = tokenStore
+            tokenStore = tokenStore,
+            membershipStore = membershipStore,
+            invitationStore = invitationStore,
+            joinRequestStore = joinRequestStore
         )
     }
 
@@ -456,7 +766,10 @@ private data class GroupFixture(
     val guest: CurrentUser,
     val mailService: FakeGroupMailService,
     val activityStore: InMemoryActivityStore,
-    val tokenStore: InMemoryGroupTokenStore
+    val tokenStore: InMemoryGroupTokenStore,
+    val membershipStore: InMemoryGroupMembershipStore,
+    val invitationStore: InMemoryGroupInvitationStore,
+    val joinRequestStore: InMemoryGroupJoinRequestStore
 )
 
 private class FakeGroupMailService : GroupMailService {
