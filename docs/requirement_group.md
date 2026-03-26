@@ -92,6 +92,12 @@ Für die Mitglieder trägt er einen drumdibum Nickname ein bzw. eine ihm bekannt
 
 Wenn der Nickname oder die Email Adresse bekannt ist, dann bekommt das Mitglied eine Information per Email geschickt, dass er zu einer neuen Gruppe eingeladen ist.
 
+Ist der Empfaenger bereits als Nutzer in der Anwendung bekannt, dann enthaelt diese E-Mail ausserdem den Einladenden, den Gruppennamen, die Gruppenbeschreibung, die naechste Aktivitaet sowie zwei direkte Links zum Annehmen oder Ablehnen der Einladung.
+
+Der Klick auf diese Links verarbeitet die Entscheidung direkt und fuehrt danach auf eine Ergebnisseite mit den Gruppendaten und dem Status der Entscheidung.
+
+Wird die Einladung per E-Mail abgelehnt, dann ist diese Ablehnung final und fuehrt nicht mehr zu einem direkten Gruppenzugriff.
+
 Wenn die Email Adresse nicht bekannt ist, dann bekommt das Mitglied eine Information per Email geschickt mit Informationen zu drumdibum und falls der Empfänger noch kein Mitglied ist, dann den Ablauf für Registration usw.
 
 ## Tests
@@ -157,5 +163,4 @@ Nach der Eingabe wird dem Anwender bestätigt, dass er der Gruppe beigetreten is
 # 10 - Als Gruppenverwalter möchte ich Mitgliedschaftsanträge bearbeiten.
 
 # 11 - Als Gruppenverwalter möchte ich einem anderen Gruppenverwalter Rechte entziehen
-
 

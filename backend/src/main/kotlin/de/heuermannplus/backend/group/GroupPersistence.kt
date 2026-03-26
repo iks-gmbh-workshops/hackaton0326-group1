@@ -57,6 +57,8 @@ interface GroupInvitationStore {
 interface GroupInvitationTokenStore {
     fun save(token: GroupInvitationToken): GroupInvitationToken
 
+    fun findById(id: Long): GroupInvitationToken?
+
     fun findByGroupId(groupId: Long): List<GroupInvitationToken>
 
     fun findByTokenHash(tokenHash: String): GroupInvitationToken?
@@ -115,6 +117,10 @@ class GroupMembershipEntity(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: GroupMembershipStatus = GroupMembershipStatus.INVITED,
+    @Column(name = "open_user_relation")
+    var openUserRelation: Boolean? = null,
+    @Column(name = "open_email_relation")
+    var openEmailRelation: Boolean? = null,
     @Column(name = "is_admin", nullable = false)
     var isAdmin: Boolean = false,
     @Column(name = "created_at", nullable = false)
@@ -223,7 +229,7 @@ interface GroupJpaRepository : JpaRepository<GroupEntity, Long> {
 interface GroupMembershipJpaRepository : JpaRepository<GroupMembershipEntity, Long> {
     fun findAllByGroupId(groupId: Long): List<GroupMembershipEntity>
 
-    fun findByGroupIdAndUserId(groupId: Long, userId: String): GroupMembershipEntity?
+    fun findAllByGroupIdAndUserIdOrderByCreatedAtDesc(groupId: Long, userId: String): List<GroupMembershipEntity>
 
     fun findAllByUserIdAndStatusIn(userId: String, statuses: Collection<GroupMembershipStatus>): List<GroupMembershipEntity>
 
@@ -303,7 +309,7 @@ class JpaGroupMembershipStore(
         repository.findAllByGroupId(groupId).map(GroupMembershipEntity::toDomain)
 
     override fun findByGroupIdAndUserId(groupId: Long, userId: String): GroupMembership? =
-        repository.findByGroupIdAndUserId(groupId, userId)?.toDomain()
+        repository.findAllByGroupIdAndUserIdOrderByCreatedAtDesc(groupId, userId).firstOrNull()?.toDomain()
 
     override fun findByUserIdAndStatuses(userId: String, statuses: Set<GroupMembershipStatus>): List<GroupMembership> =
         repository.findAllByUserIdAndStatusIn(userId, statuses).map(GroupMembershipEntity::toDomain)
@@ -352,6 +358,9 @@ class JpaGroupInvitationTokenStore(
 
     override fun save(token: GroupInvitationToken): GroupInvitationToken =
         repository.save(token.toEntity()).toDomain()
+
+    override fun findById(id: Long): GroupInvitationToken? =
+        repository.findById(id).orElse(null)?.toDomain()
 
     override fun findByGroupId(groupId: Long): List<GroupInvitationToken> =
         repository.findAllByGroupIdOrderByCreatedAtDesc(groupId).map(GroupInvitationTokenEntity::toDomain)
@@ -414,6 +423,8 @@ private fun GroupMembership.toEntity(): GroupMembershipEntity =
         normalizedInviteEmail = normalizedInviteEmail,
         displayName = displayName,
         status = status,
+        openUserRelation = openUserRelation(),
+        openEmailRelation = openEmailRelation(),
         isAdmin = isAdmin,
         createdAt = createdAt,
         updatedAt = updatedAt,
@@ -524,3 +535,12 @@ private fun GroupJoinRequestEntity.toDomain(): GroupJoinRequest =
         createdAt = createdAt,
         reviewedAt = reviewedAt
     )
+
+private fun GroupMembership.openUserRelation(): Boolean? =
+    if (userId != null && status.isOpenRelation()) true else null
+
+private fun GroupMembership.openEmailRelation(): Boolean? =
+    if (normalizedInviteEmail != null && status.isOpenRelation()) true else null
+
+private fun GroupMembershipStatus.isOpenRelation(): Boolean =
+    this == GroupMembershipStatus.ACTIVE || this == GroupMembershipStatus.INVITED
