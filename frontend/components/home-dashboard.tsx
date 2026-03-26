@@ -82,20 +82,20 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             <h2 className="section-headline text-3xl">Direkt nach dem Login orientieren</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Meine Gruppen</p>
               <p className="section-headline mt-2 text-[2rem]">{statsGroups}</p>
               <p className="helper-text">aktive Zugehörigkeiten</p>
             </div>
 
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Einladungen</p>
               <p className="section-headline mt-2 text-[2rem]">{statsInvitations}</p>
               <p className="helper-text">offene Gruppeneinladungen</p>
             </div>
 
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Anträge</p>
               <p className="section-headline mt-2 text-[2rem]">{statsRequests}</p>
               <p className="helper-text">laufende Mitgliedschaftsanträge</p>
@@ -168,7 +168,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             ) : null}
 
             {!isLoading && !loadError && (data.invitations.length || data.joinRequests.length) ? (
-              <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+              <div className="rounded-xl border border-base-300 bg-white/90 p-4">
                 <p className="subsection-title">Offene Punkte</p>
                 <div className="mt-3 grid gap-3">
                   {data.invitations.slice(0, 2).map((invitation) => (
@@ -211,7 +211,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-base-300 bg-white/90 p-5">
+          <div className="rounded-xl border border-base-300 bg-white/90 p-5">
             <p className="subsection-title">Noch keine Aktivitätenansicht verfügbar</p>
             <p className="body-copy mt-3 text-sm">
               Sobald Aktivitäten im Produkt eingeführt sind, werden hier deine anstehenden Termine, Treffpunkte und

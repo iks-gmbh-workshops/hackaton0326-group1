@@ -15,7 +15,7 @@ export function AppHeader({ authenticated, userName }: AppHeaderProps) {
   const showPublicLogin = !authenticated && pathname === "/";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-base-300/70 bg-base-100/80 backdrop-blur supports-[backdrop-filter]:bg-base-100/60">
+    <header className="sticky top-0 z-30 border-b border-base-300/80 bg-base-100/94">
       <div className="mx-auto flex min-h-[4.75rem] w-full max-w-7xl items-center justify-between gap-4 px-3 py-3">
         <Link href="/" className="flex items-center gap-3">
           <span className="brand-kicker">HeuermannPlus</span>
@@ -27,15 +27,9 @@ export function AppHeader({ authenticated, userName }: AppHeaderProps) {
               Gruppen
             </Link>
 
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              disabled
-              aria-disabled="true"
-              title="Mock: Die Aktivitäten-Route ist noch nicht implementiert."
-            >
+            <Link href={"/activities" as Route} className="btn btn-ghost btn-sm">
               Aktivitäten
-            </button>
+            </Link>
 
             <button
               type="button"

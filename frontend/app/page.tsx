@@ -32,7 +32,7 @@ export default async function HomePage() {
 
             <div className="max-w-3xl space-y-4">
               <p className="subheadline">Planen, koordinieren und gemeinsam den Überblick behalten.</p>
-              <h1 className="headline">HeuermannPlus bringt Gruppen und Aktivitäten an einen Ort.</h1>
+              <h1 className="display-headline">HeuermannPlus bringt Gruppen und Aktivitäten an einen Ort.</h1>
               <p className="body-copy max-w-2xl">
                 Die Plattform hilft dabei, Gruppen zu organisieren, Mitglieder zusammenzubringen und gemeinsame
                 Aktivitäten klar und übersichtlich zu koordinieren.
@@ -68,7 +68,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="soft-panel grid gap-5">
+          <div className="soft-panel grid gap-4">
             <div className="space-y-2">
               <h2 className="section-headline text-3xl">Der schnelle Einstieg für neue Mitglieder</h2>
               <p className="subheadline">

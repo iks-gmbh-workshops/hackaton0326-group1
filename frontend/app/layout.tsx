@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Merriweather } from "next/font/google";
+import { getServerSession } from "next-auth";
 import "./globals.css";
+import { AppHeader } from "@/components/app-header";
+import { authOptions } from "@/lib/auth";
 
 const headlineFont = Merriweather({
   subsets: ["latin"],
@@ -12,13 +15,23 @@ const headlineFont = Merriweather({
 
 export const metadata: Metadata = {
   title: "HeuermannPlus",
-  description: "Scaffold für eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak."
+  description: "Scaffold fuer eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak.",
+  icons: {
+    icon: "/icon.svg"
+  }
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const session = await getServerSession(authOptions);
+  const authenticated = Boolean(session?.user);
+  const displayName = session?.user?.name ?? session?.user?.email ?? null;
+
   return (
     <html data-theme="light" lang="de">
-      <body className={headlineFont.variable}>{children}</body>
+      <body className={headlineFont.variable}>
+        <AppHeader authenticated={authenticated} userName={displayName} />
+        {children}
+      </body>
     </html>
   );
 }
