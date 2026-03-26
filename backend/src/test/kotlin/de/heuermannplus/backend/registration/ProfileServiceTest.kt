@@ -123,6 +123,22 @@ class ProfileServiceTest {
         assertEquals("DELETE_CONFIRMATION_MISMATCH", exception.code)
     }
 
+    @Test
+    fun `profile falls back to email when subject lookup misses`() {
+        val appUser = appUser(
+            keycloakUserId = "kc-rob",
+            nickname = "rob",
+            email = "r.schlottmann@example.com"
+        )
+        val service = profileService(appUsers = listOf(appUser))
+        val authentication = authentication(subject = "missing-id", email = "r.schlottmann@example.com")
+
+        val profile = service.profile(authentication)
+
+        assertEquals("rob", profile.username)
+        assertEquals("r.schlottmann@example.com", profile.email)
+    }
+
     private fun profileService(appUsers: List<AppUser> = emptyList()): ProfileService =
         ProfileService(
             passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
@@ -169,7 +185,8 @@ class ProfileServiceTest {
 
     private fun authentication(
         subject: String? = null,
-        preferredUsername: String? = null
+        preferredUsername: String? = null,
+        email: String? = null
     ): JwtAuthenticationToken {
         val builder = Jwt.withTokenValue("token")
             .header("alg", "none")
@@ -180,6 +197,9 @@ class ProfileServiceTest {
         }
         if (preferredUsername != null) {
             builder.claim("preferred_username", preferredUsername)
+        }
+        if (email != null) {
+            builder.claim("email", email)
         }
 
         return JwtAuthenticationToken(builder.build())
@@ -207,6 +227,16 @@ class ProfileServiceTest {
         override fun deleteById(keycloakUserId: String) {
             usersById.remove(keycloakUserId)
         }
+
+        override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
+            usersById.values
+                .filterNot { it.keycloakUserId == excludedUserId }
+                .filter {
+                    query.isBlank() ||
+                        it.nickname.contains(query, ignoreCase = true) ||
+                        it.email.contains(query, ignoreCase = true)
+                }
+                .take(limit)
     }
 
     private class FakeKeycloakAdminClient : KeycloakAdminClient {

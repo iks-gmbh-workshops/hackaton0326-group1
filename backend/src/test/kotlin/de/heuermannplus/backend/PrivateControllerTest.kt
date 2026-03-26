@@ -6,7 +6,24 @@ import de.heuermannplus.backend.registration.ApiErrorResponse
 import de.heuermannplus.backend.registration.AppUser
 import de.heuermannplus.backend.registration.AppUserStatus
 import de.heuermannplus.backend.registration.AppUserStore
+import de.heuermannplus.backend.registration.CaptchaMode
+import de.heuermannplus.backend.registration.CaptchaProperties
+import de.heuermannplus.backend.registration.ChangePasswordRequest
+import de.heuermannplus.backend.registration.DeleteAccountRequest
+import de.heuermannplus.backend.registration.KeycloakAdminClient
+import de.heuermannplus.backend.registration.KeycloakUserRepresentation
+import de.heuermannplus.backend.registration.KeycloakUserSummary
+import de.heuermannplus.backend.registration.MessageResponse
+import de.heuermannplus.backend.registration.PasswordPolicyEvaluator
+import de.heuermannplus.backend.registration.PasswordPolicyProperties
+import de.heuermannplus.backend.registration.ProfileResponse
+import de.heuermannplus.backend.registration.ProfileService
+import de.heuermannplus.backend.registration.RegistrationProperties
+import de.heuermannplus.backend.registration.RegistrationUserDraft
+import de.heuermannplus.backend.registration.UpdateProfileRequest
 import java.time.Instant
+import java.time.Clock
+import java.time.ZoneId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -34,7 +51,8 @@ class PrivateControllerTest {
                     createdAt = Instant.parse("2026-03-24T12:00:00Z"),
                     updatedAt = Instant.parse("2026-03-24T12:05:00Z")
                 )
-            )
+            ),
+            profileService = stubProfileService()
         )
 
         val response = controller.me(
@@ -66,7 +84,8 @@ class PrivateControllerTest {
     @Test
     fun `me returns 404 when local user profile does not exist`() {
         val controller = PrivateController(
-            appUserStore = FakeAppUserStore()
+            appUserStore = FakeAppUserStore(),
+            profileService = stubProfileService()
         )
 
         val response = controller.me(authenticationToken(subject = "missing-user"))
@@ -84,7 +103,8 @@ class PrivateControllerTest {
     @Test
     fun `me returns unauthorized when jwt subject is missing`() {
         val controller = PrivateController(
-            appUserStore = FakeAppUserStore()
+            appUserStore = FakeAppUserStore(),
+            profileService = stubProfileService()
         )
 
         val exception = assertFailsWith<ResponseStatusException> {
@@ -121,6 +141,32 @@ class PrivateControllerTest {
             )
         )
     }
+
+    private fun stubProfileService(): ProfileService =
+        ProfileService(
+            passwordPolicyEvaluator = PasswordPolicyEvaluator(
+                RegistrationProperties(
+                    frontendBaseUrl = "http://localhost:3000",
+                    verificationTtl = java.time.Duration.ofHours(24),
+                    cleanupCron = "0 0 * * * *",
+                    emailFrom = "no-reply@example.com",
+                    password = PasswordPolicyProperties(
+                        minLength = 8,
+                        minUpperCase = 1,
+                        minLowerCase = 1,
+                        minDigits = 1,
+                        minSpecialChars = 1
+                    ),
+                    captcha = CaptchaProperties(
+                        mode = CaptchaMode.MOCK,
+                        mockPassToken = "test-pass"
+                    )
+                )
+            ),
+            keycloakAdminClient = FakePrivateKeycloakAdminClient(),
+            appUserStore = FakeAppUserStore(),
+            clock = Clock.fixed(Instant.parse("2026-03-24T12:00:00Z"), ZoneId.of("UTC"))
+        )
 }
 
 private class FakeAppUserStore(
@@ -138,6 +184,9 @@ private class FakeAppUserStore(
     override fun findByEmail(email: String): AppUser? =
         users.firstOrNull { it.email == email }
 
+    override fun deleteById(keycloakUserId: String) {
+    }
+
     override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
         users.asList()
             .filterNot { it.keycloakUserId == excludedUserId }
@@ -147,4 +196,42 @@ private class FakeAppUserStore(
                     it.email.contains(query, ignoreCase = true)
             }
             .take(limit)
+}
+
+private class FakePrivateKeycloakAdminClient : KeycloakAdminClient {
+    override fun findUserByUsername(username: String): KeycloakUserSummary? = null
+
+    override fun findUserByEmail(email: String): KeycloakUserSummary? = null
+
+    override fun findUserById(userId: String): KeycloakUserRepresentation? = null
+
+    override fun createPendingUser(draft: RegistrationUserDraft): String = "created-user"
+
+    override fun updateUser(
+        userId: String,
+        username: String,
+        email: String,
+        firstName: String?,
+        lastName: String?,
+        enabled: Boolean,
+        emailVerified: Boolean
+    ) {
+    }
+
+    override fun changePassword(userId: String, newPassword: String) {
+    }
+
+    override fun validateUserCredentials(username: String, password: String): Boolean = true
+
+    override fun assignRealmRoles(userId: String, roleNames: Set<String>) {
+    }
+
+    override fun removeRealmRoles(userId: String, roleNames: Set<String>) {
+    }
+
+    override fun enableUser(userId: String) {
+    }
+
+    override fun deleteUser(userId: String) {
+    }
 }

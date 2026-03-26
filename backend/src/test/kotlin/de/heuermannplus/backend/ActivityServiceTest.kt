@@ -148,6 +148,42 @@ class ActivityServiceTest {
     }
 
     @Test
+    fun `active group member can view group activities`() {
+        val fixture = activityFixture()
+        fixture.createDefaultActivity()
+
+        val list = fixture.service.listGroupActivities(fixture.groupId, fixture.member)
+
+        assertEquals(1, list.activities.size)
+        assertEquals("Probeabend", list.activities.single().description)
+    }
+
+    @Test
+    fun `group activities are forbidden for users outside the group`() {
+        val fixture = activityFixture()
+        fixture.createDefaultActivity()
+        val outsider = CurrentUser("outsider-1", "outsider", "outsider@example.org")
+
+        val exception = assertFailsWith<ActivityException> {
+            fixture.service.listGroupActivities(fixture.groupId, outsider)
+        }
+
+        assertEquals("FORBIDDEN_ACTIVITY_ACCESS", exception.code)
+    }
+
+    @Test
+    fun `active group member can view all current participants on activity detail`() {
+        val fixture = activityFixture()
+        val detail = fixture.createDefaultActivity()
+
+        val visible = fixture.service.getActivity(fixture.groupId, detail.id, fixture.member)
+
+        assertEquals(3, visible.participants.count { it.removedAt == null })
+        assertTrue(visible.participants.any { it.displayName == "owner" })
+        assertTrue(visible.participants.any { it.displayName == "guest" })
+    }
+
+    @Test
     fun `upcoming list only contains future assigned activities`() {
         val fixture = activityFixture()
         fixture.service.createActivity(

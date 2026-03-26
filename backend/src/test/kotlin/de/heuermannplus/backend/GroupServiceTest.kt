@@ -172,6 +172,54 @@ class GroupServiceTest {
     }
 
     @Test
+    fun `group details are visible to invited members`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        fixture.service.inviteMember(
+            groupId,
+            InviteGroupMemberRequest(nicknameOrEmail = "guest@example.org"),
+            fixture.owner
+        )
+
+        val detail = fixture.service.getGroup(groupId, fixture.guest)
+
+        assertEquals(GroupMembershipStatus.INVITED, detail.currentMembershipStatus)
+        assertEquals(2, detail.members.size)
+        assertEquals(false, detail.currentUserAdmin)
+    }
+
+    @Test
+    fun `group details are forbidden for users without membership`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.getGroup(groupId, fixture.member)
+        }
+
+        assertEquals("FORBIDDEN_GROUP_MEMBER", exception.code)
+    }
+
+    @Test
+    fun `accept invitation rejects other users invitation`() {
+        val fixture = groupFixture()
+        val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
+
+        val invitation = fixture.service.inviteMember(
+            groupId,
+            InviteGroupMemberRequest(nicknameOrEmail = "guest@example.org"),
+            fixture.owner
+        ).members.first { it.displayName == "guest" }
+
+        val exception = assertFailsWith<GroupException> {
+            fixture.service.acceptInvitation(groupId, invitation.id, fixture.member)
+        }
+
+        assertEquals("FORBIDDEN_GROUP_MEMBER", exception.code)
+    }
+
+    @Test
     fun `last admin cannot leave or be revoked`() {
         val fixture = groupFixture()
         val groupId = fixture.service.createGroup(CreateGroupRequest(name = "Band 1"), fixture.owner).id
@@ -269,6 +317,10 @@ private class GroupTestAppUserStore(users: List<AppUser>) : AppUserStore {
     override fun findByNickname(nickname: String): AppUser? = records.values.firstOrNull { it.nickname == nickname }
 
     override fun findByEmail(email: String): AppUser? = records.values.firstOrNull { it.email == email }
+
+    override fun deleteById(keycloakUserId: String) {
+        records.remove(keycloakUserId)
+    }
 
     override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
         records.values

@@ -7,6 +7,7 @@ import de.heuermannplus.backend.registration.CaptchaMode
 import de.heuermannplus.backend.registration.CaptchaProperties
 import de.heuermannplus.backend.registration.CaptchaVerifier
 import de.heuermannplus.backend.registration.KeycloakAdminClient
+import de.heuermannplus.backend.registration.KeycloakUserRepresentation
 import de.heuermannplus.backend.registration.KeycloakUserSummary
 import de.heuermannplus.backend.registration.PasswordPolicyEvaluator
 import de.heuermannplus.backend.registration.PasswordPolicyProperties
@@ -559,6 +560,10 @@ private class InMemoryAppUserStore(
     override fun findByEmail(email: String): AppUser? =
         records.values.firstOrNull { it.email == email }
 
+    override fun deleteById(keycloakUserId: String) {
+        records.remove(keycloakUserId)
+    }
+
     override fun searchInviteSuggestions(query: String, excludedUserId: String, limit: Int): List<AppUser> =
         records.values
             .asSequence()
@@ -582,6 +587,9 @@ private class FakeKeycloakAdminClient : KeycloakAdminClient {
     override fun findUserByEmail(email: String): KeycloakUserSummary? =
         users.values.firstOrNull { it.email == email }?.toSummary()
 
+    override fun findUserById(userId: String): KeycloakUserRepresentation? =
+        users[userId]?.toRepresentation()
+
     override fun createPendingUser(draft: RegistrationUserDraft): String {
         val id = "user-${sequence++}"
         users[id] = FakeKeycloakUser(
@@ -594,6 +602,31 @@ private class FakeKeycloakAdminClient : KeycloakAdminClient {
         )
         return id
     }
+
+    override fun updateUser(
+        userId: String,
+        username: String,
+        email: String,
+        firstName: String?,
+        lastName: String?,
+        enabled: Boolean,
+        emailVerified: Boolean
+    ) {
+        val current = users.getValue(userId)
+        users[userId] = current.copy(
+            username = username,
+            email = email,
+            enabled = enabled,
+            emailVerified = emailVerified,
+            roles = LinkedHashSet(current.roles)
+        )
+    }
+
+    override fun changePassword(userId: String, newPassword: String) {
+    }
+
+    override fun validateUserCredentials(username: String, password: String): Boolean =
+        users.values.any { it.username == username }
 
     override fun assignRealmRoles(userId: String, roleNames: Set<String>) {
         users.getValue(userId).roles += roleNames
@@ -625,6 +658,15 @@ private data class FakeKeycloakUser(
 ) {
     fun toSummary(): KeycloakUserSummary =
         KeycloakUserSummary(
+            id = id,
+            username = username,
+            email = email,
+            enabled = enabled,
+            emailVerified = emailVerified
+        )
+
+    fun toRepresentation(): KeycloakUserRepresentation =
+        KeycloakUserRepresentation(
             id = id,
             username = username,
             email = email,
