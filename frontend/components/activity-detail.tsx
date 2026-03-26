@@ -171,9 +171,8 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
           }}
         >
           <div className="section-intro">
-            <p className="section-title">{activity.groupName}</p>
-            <h1 className="section-headline sm:text-[2.4rem]">{activity.description}</h1>
-            <p className="subheadline">Aktualisiert am {formatActivityDateTime(activity.updatedAt)}</p>
+            <h1 className="section-headline sm:text-[2.4rem]">Aktivität: {activity.description}</h1>
+            <p className="subheadline">In {activity.groupName} · Aktualisiert am {formatActivityDateTime(activity.updatedAt)}</p>
           </div>
 
           <ActivityField disabled={!activity.currentUserCanManage} label="Beschreibung" onChange={setDescription} value={description} />
@@ -210,8 +209,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
 
         <div className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Status</p>
-            <h2 className="section-headline text-[2rem]">Teilnahme und Rückmeldungen</h2>
+            <h2 className="section-headline text-[2rem]">Teilnahme und Rückmeldungen im Überblick</h2>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -271,8 +269,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
       {activity.currentUserCanManage ? (
         <section className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Teilnehmer</p>
-            <h2 className="section-headline text-[2rem]">Aktive Gruppenmitglieder zuweisen</h2>
+            <h2 className="section-headline text-[2rem]">Aktive Gruppenmitglieder zu dieser Aktivität zuweisen</h2>
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row">
@@ -314,8 +311,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
       <section className="brand-card card">
         <div className="card-body gap-4">
           <div className="section-intro">
-            <p className="section-title">Teilnehmerliste</p>
-            <h2 className="section-headline text-[2rem]">Mitglieder und Antworten</h2>
+            <h2 className="section-headline text-[2rem]">Teilnehmer und Antworten im Überblick</h2>
           </div>
 
           <div className="space-y-4">

@@ -143,8 +143,7 @@ export function RegistrationForm() {
     <div className="public-registration-layout">
       <form className="brand-card public-form-card" onSubmit={handleSubmit}>
         <div className="section-intro">
-          <p className="section-title">Registrierung</p>
-          <h1 className="display-headline">Richte dein Konto in einem klaren, geführten Einstieg ein.</h1>
+          <h1 className="display-headline">Dein Konto für Gruppen und Aktivitäten anlegen.</h1>
           <p className="body-copy">
             Die Funktion bleibt gleich: Daten erfassen, Captcha bestätigen, Bedingungen akzeptieren, Verifizierungslink
             per E-Mail erhalten. Das Design ordnet diese Schritte nur sauberer und lesbarer.
@@ -292,8 +291,7 @@ export function RegistrationForm() {
 
         <div className="soft-panel public-support-card">
           <div className="section-intro">
-            <p className="section-title">Ablauf</p>
-            <h2 className="section-headline">Was nach dem Formular passiert.</h2>
+            <h2 className="section-headline">So geht es nach dem Absenden weiter.</h2>
           </div>
 
           <div className="public-stage-list">
@@ -314,8 +312,7 @@ export function RegistrationForm() {
 
         <div className="soft-panel public-support-card">
           <div className="section-intro">
-            <p className="section-title">Freischaltung</p>
-            <h2 className="section-headline">Neue Nutzer starten bewusst ohne direkte App-Freigabe.</h2>
+            <h2 className="section-headline">Dein Zugang wird erst nach der E-Mail-Verifizierung freigeschaltet.</h2>
           </div>
           <p className="body-copy text-sm">
             Erst nach der bestätigten E-Mail-Verifizierung weist das System die Rolle <code>app-user</code> zu. Die

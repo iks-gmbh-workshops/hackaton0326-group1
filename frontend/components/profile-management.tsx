@@ -280,8 +280,7 @@ export function ProfileManagement() {
                     <div className="card-body gap-4">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="section-intro">
-                                <p className="section-title">Profil</p>
-                                <h1 className="section-headline text-[2.4rem]">Konto verwalten</h1>
+                                <h1 className="section-headline text-[2.4rem]">Konto und Profil verwalten</h1>
                                 <p className="subheadline">
                                     Aktualisiere deinen Username und deine Stammdaten, ändere dein Passwort oder lösche dein Konto vollständig.
                                 </p>
@@ -296,8 +295,7 @@ export function ProfileManagement() {
                 <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
                     <form className="brand-card space-y-5 p-6" onSubmit={handleProfileSubmit}>
                         <div className="space-y-2">
-                            <p className="section-title">Profil bearbeiten</p>
-                            <h2 className="section-headline text-[2rem]">Sichtbare Kontodaten</h2>
+                            <h2 className="section-headline text-[2rem]">Sichtbare Kontodaten bearbeiten</h2>
                             <p className="subheadline">
                                 Username, Vorname und Nachname werden nach dem Speichern auch in Keycloak synchronisiert.
                             </p>
@@ -349,8 +347,7 @@ export function ProfileManagement() {
                     <div className="space-y-6">
                         <form className="brand-card space-y-5 p-6" onSubmit={handlePasswordSubmit}>
                             <div className="space-y-2">
-                                <p className="section-title">Passwort ändern</p>
-                                <h2 className="section-headline text-[2rem]">Neues Passwort setzen</h2>
+                                <h2 className="section-headline text-[2rem]">Ein neues Passwort festlegen</h2>
                                 <p className="subheadline">Lege ein neues Passwort fest. Du bist bereits angemeldet, daher ist keine Verifizierung des aktuellen Passworts nötig.</p>
                             </div>
 
@@ -397,8 +394,7 @@ export function ProfileManagement() {
                                 </span>
 
                                 <div className="space-y-2">
-                                    <p className="section-title !text-white/80">Konto löschen</p>
-                                    <h2 className="section-headline !text-white text-[2rem]">Unwiderruflich entfernen</h2>
+                                    <h2 className="section-headline !text-white text-[2rem]">Dein Konto unwiderruflich löschen</h2>
                                     <p className="subheadline max-w-2xl !text-white/90">
                                         Dieser Schritt ist endgültig. Wenn du dein Konto löschst, werden deine Zugangsdaten und Profildaten dauerhaft entfernt und können nicht wiederhergestellt werden.
                                     </p>

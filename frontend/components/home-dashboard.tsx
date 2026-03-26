@@ -61,8 +61,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
           </div>
 
           <div className="max-w-3xl space-y-4">
-            <p className="subheadline">Dein schneller Überblick für Gruppen und nächste Schritte.</p>
-            <h1 className="headline">Willkommen zurück, {userName}.</h1>
+            <h1 className="headline">Willkommen zurück, {userName}. Hier findest du Gruppen und nächste Schritte.</h1>
             <p className="body-copy max-w-2xl">
               Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz für kommende Aktivitäten.
             </p>
@@ -77,8 +76,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <div className="soft-panel grid gap-4">
           <div className="section-intro">
-            <p className="section-title">Übersicht</p>
-            <h2 className="section-headline max-w-[16ch]">Direkt nach dem Login orientieren</h2>
+            <h2 className="section-headline max-w-[20ch]">Direkt nach dem Login den Überblick behalten</h2>
           </div>
 
           <div className="overview-grid">
@@ -123,7 +121,6 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
         <section className="brand-card card">
           <div className="card-body gap-5">
             <div className="section-intro">
-              <p className="section-title">Meine Gruppen</p>
               <h2 className="section-headline">Deine wichtigsten Gruppen auf einen Blick</h2>
               <p className="subheadline">
                 Kompakt dargestellt für den schnellen Einstieg. Die komplette Verwaltung bleibt unter Gruppen.
@@ -209,8 +206,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <section className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Bevorstehende Aktivitäten</p>
-            <h2 className="section-headline">Hier erscheinen deine nächsten Termine</h2>
+            <h2 className="section-headline">Hier erscheinen deine nächsten Aktivitäten und Termine</h2>
             <p className="subheadline">
               Die Aktivitätenfunktion ist im Projekt noch nicht umgesetzt. Dieser Bereich ist dafür bereits vorgesehen.
             </p>

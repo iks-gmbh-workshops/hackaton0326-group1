@@ -200,8 +200,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
           }}
         >
           <div className="section-intro">
-            <p className="section-title">Gruppendetails</p>
-            <h1 className="section-headline">{group.name}</h1>
+            <h1 className="section-headline">Gruppe {group.name} im Überblick</h1>
             <p className="subheadline">Erstellt am {formatDate(group.createdAt)}</p>
           </div>
 
@@ -228,8 +227,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
 
         <div className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Mitgliedschaft</p>
-            <h2 className="section-headline">Dein Status</h2>
+            <h2 className="section-headline">Dein Mitgliedsstatus in dieser Gruppe</h2>
           </div>
           <p className="body-copy text-sm">{membershipLabel(group.currentMembershipStatus)}</p>
           {group.currentMembershipStatus === "INVITED" && group.currentMembershipId ? (
@@ -307,8 +305,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
             }}
           >
             <div className="section-intro">
-              <p className="section-title">Einladen</p>
-              <h2 className="section-headline">Mitglieder per Nickname oder E-Mail</h2>
+              <h2 className="section-headline">Mitglieder per Nickname oder E-Mail einladen</h2>
             </div>
             <InviteSuggestionField
               label="Nickname oder E-Mail-Adresse"
@@ -332,8 +329,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
 
           <div className="soft-panel space-y-4">
             <div className="section-intro">
-              <p className="section-title">Token</p>
-              <h2 className="section-headline">Einladungstoken generieren</h2>
+              <h2 className="section-headline">Einladungstoken für diese Gruppe generieren</h2>
             </div>
             <button
               className="btn btn-outline btn-primary"
@@ -373,8 +369,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         <div className="brand-card card">
           <div className="card-body gap-4">
             <div className="section-intro">
-              <p className="section-title">Aktivitäten</p>
-              <h2 className="section-headline text-[2rem]">Anstehende Gruppentermine</h2>
+              <h2 className="section-headline text-[2rem]">Anstehende Aktivitäten in dieser Gruppe</h2>
             </div>
 
             <div className="space-y-4">
@@ -411,8 +406,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         <div className="brand-card card">
           <div className="card-body gap-4">
             <div className="section-intro">
-              <p className="section-title">Mitglieder</p>
-              <h2 className="section-headline">Mitglieder und Rollen</h2>
+              <h2 className="section-headline">Mitglieder und Rollen in dieser Gruppe</h2>
             </div>
 
             <div className="space-y-4">
@@ -482,8 +476,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
           {group.currentUserAdmin ? (
             <section className="soft-panel space-y-4">
               <div className="section-intro">
-                <p className="section-title">Anträge</p>
-                <h2 className="section-headline text-[2rem]">Offene Mitgliedschaftsanträge</h2>
+                <h2 className="section-headline text-[2rem]">Offene Mitgliedschaftsanträge in dieser Gruppe</h2>
               </div>
               {group.joinRequests.map((request) => (
                 <div key={request.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
@@ -533,8 +526,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
 
           <section className="soft-panel space-y-4">
             <div className="section-intro">
-              <p className="section-title">Einladungen</p>
-              <h2 className="section-headline">Versendete Einladungen</h2>
+              <h2 className="section-headline">Bereits versendete Einladungen</h2>
             </div>
             {group.invitations.map((invitation) => (
               <div key={invitation.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">

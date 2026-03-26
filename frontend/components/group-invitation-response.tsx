@@ -93,8 +93,7 @@ export function GroupInvitationResponse() {
   if (state.status === "loading") {
     return (
       <div className="soft-panel mx-auto grid w-full max-w-3xl gap-4 rounded-[1.75rem]">
-        <p className="section-title">Gruppeneinladung</p>
-        <h1 className="section-headline">Einladung wird verarbeitet</h1>
+        <h1 className="section-headline">Gruppeneinladung wird verarbeitet</h1>
         <p className="subheadline">Wir verarbeiten gerade deine Antwort aus der E-Mail.</p>
       </div>
     );
@@ -103,8 +102,7 @@ export function GroupInvitationResponse() {
   if (state.status === "error") {
     return (
       <div className="soft-panel mx-auto grid w-full max-w-3xl gap-4 rounded-[1.75rem]">
-        <p className="section-title">Gruppeneinladung</p>
-        <h1 className="section-headline">Einladung konnte nicht verarbeitet werden</h1>
+        <h1 className="section-headline">Gruppeneinladung konnte nicht verarbeitet werden</h1>
         <div className="alert alert-error">{state.message}</div>
       </div>
     );
@@ -115,7 +113,6 @@ export function GroupInvitationResponse() {
   return (
     <div className="soft-panel mx-auto grid w-full max-w-3xl gap-6 rounded-[1.75rem]">
       <div className="section-intro">
-        <p className="section-title">Gruppeneinladung</p>
         <h1 className="section-headline">{resultHeading(result)}</h1>
         <p className="subheadline">{resultSubheadline(result)}</p>
       </div>
@@ -173,17 +170,17 @@ export function GroupInvitationResponse() {
 function resultHeading(result: GroupInvitationResult) {
   switch (result.status) {
     case "ACCEPTED":
-      return "Einladung angenommen";
+      return "Gruppeneinladung angenommen";
     case "ALREADY_ACCEPTED":
-      return "Einladung bereits angenommen";
+      return "Gruppeneinladung bereits angenommen";
     case "DECLINED":
-      return "Einladung abgelehnt";
+      return "Gruppeneinladung abgelehnt";
     case "ALREADY_DECLINED":
-      return "Einladung bereits abgelehnt";
+      return "Gruppeneinladung bereits abgelehnt";
     case "EXPIRED":
-      return "Einladung abgelaufen";
+      return "Gruppeneinladung abgelaufen";
     case "INVALID":
-      return "Einladung ungueltig";
+      return "Gruppeneinladung ungültig";
   }
 }
 

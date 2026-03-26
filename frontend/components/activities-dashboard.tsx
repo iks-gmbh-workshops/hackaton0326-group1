@@ -46,8 +46,7 @@ export function ActivitiesDashboard() {
       <section className="brand-card card">
         <div className="card-body gap-5">
           <div className="section-intro">
-            <p className="section-title">Aktivitäten</p>
-            <h1 className="section-headline sm:text-[2.4rem]">Deine anstehenden Termine</h1>
+            <h1 className="section-headline sm:text-[2.4rem]">Deine anstehenden Aktivitäten und Termine</h1>
             <p className="subheadline">
               Hier siehst du alle kommenden Aktivitäten, denen du aktuell zugewiesen bist.
             </p>

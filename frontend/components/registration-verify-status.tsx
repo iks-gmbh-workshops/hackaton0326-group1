@@ -63,8 +63,7 @@ export function RegistrationVerifyStatus() {
     <section className="public-verification-shell">
       <div className="public-callout public-verification-card">
         <div className="section-intro">
-          <p className="section-title">Verifizierung</p>
-          <h1 className="display-headline">Bestätige deinen Zugang und schließe den Einstieg sauber ab.</h1>
+          <h1 className="display-headline">Deinen Zugang bestätigen und die Registrierung abschließen.</h1>
           <p className="body-copy">
             Die Rückmeldung unten kommt direkt aus dem bestehenden Verifizierungsprozess. Das Redesign ändert nicht den
             Ablauf, sondern macht Erfolg und Fehler eindeutiger sichtbar.

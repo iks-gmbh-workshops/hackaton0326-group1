@@ -10,8 +10,7 @@ export function PasswordRequirements({ requirements }: PasswordRequirementsProps
   return (
     <div className="soft-panel public-support-card">
       <div className="section-intro">
-        <p className="section-title">Passwortanforderungen</p>
-        <h2 className="section-headline">Die Freigabe prueft dein Passwort direkt gegen die Richtlinie.</h2>
+        <h2 className="section-headline">Dein Passwort wird direkt gegen diese Richtlinie geprüft.</h2>
       </div>
 
       <ul className="space-y-2 text-sm">

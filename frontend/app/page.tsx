@@ -46,22 +46,22 @@ const stages = [
 const proofPoints = [
   {
     title: "Für Organisator:innen",
-    headline: "Weniger Rückfragen, stärkere Orientierung.",
+    headline: "Für Organisator:innen: weniger Rückfragen und mehr Orientierung.",
     copy: "Die zentrale Gruppenansicht reduziert Abstimmungslast und zeigt, wo Entscheidungen oder Reaktionen gebraucht werden."
   },
   {
     title: "Für Mitglieder",
-    headline: "Schneller verstehen, sicherer teilnehmen.",
+    headline: "Für Mitglieder: schneller verstehen und sicherer teilnehmen.",
     copy: "Mitglieder sehen Einladungen, Aktivitäten und den aktuellen Stand gebündelt statt verteilt über mehrere Kanäle."
   },
   {
     title: "Für den Einstieg",
-    headline: "Ein klarer Start statt Tool-Sammlung.",
+    headline: "Für den Einstieg: ein klarer Start statt verteilter Tools.",
     copy: "Konto anlegen, verifizieren, loslegen: der Einstieg bleibt nachvollziehbar und führt direkt in die gemeinsame Struktur."
   },
   {
     title: "Für spätere Erweiterung",
-    headline: "Die Oberfläche bleibt aufnahmefähig.",
+    headline: "Für spätere Erweiterungen: die Oberfläche bleibt klar und aufnahmefähig.",
     copy: "Das Design priorisiert klare Sektionen und robuste Muster, damit künftige Funktionen nicht wie Fremdkörper wirken."
   }
 ];
@@ -85,8 +85,7 @@ export default async function HomePage() {
         <section className="public-hero">
           <div className="public-hero-copy space-y-6">
             <div className="section-intro">
-              <p className="section-title">Koordination für echte Gruppenarbeit</p>
-              <h1 className="display-headline">Ein neuer Ausgangspunkt für Einladungen, Gruppen und gemeinsame Aktivitäten.</h1>
+              <h1 className="display-headline">Gruppen, Einladungen und Aktivitäten an einem gemeinsamen Ort koordinieren.</h1>
               <p className="body-copy">
                 HeuermannPlus strukturiert den Weg vom ersten Zugang bis zur laufenden Zusammenarbeit. Gruppen starten
                 geordnet, Mitglieder finden schneller ihren Platz und Aktivitäten bleiben sichtbar statt implizit.
@@ -109,8 +108,7 @@ export default async function HomePage() {
           <div className="public-stage-rail" aria-hidden="true">
             <div className="public-callout">
               <div className="section-intro">
-                <p className="section-title">Heute sichtbar</p>
-                <h2 className="section-headline">Weniger Sucharbeit, mehr gemeinsame Orientierung.</h2>
+                <h2 className="section-headline">So behältst du Gruppen, Einladungen und Aktivitäten im Blick.</h2>
               </div>
 
               <div className="public-stage-list">
@@ -144,8 +142,7 @@ export default async function HomePage() {
 
         <section className="public-section page-section">
           <div className="section-intro">
-            <p className="section-title">Was das Produkt stärkt</p>
-            <h2 className="section-headline">Die neue visuelle Sprache ordnet das Produkt nach Aufgaben statt nach Zufall.</h2>
+            <h2 className="section-headline">Die Oberfläche bleibt nach Aufgaben geordnet und direkt verständlich.</h2>
             <p className="subheadline">
               Typografie, Farbcodierung und Flächenhierarchie folgen der Styleguide-Basis, während DaisyUI die
               Komponentenlogik für Buttons, Karten, Alerts und Formulare trägt.
@@ -165,8 +162,7 @@ export default async function HomePage() {
 
         <section className="public-section page-section">
           <div className="section-intro">
-            <p className="section-title">Vom Einstieg bis zur Planung</p>
-            <h2 className="section-headline">Drei Bewegungen, die das Produkt klar lesbar machen.</h2>
+            <h2 className="section-headline">So führst du Gruppen vom Einstieg bis zur Planung.</h2>
           </div>
 
           <div className="public-stage-grid">
@@ -182,14 +178,12 @@ export default async function HomePage() {
 
         <section className="public-section page-section">
           <div className="section-intro">
-            <p className="section-title">Relevanz für beide Seiten</p>
-            <h2 className="section-headline">Die Oberfläche bleibt gleichermaßen klar für Organisator:innen und Mitglieder.</h2>
+            <h2 className="section-headline">Klare Orientierung für Organisator:innen und Mitglieder.</h2>
           </div>
 
           <div className="public-proof-grid">
             {proofPoints.map((point) => (
               <article key={point.title} className="feature-card">
-                <p className="subsection-title">{point.title}</p>
                 <h3 className="headline text-[1.45rem]">{point.headline}</h3>
                 <p className="body-copy text-sm">{point.copy}</p>
               </article>
@@ -199,8 +193,7 @@ export default async function HomePage() {
 
         <section className="public-callout page-section">
           <div className="section-intro">
-            <p className="section-title">Direkter Einstieg</p>
-            <h2 className="section-headline">Starte mit einem Konto und führe deine Gruppe später in dieselbe neue Shell.</h2>
+            <h2 className="section-headline">Starte mit deinem Konto und führe deine Gruppe später in dieselbe Oberfläche.</h2>
             <p className="body-copy">
               Die jetzige Iteration verankert Navigation, Typografie, CTA-Hierarchie und Formularrhythmus. Die
               geschützten Bereiche können diese Muster im nächsten Schritt direkt übernehmen.

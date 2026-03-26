@@ -24,7 +24,6 @@ export default async function TermsPage({ params }: TermsPageProps) {
       <div className="page-container max-w-4xl">
         <section className="brand-card p-6 sm:p-8">
           <div className="section-intro">
-            <p className="section-title">Rechtliches</p>
             <h1 className="section-headline">{document.title}</h1>
             <p className="subheadline">
               {document.updatedAtLabel} · Version {document.version}

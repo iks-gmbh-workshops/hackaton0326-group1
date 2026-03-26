@@ -65,8 +65,7 @@ export function ActivityFormView({ groupId }: ActivityFormViewProps) {
       <section className="brand-card">
         <form className="grid gap-5 p-6" onSubmit={handleSubmit}>
           <div className="section-intro">
-            <p className="section-title">Neue Aktivität</p>
-            <h1 className="section-headline sm:text-[2.4rem]">Termin für die Gruppe anlegen</h1>
+            <h1 className="section-headline sm:text-[2.4rem]">Neue Aktivität für deine Gruppe anlegen</h1>
             <p className="subheadline">
               Alle aktuell aktiven Gruppenmitglieder werden automatisch mit Status offen übernommen.
             </p>

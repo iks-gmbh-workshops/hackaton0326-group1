@@ -79,20 +79,10 @@ export function AppHeader({ authenticated, userName }: AppHeaderProps) {
         ) : (
           <div className="app-header-actions">
             <nav className="app-header-nav" aria-label="Öffentliche Navigation">
-              <Link href={"/" as Route} className={publicNavClass("/")}>
-                Start
-              </Link>
               <Link href={"/register" as Route} className={publicNavClass("/register")}>
                 Registrierung
               </Link>
             </nav>
-
-            <Link
-              href={"/" as Route}
-              className={`btn btn-ghost btn-sm app-nav-link lg:hidden ${pathname === "/" ? "app-nav-link-active" : ""}`}
-            >
-              Start
-            </Link>
 
             <Link
               href={"/register" as Route}
