@@ -26,7 +26,7 @@ class RegistrationExceptionHandler {
             .body(
                 ApiErrorResponse(
                     code = "BAD_REQUEST",
-                    message = exception.message ?: "Ungueltige Anfrage"
+                    message = exception.message ?: "Ungültige Anfrage"
                 )
             )
 }

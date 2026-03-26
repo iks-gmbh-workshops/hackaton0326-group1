@@ -46,7 +46,7 @@ export function ActivityFormView({ groupId }: ActivityFormViewProps) {
           router.push(`/groups/${groupId}/activities/${body.id}` as Route);
         })
         .catch(() => {
-          setError({ code: "NETWORK_ERROR", message: "Aktivitaet konnte nicht gespeichert werden" });
+          setError({ code: "NETWORK_ERROR", message: "Aktivität konnte nicht gespeichert werden" });
         });
     });
   }
@@ -58,17 +58,17 @@ export function ActivityFormView({ groupId }: ActivityFormViewProps) {
           Zur Gruppe
         </Link>
         <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
-          Meine Aktivitaeten
+          Meine Aktivitäten
         </Link>
       </div>
 
       <section className="brand-card">
         <form className="grid gap-5 p-6" onSubmit={handleSubmit}>
           <div className="section-intro">
-            <p className="section-title">Neue Aktivitaet</p>
-            <h1 className="section-headline sm:text-[2.4rem]">Termin fuer die Gruppe anlegen</h1>
+            <p className="section-title">Neue Aktivität</p>
+            <h1 className="section-headline sm:text-[2.4rem]">Termin für die Gruppe anlegen</h1>
             <p className="subheadline">
-              Alle aktuell aktiven Gruppenmitglieder werden automatisch mit Status offen uebernommen.
+              Alle aktuell aktiven Gruppenmitglieder werden automatisch mit Status offen übernommen.
             </p>
           </div>
 
@@ -82,8 +82,8 @@ export function ActivityFormView({ groupId }: ActivityFormViewProps) {
 
           {error ? <div className="alert alert-error">{error.message}</div> : null}
 
-          <button className="btn btn-primary" disabled={isPending} type="submit">
-            {isPending ? "Speichere..." : "Aktivitaet erstellen"}
+          <button className="form-actions btn btn-primary" disabled={isPending} type="submit">
+            {isPending ? "Speichere..." : "Aktivität erstellen"}
           </button>
         </form>
       </section>

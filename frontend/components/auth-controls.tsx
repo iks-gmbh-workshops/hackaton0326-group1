@@ -5,9 +5,10 @@ import { signIn, signOut } from "next-auth/react";
 
 type AuthControlsProps = {
   authenticated: boolean;
+  variant?: "default" | "header";
 };
 
-export function AuthControls({ authenticated }: AuthControlsProps) {
+export function AuthControls({ authenticated, variant = "default" }: AuthControlsProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleLogin() {
@@ -46,14 +47,18 @@ export function AuthControls({ authenticated }: AuthControlsProps) {
   if (authenticated) {
     return (
       <button className="btn btn-outline btn-primary" disabled={isPending} onClick={handleLogout}>
-        {isPending ? "Abmelden..." : "Logout"}
+        {isPending ? "Abmelden..." : "Abmelden"}
       </button>
     );
   }
 
   return (
-    <button className="btn btn-primary" disabled={isPending} onClick={handleLogin}>
-      {isPending ? "Weiter..." : "Mit Keycloak anmelden"}
+    <button
+      className={variant === "header" ? "btn btn-outline btn-primary btn-sm" : "btn btn-primary"}
+      disabled={isPending}
+      onClick={handleLogin}
+    >
+      {isPending ? "Weiter..." : variant === "header" ? "Anmelden" : "Mit Keycloak anmelden"}
     </button>
   );
 }

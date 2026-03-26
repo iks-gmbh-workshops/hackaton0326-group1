@@ -8,5 +8,5 @@ fun JwtAuthenticationToken.requiredSubject(): String =
     token.getClaimAsString("sub")
         ?: throw ResponseStatusException(
             HttpStatus.UNAUTHORIZED,
-            "JWT enthaelt keinen Subject-Claim"
+            "JWT enthält keinen Subject-Claim"
         )

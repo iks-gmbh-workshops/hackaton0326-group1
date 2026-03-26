@@ -161,7 +161,7 @@ export function GroupsDashboard() {
         <form className="brand-card space-y-4 p-6" onSubmit={handleCreateGroup}>
           <div className="section-intro">
             <p className="section-title">Neue Gruppe</p>
-            <h1 className="section-headline sm:text-[2.4rem]">Gruppen anlegen und verwalten</h1>
+            <h1 className="section-headline">Gruppen anlegen und verwalten</h1>
             <p className="subheadline">
               Der Ersteller wird automatisch Gruppenverwalter und kann danach Mitglieder einladen.
             </p>
@@ -181,12 +181,12 @@ export function GroupsDashboard() {
 
           {submitError?.field === "name" ? <div className="alert alert-error">{submitError.message}</div> : null}
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="form-actions flex flex-wrap items-center gap-3">
             <button className="btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Speichere..." : "Gruppe erstellen"}
             </button>
             <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
-              Meine Aktivitaeten
+              Meine Aktivitäten
             </Link>
             <Link className="btn btn-ghost" href={"/" as Route}>
               Zur Startseite
@@ -197,7 +197,7 @@ export function GroupsDashboard() {
         <form className="soft-panel space-y-4" onSubmit={handleJoinByToken}>
           <div className="section-intro">
             <p className="section-title">Token</p>
-            <h2 className="section-headline text-[2rem]">Mit Einladungstoken beitreten</h2>
+            <h2 className="section-headline">Mit Einladungstoken beitreten</h2>
           </div>
           <Field
             label="Gruppeneinladungstoken"
@@ -205,8 +205,8 @@ export function GroupsDashboard() {
             required
             value={joinToken}
           />
-          <button className="btn btn-outline btn-primary" disabled={isPending} type="submit">
-            {isPending ? "Pruefe..." : "Token einloesen"}
+          <button className="form-actions btn btn-outline btn-primary" disabled={isPending} type="submit">
+            {isPending ? "Prüfe..." : "Token einlösen"}
           </button>
         </form>
 
@@ -219,7 +219,7 @@ export function GroupsDashboard() {
           <div className="card-body gap-4">
             <div className="section-intro">
               <p className="section-title">Meine Gruppen</p>
-              <h2 className="section-headline text-[2rem]">Aktive Zugehoerigkeiten und Einladungen</h2>
+              <h2 className="section-headline text-[2rem]">Aktive Zugehörigkeiten und Einladungen</h2>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -235,7 +235,7 @@ export function GroupsDashboard() {
                   <p className="body-copy text-sm">{group.description || "Keine Beschreibung hinterlegt."}</p>
                   <p className="helper-text">{group.memberCount} aktive Mitglieder</p>
                   <Link className="btn btn-sm btn-primary" href={`/groups/${group.id}` as Route}>
-                    Details oeffnen
+                    Details öffnen
                   </Link>
                 </article>
               ))}
@@ -247,13 +247,13 @@ export function GroupsDashboard() {
         <section className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Einladungen</p>
-            <h2 className="section-headline text-[2rem]">Offene Gruppeneinladungen</h2>
+            <h2 className="section-headline">Offene Gruppeneinladungen</h2>
           </div>
           {data.invitations.map((invitation) => (
             <div key={invitation.membershipId} className="rounded-2xl border border-base-300 bg-white/85 p-4">
               <p className="subsection-title">{invitation.groupName}</p>
               <p className="helper-text">Eingeladen am {formatDate(invitation.invitedAt)}</p>
-              <p className="body-copy mt-2 text-sm">Einladung fuer {invitation.displayName}</p>
+              <p className="body-copy mt-2 text-sm">Einladung für {invitation.displayName}</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 <button
                   className="btn btn-sm btn-primary"
@@ -274,8 +274,8 @@ export function GroupsDashboard() {
 
         <section className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Antraege</p>
-            <h2 className="section-headline text-[2rem]">Eigene Mitgliedschaftsantraege</h2>
+            <p className="section-title">Anträge</p>
+            <h2 className="section-headline text-[2rem]">Eigene Mitgliedschaftsanträge</h2>
           </div>
           {data.joinRequests.map((request) => (
             <div key={request.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
@@ -284,13 +284,13 @@ export function GroupsDashboard() {
               {request.comment ? <p className="body-copy mt-2 text-sm">{request.comment}</p> : null}
             </div>
           ))}
-          {!data.joinRequests.length ? <p className="helper-text">Keine offenen Antraege.</p> : null}
+          {!data.joinRequests.length ? <p className="helper-text">Keine offenen Anträge.</p> : null}
         </section>
 
         <section className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Gruppen finden</p>
-            <h2 className="section-headline text-[2rem]">Mitgliedschaft beantragen</h2>
+            <h2 className="section-headline">Mitgliedschaft beantragen</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {data.availableGroups.map((group) => (
@@ -309,7 +309,7 @@ export function GroupsDashboard() {
               </article>
             ))}
           </div>
-          {!data.availableGroups.length ? <p className="helper-text">Keine weiteren Gruppen verfuegbar.</p> : null}
+          {!data.availableGroups.length ? <p className="helper-text">Keine weiteren Gruppen verfügbar.</p> : null}
         </section>
       </div>
     </div>

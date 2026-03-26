@@ -92,26 +92,26 @@ class ProfileService(
         }
 
         keycloakAdminClient.changePassword(currentUser.keycloakUserId, newPassword)
-        return MessageResponse("Passwort wurde geaendert")
+        return MessageResponse("Passwort wurde geändert")
     }
 
     @Transactional
     fun deleteAccount(authentication: JwtAuthenticationToken, request: DeleteAccountRequest): MessageResponse {
         val currentUser = currentUser(authentication)
-        val confirmation = request.confirmation.requireField("confirmation", "Bitte Username zur Bestaetigung eingeben")
+        val confirmation = request.confirmation.requireField("confirmation", "Bitte Username zur Bestätigung eingeben")
 
         if (confirmation != currentUser.nickname) {
             throw RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "DELETE_CONFIRMATION_MISMATCH",
-                message = "Die Bestaetigung stimmt nicht mit dem Username ueberein",
+                message = "Die Bestätigung stimmt nicht mit dem Username überein",
                 field = "confirmation"
             )
         }
 
         keycloakAdminClient.deleteUser(currentUser.keycloakUserId)
         appUserStore.deleteById(currentUser.keycloakUserId)
-        return MessageResponse("Konto wurde geloescht")
+        return MessageResponse("Konto wurde gelöscht")
     }
 
     private fun currentUser(authentication: JwtAuthenticationToken): AppUser {
@@ -147,7 +147,7 @@ class ProfileService(
             throw RegistrationException(
                 status = HttpStatus.UNAUTHORIZED,
                 code = "INVALID_TOKEN",
-                message = "Die Anmeldung enthaelt keine gueltige Benutzerkennung"
+                message = "Die Anmeldung enthält keine gültige Benutzerkennung"
             )
         }
 

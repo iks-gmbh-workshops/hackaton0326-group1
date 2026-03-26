@@ -49,7 +49,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
     const groupBody = (await groupResponse.json()) as GroupDetail & ActivityError;
 
     if (!activityResponse.ok) {
-      throw new Error(activityBody.message || "Aktivitaet konnte nicht geladen werden");
+      throw new Error(activityBody.message || "Aktivität konnte nicht geladen werden");
     }
     if (!groupResponse.ok) {
       throw new Error(groupBody.message || "Gruppe konnte nicht geladen werden");
@@ -71,7 +71,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
 
   useEffect(() => {
     void loadData().catch((loadError) => {
-      setError(loadError instanceof Error ? loadError.message : "Aktivitaet konnte nicht geladen werden");
+      setError(loadError instanceof Error ? loadError.message : "Aktivität konnte nicht geladen werden");
     });
   }, [loadData]);
 
@@ -122,7 +122,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
           onSuccess?.(body);
         })
         .catch(() => {
-          setError("Aktion konnte nicht ausgefuehrt werden");
+          setError("Aktion konnte nicht ausgeführt werden");
         });
     });
   }
@@ -132,7 +132,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
   }
 
   if (!activity || !group) {
-    return <div className="soft-panel">Lade Aktivitaet...</div>;
+    return <div className="soft-panel">Lade Aktivität...</div>;
   }
 
   return (
@@ -142,7 +142,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
           Zur Gruppe
         </Link>
         <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
-          Meine Aktivitaeten
+          Meine Aktivitäten
         </Link>
       </div>
 
@@ -166,7 +166,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
                     scheduledAt: combineDateTimeToIso(date, time)
                   })
                 }),
-              "Aktivitaet aktualisiert"
+              "Aktivität aktualisiert"
             );
           }}
         >
@@ -187,7 +187,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
           {activity.currentUserCanManage ? (
             <div className="flex flex-wrap gap-3">
               <button className="btn btn-primary" disabled={isPending} type="submit">
-                {isPending ? "Speichere..." : "Aenderungen speichern"}
+                {isPending ? "Speichere..." : "Änderungen speichern"}
               </button>
               <button
                 className="btn btn-outline btn-error"
@@ -195,14 +195,14 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
                 onClick={() =>
                   performAction(
                     () => authenticatedBackendFetch(`/api/private/groups/${groupId}/activities/${activityId}`, { method: "DELETE" }),
-                    "Aktivitaet geloescht",
+                    "Aktivität gelöscht",
                     () => {
                       window.location.assign(`/groups/${groupId}`);
                     }
                   )}
                 type="button"
               >
-                Aktivitaet loeschen
+                Aktivität löschen
               </button>
             </div>
           ) : null}
@@ -211,7 +211,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
         <div className="soft-panel space-y-4">
           <div className="section-intro">
             <p className="section-title">Status</p>
-            <h2 className="section-headline text-[2rem]">Teilnahme und Rueckmeldungen</h2>
+            <h2 className="section-headline text-[2rem]">Teilnahme und Rückmeldungen</h2>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -237,7 +237,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ responseStatus, responseNote })
                     }),
-                  "Rueckmeldung gespeichert"
+                  "Rückmeldung gespeichert"
                 );
               }}
             >
@@ -257,12 +257,12 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
               </label>
               <ActivityTextarea label="Notiz" onChange={setResponseNote} value={responseNote} />
               <button className="btn btn-primary" disabled={isPending} type="submit">
-                {isPending ? "Speichere..." : "Rueckmeldung senden"}
+                {isPending ? "Speichere..." : "Rückmeldung senden"}
               </button>
             </form>
           ) : (
             <div className="rounded-2xl border border-base-300 bg-white/85 p-4">
-              <p className="helper-text">Du bist dieser Aktivitaet derzeit nicht als Teilnehmer zugewiesen.</p>
+              <p className="helper-text">Du bist dieser Aktivität derzeit nicht als Teilnehmer zugewiesen.</p>
             </div>
           )}
         </div>
@@ -281,7 +281,7 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
               onChange={(event) => setSelectedMembershipId(event.target.value)}
               value={selectedMembershipId}
             >
-              <option value="">Mitglied auswaehlen</option>
+              <option value="">Mitglied auswählen</option>
               {availableMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.displayName}
@@ -299,15 +299,15 @@ export function ActivityDetailView({ groupId, activityId }: ActivityDetailProps)
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ groupMembershipId: Number(selectedMembershipId) })
                     }),
-                  "Teilnehmer hinzugefuegt",
+                  "Teilnehmer hinzugefügt",
                   () => setSelectedMembershipId("")
                 )}
               type="button"
             >
-              Teilnehmer hinzufuegen
+              Teilnehmer hinzufügen
             </button>
           </div>
-          {!availableMembers.length ? <p className="helper-text">Keine weiteren aktiven Gruppenmitglieder verfuegbar.</p> : null}
+          {!availableMembers.length ? <p className="helper-text">Keine weiteren aktiven Gruppenmitglieder verfügbar.</p> : null}
         </section>
       ) : null}
 

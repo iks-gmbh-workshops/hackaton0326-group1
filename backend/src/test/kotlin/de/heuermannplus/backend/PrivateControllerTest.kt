@@ -113,7 +113,7 @@ class PrivateControllerTest {
         }
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
-        assertEquals("401 UNAUTHORIZED \"JWT enthaelt keinen Subject-Claim\"", exception.message)
+        assertEquals("401 UNAUTHORIZED \"JWT enthält keinen Subject-Claim\"", exception.message)
     }
 
     @Test
@@ -225,7 +225,7 @@ class PrivateControllerTest {
             )
         )
 
-        assertEquals(MessageResponse("Passwort wurde geaendert"), response)
+        assertEquals(MessageResponse("Passwort wurde geändert"), response)
         assertEquals("user-123" to "NewPass123!", keycloakClient.lastPasswordChange)
     }
 
@@ -258,7 +258,7 @@ class PrivateControllerTest {
             request = DeleteAccountRequest(confirmation = "drummer")
         )
 
-        assertEquals(MessageResponse("Konto wurde geloescht"), response)
+        assertEquals(MessageResponse("Konto wurde gelöscht"), response)
         assertEquals(listOf("user-123"), keycloakClient.deletedUsers)
         assertNull(appUserStore.findById("user-123"))
     }

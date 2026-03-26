@@ -237,7 +237,7 @@ class ProfileServiceTest {
             )
         )
 
-        assertEquals("Passwort wurde geaendert", response.message)
+        assertEquals("Passwort wurde geändert", response.message)
         assertEquals("kc-rob", keycloakClient.changedPasswordUserId)
         assertEquals("NewSecurePass123!", keycloakClient.changedPassword)
     }
@@ -290,7 +290,7 @@ class ProfileServiceTest {
 
         val response = service.deleteAccount(authentication(subject = "kc-rob"), DeleteAccountRequest(confirmation = "rob"))
 
-        assertEquals("Konto wurde geloescht", response.message)
+        assertEquals("Konto wurde gelöscht", response.message)
         assertEquals("kc-rob", keycloakClient.deletedUserId)
         assertNull(appStore.findById("kc-rob"))
     }

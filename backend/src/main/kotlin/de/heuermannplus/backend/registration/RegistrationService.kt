@@ -76,7 +76,7 @@ class RegistrationService(
             throw RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_EMAIL",
-                message = "Ungueltiges Format der Email Adresse",
+                message = "Ungültiges Format der Email Adresse",
                 field = "email"
             )
         }
@@ -206,14 +206,14 @@ class RegistrationService(
 
     @Transactional
     fun verify(request: RegistrationVerifyRequest): RegistrationVerifyResponse {
-        val token = request.token.requireField("token", "Der Verifizierungslink ist ungueltig")
+        val token = request.token.requireField("token", "Der Verifizierungslink ist ungültig")
         val now = Instant.now(clock)
         val tokenHash = verificationTokenService.hash(token)
         val verification = verificationStore.findByTokenHash(tokenHash)
             ?: throw RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_TOKEN",
-                message = "Der Verifizierungslink ist ungueltig",
+                message = "Der Verifizierungslink ist ungültig",
                 field = "token"
             )
 
@@ -221,7 +221,7 @@ class RegistrationService(
             throw RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_TOKEN",
-                message = "Der Verifizierungslink ist ungueltig",
+                message = "Der Verifizierungslink ist ungültig",
                 field = "token"
             )
         }
@@ -299,7 +299,7 @@ class RegistrationService(
         )
 
         return RegistrationVerifyResponse(
-            message = "Die Registrierung wurde erfolgreich bestaetigt"
+            message = "Die Registrierung wurde erfolgreich bestätigt"
         )
     }
 

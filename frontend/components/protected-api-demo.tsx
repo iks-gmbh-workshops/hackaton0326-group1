@@ -25,7 +25,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
 
       if (!response.ok) {
         setPayload("");
-        setError(text || "Der geschuetzte Backend-Call ist fehlgeschlagen.");
+        setError(text || "Der geschützte Backend-Call ist fehlgeschlagen.");
         return;
       }
 
@@ -35,7 +35,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
       setError(
         fetchError instanceof Error
           ? fetchError.message
-          : "Der geschuetzte Backend-Call konnte nicht ausgefuehrt werden."
+          : "Der geschützte Backend-Call konnte nicht ausgeführt werden."
       );
     }
   }
@@ -52,7 +52,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
         <div className="flex items-center justify-between gap-4">
           <div className="section-intro">
             <p className="section-title">Protected API Demo</p>
-            <h2 className="section-headline text-[2rem]">Browser ruft das Spring-Backend direkt auf</h2>
+            <h2 className="section-headline">Browser ruft das Spring-Backend direkt auf</h2>
           </div>
           <span className={`badge ${authenticated ? "badge-success" : "badge-neutral"} badge-lg`}>
             {authenticated ? "angemeldet" : "nicht angemeldet"}
@@ -60,7 +60,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
         </div>
 
         <p className="subheadline max-w-2xl">
-          Der Button laedt die geschuetzten Benutzerdaten direkt aus dem Backend. Der Bearer-Token ist dabei im Browser-Request sichtbar.
+          Der Button lädt die geschützten Benutzerdaten direkt aus dem Backend. Der Bearer-Token ist dabei im Browser-Request sichtbar.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -69,7 +69,7 @@ export function ProtectedApiDemo({ authenticated }: ProtectedApiDemoProps) {
             disabled={!authenticated || isPending}
             onClick={handleFetch}
           >
-            {isPending ? "Lade..." : "Geschuetzten Call ausfuehren"}
+            {isPending ? "Lade..." : "Geschützten Call ausführen"}
           </button>
           {!authenticated ? (
             <span className="helper-text">

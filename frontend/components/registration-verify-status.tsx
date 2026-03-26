@@ -19,7 +19,7 @@ export function RegistrationVerifyStatus() {
     const token = searchParams.get("token");
 
     if (!token) {
-      setState({ status: "error", message: "Der Verifizierungslink ist ungueltig" });
+      setState({ status: "error", message: "Der Verifizierungslink ist ungültig" });
       return;
     }
 
@@ -45,7 +45,7 @@ export function RegistrationVerifyStatus() {
         return;
       }
 
-      setState({ status: "success", message: body.message ?? "Die Registrierung wurde erfolgreich bestaetigt" });
+      setState({ status: "success", message: body.message ?? "Die Registrierung wurde erfolgreich bestätigt" });
     }
 
     void verify().catch(() => {
@@ -62,10 +62,10 @@ export function RegistrationVerifyStatus() {
   return (
     <div className="soft-panel mx-auto grid w-full max-w-2xl gap-4 rounded-[1.75rem]">
       <p className="section-title">Verifizierung</p>
-      <h1 className="section-headline">Registrierung bestaetigen</h1>
+      <h1 className="section-headline">Registrierung bestätigen</h1>
 
       {state.status === "loading" ? (
-        <p className="subheadline">Wir pruefen deinen Verifizierungslink...</p>
+        <p className="subheadline">Wir prüfen deinen Verifizierungslink...</p>
       ) : null}
 
       {state.status === "success" ? <div className="alert alert-success">{state.message}</div> : null}

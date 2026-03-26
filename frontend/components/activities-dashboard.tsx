@@ -26,14 +26,14 @@ export function ActivitiesDashboard() {
         const body = (await response.json()) as ActivityListResponse & ActivityError;
 
         if (!response.ok) {
-          throw new Error(body.message || "Aktivitaeten konnten nicht geladen werden");
+          throw new Error(body.message || "Aktivitäten konnten nicht geladen werden");
         }
 
         setData(body);
         setError(null);
       })
       .catch((loadError) => {
-        setError(loadError instanceof Error ? loadError.message : "Aktivitaeten konnten nicht geladen werden");
+        setError(loadError instanceof Error ? loadError.message : "Aktivitäten konnten nicht geladen werden");
       });
   }, []);
 
@@ -46,10 +46,10 @@ export function ActivitiesDashboard() {
       <section className="brand-card card">
         <div className="card-body gap-5">
           <div className="section-intro">
-            <p className="section-title">Aktivitaeten</p>
+            <p className="section-title">Aktivitäten</p>
             <h1 className="section-headline sm:text-[2.4rem]">Deine anstehenden Termine</h1>
             <p className="subheadline">
-              Hier siehst du alle kommenden Aktivitaeten, denen du aktuell zugewiesen bist.
+              Hier siehst du alle kommenden Aktivitäten, denen du aktuell zugewiesen bist.
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export function ActivitiesDashboard() {
             </div>
 
             <Link className="btn btn-sm btn-primary" href={`/groups/${activity.groupId}/activities/${activity.id}` as Route}>
-              Details oeffnen
+              Details öffnen
             </Link>
           </article>
         ))}
@@ -100,7 +100,7 @@ export function ActivitiesDashboard() {
 
       {!data.activities.length ? (
         <section className="soft-panel">
-          <p className="helper-text">Keine anstehenden Aktivitaeten vorhanden.</p>
+          <p className="helper-text">Keine anstehenden Aktivitäten vorhanden.</p>
         </section>
       ) : null}
     </div>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "UX Designer"
+  short_description: "Review frontend UI for styleguide, readability, and usability"
+  default_prompt: "Use $ux-designer to review or guide HeuermannPlus frontend changes for styleguide compliance, readability, usability, hierarchy, spacing, CTA clarity, and mobile presentation."

@@ -1,6 +1,6 @@
 # Docs
 
-Dieser Ordner ist fuer zukuenftige technische und fachliche Dokumentation reserviert.
+Dieser Ordner ist für zukünftige technische und fachliche Dokumentation reserviert.
 
 Geplante Inhalte:
 

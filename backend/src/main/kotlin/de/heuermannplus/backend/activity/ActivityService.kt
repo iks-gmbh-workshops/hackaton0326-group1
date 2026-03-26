@@ -154,15 +154,15 @@ class ActivityService(
         val membershipId = request.groupMembershipId ?: throw ActivityException(
             HttpStatus.BAD_REQUEST,
             "FIELD_REQUIRED",
-            "Bitte Mitglied auswaehlen",
+            "Bitte Mitglied auswählen",
             "groupMembershipId"
         )
         val membership = requireGroupMembership(groupId, membershipId)
         if (membership.status != GroupMembershipStatus.ACTIVE) {
-            throw ActivityException(HttpStatus.BAD_REQUEST, "GROUP_MEMBER_NOT_ACTIVE", "Nur aktive Gruppenmitglieder koennen hinzugefuegt werden")
+            throw ActivityException(HttpStatus.BAD_REQUEST, "GROUP_MEMBER_NOT_ACTIVE", "Nur aktive Gruppenmitglieder können hinzugefügt werden")
         }
         if (participantStore.findActiveByActivityIdAndGroupMembershipId(activityId, membershipId) != null) {
-            throw ActivityException(HttpStatus.CONFLICT, "ACTIVITY_PARTICIPANT_ALREADY_EXISTS", "Mitglied ist der Aktivitaet bereits zugewiesen")
+            throw ActivityException(HttpStatus.CONFLICT, "ACTIVITY_PARTICIPANT_ALREADY_EXISTS", "Mitglied ist der Aktivität bereits zugewiesen")
         }
 
         participantStore.save(
@@ -203,11 +203,11 @@ class ActivityService(
         val currentMembership = requireActiveMembership(groupId, currentUser.userId)
         val activity = requireActivity(groupId, activityId)
         val participant = participantStore.findActiveByActivityIdAndGroupMembershipId(activityId, currentMembership.id!!)
-            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_RESPONSE", "Nur zugewiesene Mitglieder koennen antworten")
+            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_RESPONSE", "Nur zugewiesene Mitglieder können antworten")
         val responseStatus = request.responseStatus ?: throw ActivityException(
             HttpStatus.BAD_REQUEST,
             "FIELD_REQUIRED",
-            "Bitte Antwortstatus auswaehlen",
+            "Bitte Antwortstatus auswählen",
             "responseStatus"
         )
         val now = Instant.now(clock)
@@ -261,9 +261,9 @@ class ActivityService(
 
     private fun requireActivity(groupId: Long, activityId: Long): Activity {
         val activity = activityStore.findActiveById(activityId)
-            ?: throw ActivityException(HttpStatus.NOT_FOUND, "ACTIVITY_NOT_FOUND", "Aktivitaet nicht gefunden")
+            ?: throw ActivityException(HttpStatus.NOT_FOUND, "ACTIVITY_NOT_FOUND", "Aktivität nicht gefunden")
         if (activity.groupId != groupId) {
-            throw ActivityException(HttpStatus.NOT_FOUND, "ACTIVITY_NOT_FOUND", "Aktivitaet nicht gefunden")
+            throw ActivityException(HttpStatus.NOT_FOUND, "ACTIVITY_NOT_FOUND", "Aktivität nicht gefunden")
         }
         return activity
     }
@@ -280,11 +280,11 @@ class ActivityService(
     private fun requireActiveMembership(groupId: Long, userId: String): GroupMembership =
         membershipStore.findByGroupIdAndUserId(groupId, userId)
             ?.takeIf { it.status == GroupMembershipStatus.ACTIVE }
-            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_ACCESS", "Aktivitaeten koennen nur von aktiven Gruppenmitgliedern eingesehen werden")
+            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_ACCESS", "Aktivitäten können nur von aktiven Gruppenmitgliedern eingesehen werden")
 
     private fun requireAdminMembership(groupId: Long, userId: String): GroupMembership =
         requireActiveMembership(groupId, userId).takeIf { it.isAdmin }
-            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_ADMIN", "Aktion ist nur fuer Gruppenverwalter erlaubt")
+            ?: throw ActivityException(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTIVITY_ADMIN", "Aktion ist nur für Gruppenverwalter erlaubt")
 
     private fun requireGroupMembership(groupId: Long, membershipId: Long): GroupMembership {
         val membership = membershipStore.findById(membershipId)
