@@ -60,26 +60,32 @@ export default async function HomePage() {
             <div className="space-y-2">
               <h2 className="section-headline text-3xl">Schnell startklar</h2>
               <p className="subheadline">
-                Registriere dich in wenigen Schritten und nutze danach alle wichtigen Funktionen fuer eure gemeinsame
-                Organisation.
+                Drei zentrale Vorteile helfen dir dabei, gemeinsame Vorhaben von Anfang an klar zu organisieren.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-base-300 bg-white/90 p-4 text-sm text-base-content">
-              <p className="subsection-title">Was dich erwartet</p>
-              <p className="body-copy text-sm">
-                Ein zentraler Ort fuer Gruppenbeitritt, Einladungen und klare Abstimmung rund um gemeinsame
-                Aktivitaeten.
-              </p>
-            </div>
-
-            <div className="brand-divider" />
-
-            <div className="status-list">
-              <div className="status-row">
-                <span className="status-dot" />
+            <div className="benefit-list">
+              <div className="benefit-item">
+                <p className="subsection-title">Gruppen uebersichtlich organisieren</p>
                 <p className="body-copy text-sm">
-                  Auf der Startseite findest du genau die zwei wichtigsten Einstiege: registrieren und anmelden.
+                  Lege Gruppen an, halte Strukturen nachvollziehbar und schaffe einen gemeinsamen Ausgangspunkt fuer
+                  eure Planung.
+                </p>
+              </div>
+
+              <div className="benefit-item">
+                <p className="subsection-title">Mitglieder gezielt zusammenbringen</p>
+                <p className="body-copy text-sm">
+                  Lade Personen ein, steuere Zugehoerigkeiten klar und behalte im Blick, wer bereits Teil deiner
+                  Gruppe ist.
+                </p>
+              </div>
+
+              <div className="benefit-item">
+                <p className="subsection-title">Vorhaben gemeinsam koordinieren</p>
+                <p className="body-copy text-sm">
+                  Bilde Absprachen, Einladungen und naechste Schritte an einem Ort ab, damit gemeinsame Aktivitaeten
+                  einfacher planbar bleiben.
                 </p>
               </div>
             </div>

@@ -270,6 +270,20 @@ a {
   gap: 1rem;
 }
 
+.benefit-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.benefit-item {
+  display: grid;
+  gap: 0.45rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+  background: rgba(243, 246, 247, 0.86);
+  padding: 1rem 1.05rem;
+}
+
 .step-row {
   display: flex;
   gap: 1rem;
