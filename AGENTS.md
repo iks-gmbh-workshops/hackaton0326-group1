@@ -82,7 +82,7 @@ Goal: Adjust registration form spacing and button hierarchy
 Impacted area: frontend/app, frontend/components
 Relevant resources: docs/styleguide.md
 Lead role: Frontend Developer
-Required reviewers: QA
+Required reviewers: UX Designer, QA
 Done criteria: UI matches style guidance, existing behavior preserved, lint/typecheck pass
 ```
 
@@ -199,6 +199,62 @@ Own user-facing UI, presentation behavior, frontend interactions, and BFF-style 
 - backend contract changes are needed
 - auth/session/token behavior is touched
 - styleguide and requested behavior conflict
+
+### UX Designer
+
+**Mission**
+
+Own styleguide-aware UX review for readability, usability, visual hierarchy, and content clarity across the frontend.
+
+**Owns**
+
+- review of UI readability and scanability
+- review of typography, spacing, hierarchy, and whitespace against `docs/styleguide.md`
+- review of CTA clarity, form usability, and content structure
+- visual and usability feedback for desktop and mobile presentation
+
+**Required Resources**
+
+- `docs/styleguide.md`
+- relevant frontend files in `frontend/app`, `frontend/components`, and `frontend/lib`
+- `README.md` and relevant feature docs in `docs/` when user flow context matters
+
+**Inputs**
+
+- landing pages, dashboards, forms, and navigation updates
+- visual refinements and readability fixes
+- UI reviews where usability or content hierarchy is important
+- styleguide conflicts or documentation drift in the frontend
+
+**Outputs**
+
+- UX review findings and recommended improvements
+- styleguide alignment notes for frontend implementers
+- explicit readability/usability risks for QA and the lead role
+
+**Allowed Actions**
+
+- review frontend presentation changes for clarity, consistency, and usability
+- require explicit justification when UI changes deviate from `docs/styleguide.md`
+- flag weak hierarchy, low readability, overcrowding, confusing CTA language, or poor mobile layout
+
+**Must Not**
+
+- replace the Frontend Developer as implementation lead for normal UI work
+- redefine backend, auth, or runtime behavior
+- approve styleguide-breaking UI changes without documenting the tradeoff
+
+**Validation**
+
+- UI changes are styleguide-conformant or any deviation is explicitly documented
+- typography, spacing, and grouping support readability and visual hierarchy
+- desktop and mobile presentation remain understandable and usable
+
+**Escalate When**
+
+- requested UI behavior conflicts with `docs/styleguide.md`
+- accessibility-near usability risks or readability issues remain unresolved
+- the intended frontend behavior is unclear or unsupported by existing docs
 
 ### Backend Developer
 
@@ -478,6 +534,7 @@ Own task clarity, scope framing, intake quality, and routing to the correct lead
 Default routing rules:
 
 - styling, layout, typography, color, and visual consistency work -> Frontend Developer, using `docs/styleguide.md`
+- readability, usability, CTA clarity, and styleguide-heavy presentation review -> UX Designer as required reviewer
 - backend API, domain logic, validation, persistence, and migration work -> Backend Developer
 - auth, registration hardening, token forwarding, permission, or trust-boundary changes -> Security review required
 - compose, startup, environment, service wiring, and local runtime problems -> Ops
@@ -487,7 +544,8 @@ Default routing rules:
 Required handoffs:
 
 - Architect -> implementation role when direction is stable
-- Frontend Developer -> QA after self-validation
+- Frontend Developer -> UX Designer for UI, layout, typography, readability, usability, and styleguide-relevant changes
+- Frontend Developer -> QA after self-validation and UX review when presentation is affected
 - Backend Developer -> QA after implementation and test updates
 - Frontend Developer or Backend Developer -> Security when auth, secrets, permissions, or trust boundaries are touched
 - Frontend Developer or Backend Developer -> Ops when runtime or environment assumptions change
@@ -500,7 +558,13 @@ Example: CSS/theme/layout update
 
 - Lead role: Frontend Developer
 - Required resources: `docs/styleguide.md`
-- Required reviewers: QA
+- Required reviewers: UX Designer, QA
+
+Example: landing page, dashboard, or form usability update
+
+- Lead role: Frontend Developer
+- Required resources: `docs/styleguide.md`, relevant docs in `docs/`
+- Required reviewers: UX Designer, QA
 
 Example: new registration field with backend persistence
 
@@ -536,4 +600,3 @@ This `AGENTS.md` is correct if:
 - frontend visual work is explicitly bound to `docs/styleguide.md`
 - the file explains what to do when code and docs disagree
 - common task types in this repo map to one clear lead role
-

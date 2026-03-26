@@ -407,11 +407,54 @@ a {
 }
 
 .btn-primary {
+  background-color: var(--color-primary);
   border-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.btn-primary:hover,
+.btn-primary.btn-active {
+  background-color: #004663;
+  border-color: #004663;
+  color: var(--color-primary-content);
+}
+
+.btn-primary:active {
+  background-color: #00394f;
+  border-color: #00394f;
+  color: var(--color-primary-content);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid rgba(0, 85, 120, 0.22);
+  outline-offset: 3px;
+}
+
+.btn-primary:disabled,
+.btn-primary[disabled],
+.btn-primary.btn-disabled {
+  background-color: rgba(0, 85, 120, 0.45);
+  border-color: rgba(0, 85, 120, 0.32);
+  color: rgba(255, 255, 255, 0.94);
 }
 
 .btn-outline.btn-primary {
+  background-color: transparent;
+  border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.btn-outline.btn-primary:hover,
+.btn-outline.btn-primary.btn-active,
+.btn-outline.btn-primary:active {
+  background-color: rgba(0, 85, 120, 0.08);
+  border-color: var(--color-primary);
+  color: #004663;
+}
+
+.btn-outline.btn-primary:focus-visible {
+  outline: 2px solid rgba(0, 85, 120, 0.18);
+  outline-offset: 3px;
 }
 
 .btn-ghost {

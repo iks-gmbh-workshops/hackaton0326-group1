@@ -156,7 +156,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
           onSuccess?.(body as GroupDetail | GroupListResponse | GroupToken);
         })
         .catch(() => {
-          setError("Aktion konnte nicht ausgefuehrt werden");
+          setError("Aktion konnte nicht ausgeführt werden");
         });
     });
   }
@@ -173,7 +173,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link className="btn btn-ghost" href={"/groups" as Route}>
-          Zur Gruppenuebersicht
+          Zur Gruppenübersicht
         </Link>
         <span className={`badge ${group.currentUserAdmin ? "badge-primary" : "badge-neutral"} badge-outline`}>
           {group.currentUserAdmin ? "Gruppenverwalter" : membershipLabel(group.currentMembershipStatus)}
@@ -221,7 +221,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
 
           {group.currentUserAdmin ? (
             <button className="btn btn-primary" disabled={isPending} type="submit">
-              {isPending ? "Speichere..." : "Aenderungen speichern"}
+              {isPending ? "Speichere..." : "Änderungen speichern"}
             </button>
           ) : null}
         </form>
@@ -271,13 +271,13 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                 performAction(
                   () => authenticatedBackendFetch(`/api/private/groups/${groupId}`, { method: "DELETE" }),
                   () => {
-                    setSuccessMessage("Gruppe aufgeloest");
+                    setSuccessMessage("Gruppe aufgelöst");
                     window.location.assign("/groups");
                   }
                 )}
               type="button"
             >
-              Gruppe aufloesen
+              Gruppe auflösen
             </button>
           ) : null}
         </div>
@@ -311,7 +311,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               <h2 className="section-headline text-[2rem]">Mitglieder per Nickname oder E-Mail</h2>
             </div>
             <InviteSuggestionField
-              label="Nickname oder Email-Adresse"
+              label="Nickname oder E-Mail-Adresse"
               loading={inviteSuggestionsLoading}
               onChange={setInviteTarget}
               onFocus={() => setInviteSuggestionsOpen(true)}
@@ -360,8 +360,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               {group.tokens.map((token) => (
                 <div key={token.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
                   <p className="subsection-title">Token #{token.id}</p>
-                  <p className="helper-text">Gueltig bis {formatDate(token.expiresAt)}</p>
-                  <p className="helper-text">{token.usedAt ? `Eingeloest am ${formatDate(token.usedAt)}` : "Noch nicht verwendet"}</p>
+                  <p className="helper-text">Gültig bis {formatDate(token.expiresAt)}</p>
+                  <p className="helper-text">{token.usedAt ? `Eingelöst am ${formatDate(token.usedAt)}` : "Noch nicht verwendet"}</p>
                 </div>
               ))}
             </div>
@@ -373,7 +373,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
         <div className="brand-card card">
           <div className="card-body gap-4">
             <div className="section-intro">
-              <p className="section-title">Aktivitaeten</p>
+              <p className="section-title">Aktivitäten</p>
               <h2 className="section-headline text-[2rem]">Anstehende Gruppentermine</h2>
             </div>
 
@@ -482,8 +482,8 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
           {group.currentUserAdmin ? (
             <section className="soft-panel space-y-4">
               <div className="section-intro">
-                <p className="section-title">Antraege</p>
-                <h2 className="section-headline text-[2rem]">Offene Mitgliedschaftsantraege</h2>
+                <p className="section-title">Anträge</p>
+                <h2 className="section-headline text-[2rem]">Offene Mitgliedschaftsanträge</h2>
               </div>
               {group.joinRequests.map((request) => (
                 <div key={request.id} className="rounded-2xl border border-base-300 bg-white/85 p-4">
@@ -527,7 +527,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
                   </div>
                 </div>
               ))}
-              {!group.joinRequests.length ? <p className="helper-text">Keine offenen Antraege.</p> : null}
+              {!group.joinRequests.length ? <p className="helper-text">Keine offenen Anträge.</p> : null}
             </section>
           ) : null}
 

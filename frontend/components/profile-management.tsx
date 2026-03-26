@@ -201,12 +201,12 @@ export function ProfileManagement() {
             }
 
             setPasswordError(null);
-            setPasswordSuccess(body.message ?? "Passwort wurde geaendert");
+            setPasswordSuccess(body.message ?? "Passwort wurde geändert");
             setPasswordForm(initialPasswordForm);
         } catch (error) {
             setPasswordError({
                 code: "NETWORK_ERROR",
-                message: error instanceof Error ? error.message : "Passwort konnte nicht geaendert werden"
+                message: error instanceof Error ? error.message : "Passwort konnte nicht geändert werden"
             });
         } finally {
             setIsChangingPassword(false);
@@ -239,7 +239,7 @@ export function ProfileManagement() {
             }
 
             setDeleteError(null);
-            setDeleteSuccess(body.message ?? "Konto wurde geloescht");
+            setDeleteSuccess(body.message ?? "Konto wurde gelöscht");
 
             const logoutResponse = await fetch("/api/auth/federated-logout", {
                 method: "GET",
@@ -258,7 +258,7 @@ export function ProfileManagement() {
         } catch (error) {
             setDeleteError({
                 code: "NETWORK_ERROR",
-                message: error instanceof Error ? error.message : "Konto konnte nicht geloescht werden"
+                message: error instanceof Error ? error.message : "Konto konnte nicht gelöscht werden"
             });
         } finally {
             setIsDeleting(false);
@@ -283,7 +283,7 @@ export function ProfileManagement() {
                                 <p className="section-title">Profil</p>
                                 <h1 className="section-headline text-[2.4rem]">Konto verwalten</h1>
                                 <p className="subheadline">
-                                    Aktualisiere deinen Username und deine Stammdaten, aendere dein Passwort oder loesche dein Konto vollstaendig.
+                                    Aktualisiere deinen Username und deine Stammdaten, ändere dein Passwort oder lösche dein Konto vollständig.
                                 </p>
                             </div>
                             <Link className="btn btn-ghost" href="/">
@@ -349,9 +349,9 @@ export function ProfileManagement() {
                     <div className="space-y-6">
                         <form className="brand-card space-y-5 p-6" onSubmit={handlePasswordSubmit}>
                             <div className="space-y-2">
-                                <p className="section-title">Passwort aendern</p>
+                                <p className="section-title">Passwort ändern</p>
                                 <h2 className="section-headline text-[2rem]">Neues Passwort setzen</h2>
-                                <p className="subheadline">Lege ein neues Passwort fest. Du bist bereits angemeldet, daher ist keine Verifizierung des aktuellen Passworts noetig.</p>
+                                <p className="subheadline">Lege ein neues Passwort fest. Du bist bereits angemeldet, daher ist keine Verifizierung des aktuellen Passworts nötig.</p>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
@@ -381,7 +381,7 @@ export function ProfileManagement() {
                             {passwordSuccess ? <div className="alert alert-success">{passwordSuccess}</div> : null}
 
                             <button className="btn btn-primary" disabled={isChangingPassword} type="submit">
-                                {isChangingPassword ? "Aendere..." : "Passwort aendern"}
+                                {isChangingPassword ? "Ändere..." : "Passwort ändern"}
                             </button>
                         </form>
 
@@ -397,19 +397,19 @@ export function ProfileManagement() {
                                 </span>
 
                                 <div className="space-y-2">
-                                    <p className="section-title !text-white/80">Konto loeschen</p>
+                                    <p className="section-title !text-white/80">Konto löschen</p>
                                     <h2 className="section-headline !text-white text-[2rem]">Unwiderruflich entfernen</h2>
                                     <p className="subheadline max-w-2xl !text-white/90">
-                                        Dieser Schritt ist endgueltig. Wenn du dein Konto loeschst, werden deine Zugangsdaten und Profildaten dauerhaft entfernt und koennen nicht wiederhergestellt werden.
+                                        Dieser Schritt ist endgültig. Wenn du dein Konto löschst, werden deine Zugangsdaten und Profildaten dauerhaft entfernt und können nicht wiederhergestellt werden.
                                     </p>
                                     <p className="text-sm font-semibold leading-7 text-white/95">
-                                        Dein Konto wird sowohl in Keycloak als auch in der App-Datenbank geloescht. Zur Bestaetigung musst du deinen aktuellen Username exakt eingeben: {profile.username}
+                                        Dein Konto wird sowohl in Keycloak als auch in der App-Datenbank gelöscht. Zur Bestätigung musst du deinen aktuellen Username exakt eingeben: {profile.username}
                                     </p>
                                 </div>
                             </div>
 
                             <label className="form-control gap-2" htmlFor="confirmation">
-                                <span className="label-text font-medium !text-white">Username zur Loeschung bestaetigen</span>
+                                <span className="label-text font-medium !text-white">Username zur Löschung bestätigen</span>
                                 <input
                                     className={`input input-bordered w-full border-white/20 bg-white text-base-content placeholder:text-base-content/45 ${deleteError?.field === "confirmation" ? "input-error" : ""}`}
                                     id="confirmation"
@@ -426,11 +426,11 @@ export function ProfileManagement() {
                             {deleteSuccess ? <div className="alert alert-success shadow-sm">{deleteSuccess}</div> : null}
 
                             <p className="text-sm leading-6 text-white/82">
-                                Bitte loesche dein Konto nur, wenn du dir sicher bist, dass dieser Schritt dauerhaft sein soll.
+                                Bitte lösche dein Konto nur, wenn du dir sicher bist, dass dieser Schritt dauerhaft sein soll.
                             </p>
 
                             <button className="btn border-none bg-white text-red-800 shadow-sm hover:bg-white/92 sm:min-w-52" disabled={isDeleting} type="submit">
-                                {isDeleting ? "Loesche unwiderruflich..." : "Konto jetzt endgueltig loeschen"}
+                                {isDeleting ? "Lösche unwiderruflich..." : "Konto jetzt endgültig löschen"}
                             </button>
                         </form>
                     </div>
