@@ -198,6 +198,37 @@ class RegistrationServiceTest {
     }
 
     @Test
+    fun `register rejects email that already exists`() {
+        val fixture = registrationFixture().also {
+            it.keycloakClient.createPendingUser(
+                RegistrationUserDraft(
+                    username = "existing",
+                    email = "drummer@example.org",
+                    firstName = null,
+                    lastName = null,
+                    password = "Drum123!"
+                )
+            )
+        }
+
+        val exception = assertFailsWith<RegistrationException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    acceptTerms = true
+                )
+            )
+        }
+
+        assertEquals("EMAIL_ALREADY_EXISTS", exception.code)
+        assertEquals("email", exception.field)
+    }
+
+    @Test
     fun `register rejects password mismatch`() {
         val fixture = registrationFixture()
 
@@ -269,6 +300,29 @@ class RegistrationServiceTest {
     }
 
     @Test
+    fun `verify rejects token that is not pending anymore`() {
+        val fixture = registrationFixture()
+        val token = "already-used"
+        fixture.verificationStore.save(
+            RegistrationVerification(
+                keycloakUserId = "user-1",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                tokenHash = VerificationTokenService().hash(token),
+                status = RegistrationVerificationStatus.VERIFIED,
+                expiresAt = fixture.clock.currentInstant.plusSeconds(3600),
+                createdAt = fixture.clock.currentInstant
+            )
+        )
+
+        val exception = assertFailsWith<RegistrationException> {
+            fixture.service.verify(RegistrationVerifyRequest(token = token))
+        }
+
+        assertEquals("INVALID_TOKEN", exception.code)
+    }
+
+    @Test
     fun `register rejects missing terms acceptance`() {
         val fixture = registrationFixture()
 
@@ -321,6 +375,78 @@ class RegistrationServiceTest {
     }
 
     @Test
+    fun `verify expired token creates expired app user when no local user exists`() {
+        val fixture = registrationFixture()
+        val keycloakUserId = fixture.keycloakClient.createPendingUser(
+            RegistrationUserDraft(
+                username = "drummer",
+                email = "drummer@example.org",
+                firstName = null,
+                lastName = null,
+                password = "Drum123!"
+            )
+        )
+        val token = "expired-manual"
+        fixture.verificationStore.save(
+            RegistrationVerification(
+                keycloakUserId = keycloakUserId,
+                nickname = "drummer",
+                email = "drummer@example.org",
+                tokenHash = VerificationTokenService().hash(token),
+                status = RegistrationVerificationStatus.PENDING,
+                expiresAt = fixture.clock.currentInstant.minusSeconds(60),
+                createdAt = null
+            )
+        )
+
+        val exception = assertFailsWith<RegistrationException> {
+            fixture.service.verify(RegistrationVerifyRequest(token = token))
+        }
+
+        assertEquals("TOKEN_EXPIRED", exception.code)
+        val expiredAppUser = fixture.appUserStore.findById(keycloakUserId)
+        assertNotNull(expiredAppUser)
+        assertEquals(AppUserStatus.EXPIRED, expiredAppUser.status)
+        assertEquals(fixture.clock.currentInstant, expiredAppUser.createdAt)
+    }
+
+    @Test
+    fun `verify creates active app user when local record is missing`() {
+        val fixture = registrationFixture()
+        val keycloakUserId = fixture.keycloakClient.createPendingUser(
+            RegistrationUserDraft(
+                username = "drummer",
+                email = "drummer@example.org",
+                firstName = null,
+                lastName = null,
+                password = "Drum123!"
+            )
+        )
+        fixture.keycloakClient.assignRealmRoles(keycloakUserId, setOf("registration-pending"))
+        val token = "fresh-manual"
+        fixture.verificationStore.save(
+            RegistrationVerification(
+                keycloakUserId = keycloakUserId,
+                nickname = "drummer",
+                email = "drummer@example.org",
+                tokenHash = VerificationTokenService().hash(token),
+                status = RegistrationVerificationStatus.PENDING,
+                expiresAt = fixture.clock.currentInstant.plusSeconds(3600),
+                createdAt = null
+            )
+        )
+
+        val response = fixture.service.verify(RegistrationVerifyRequest(token = token))
+
+        assertEquals("Die Registrierung wurde erfolgreich bestaetigt", response.message)
+        val activeUser = fixture.appUserStore.findById(keycloakUserId)
+        assertNotNull(activeUser)
+        assertEquals(AppUserStatus.ACTIVE, activeUser.status)
+        assertEquals(fixture.clock.currentInstant, activeUser.createdAt)
+        assertTrue("app-user" in fixture.keycloakClient.rolesFor(keycloakUserId))
+    }
+
+    @Test
     fun `register rollback marks local app user as deleted`() {
         val fixture = registrationFixture(mailShouldFail = true)
 
@@ -357,6 +483,31 @@ class RegistrationServiceTest {
         assertEquals("2026-03", policy.terms.currentVersion)
         assertEquals("drumdibum-agb-2026-03", policy.terms.contentSlug)
         assertEquals("/terms/drumdibum-agb-2026-03", policy.terms.url)
+    }
+
+    @Test
+    fun `policy exposes turnstile captcha metadata when configured`() {
+        val fixture = registrationFixture(
+            properties = RegistrationProperties(
+                frontendBaseUrl = "http://localhost:3000",
+                verificationTtl = java.time.Duration.ofHours(24),
+                cleanupCron = "0 0 * * * *",
+                emailFrom = "no-reply@heuermannplus.local",
+                password = PasswordPolicyProperties(),
+                captcha = CaptchaProperties(
+                    mode = CaptchaMode.TURNSTILE,
+                    mockPassToken = "test-pass",
+                    turnstileSiteKey = "site-key",
+                    turnstileSecret = "secret"
+                )
+            )
+        )
+
+        val policy = fixture.service.policy()
+
+        assertEquals("turnstile", policy.captcha.mode)
+        assertEquals(null, policy.captcha.mockPassToken)
+        assertEquals("site-key", policy.captcha.turnstileSiteKey)
     }
 
     @Test
@@ -404,13 +555,104 @@ class RegistrationServiceTest {
         assertEquals("Mehrere aktive AGB-Versionen konfiguriert", exception.message)
     }
 
+    @Test
+    fun `register fails when active terms version has no id`() {
+        val fixture = registrationFixture(
+            activeTermsVersions = listOf(
+                TermsVersion(id = null, version = "2026-03", contentSlug = "drumdibum-agb-2026-03", isActive = true)
+            )
+        )
+
+        val exception = assertFailsWith<IllegalStateException> {
+            fixture.service.register(
+                RegistrationRequest(
+                    nickname = "drummer",
+                    password = "Drum123!",
+                    passwordRepeat = "Drum123!",
+                    email = "drummer@example.org",
+                    captchaToken = "test-pass",
+                    acceptTerms = true
+                )
+            )
+        }
+
+        assertEquals("Aktive AGB-Version hat keine ID", exception.message)
+    }
+
+    @Test
+    fun `cleanup expired pending registrations marks users expired even if keycloak deletion fails`() {
+        val fixture = registrationFixture(keycloakDeleteShouldFail = true)
+        val keycloakUserId = fixture.keycloakClient.createPendingUser(
+            RegistrationUserDraft(
+                username = "drummer",
+                email = "drummer@example.org",
+                firstName = null,
+                lastName = null,
+                password = "Drum123!"
+            )
+        )
+        fixture.appUserStore.save(
+            AppUser(
+                keycloakUserId = keycloakUserId,
+                nickname = "drummer",
+                email = "drummer@example.org",
+                firstName = null,
+                lastName = null,
+                status = AppUserStatus.PENDING,
+                enabled = false,
+                emailVerified = false,
+                keycloakRole = "registration-pending",
+                createdAt = fixture.clock.currentInstant.minusSeconds(7200),
+                updatedAt = fixture.clock.currentInstant.minusSeconds(7200)
+            )
+        )
+        fixture.verificationStore.save(
+            RegistrationVerification(
+                keycloakUserId = keycloakUserId,
+                nickname = "drummer",
+                email = "drummer@example.org",
+                tokenHash = "expired-token",
+                status = RegistrationVerificationStatus.PENDING,
+                expiresAt = fixture.clock.currentInstant.minusSeconds(60),
+                createdAt = fixture.clock.currentInstant.minusSeconds(7200)
+            )
+        )
+
+        fixture.service.cleanupExpiredPendingRegistrations()
+
+        val expiredUser = fixture.appUserStore.findById(keycloakUserId)
+        assertNotNull(expiredUser)
+        assertEquals(AppUserStatus.EXPIRED, expiredUser.status)
+        assertNotNull(expiredUser.deletedAt)
+    }
+
+    @Test
+    fun `cleanup expired pending registrations creates expired local user when missing`() {
+        val fixture = registrationFixture()
+        fixture.verificationStore.save(
+            RegistrationVerification(
+                keycloakUserId = "missing-user",
+                nickname = "drummer",
+                email = "drummer@example.org",
+                tokenHash = "expired-token-2",
+                status = RegistrationVerificationStatus.PENDING,
+                expiresAt = fixture.clock.currentInstant.minusSeconds(60),
+                createdAt = null
+            )
+        )
+
+        fixture.service.cleanupExpiredPendingRegistrations(fixture.clock.currentInstant)
+
+        val expiredUser = fixture.appUserStore.findById("missing-user")
+        assertNotNull(expiredUser)
+        assertEquals(AppUserStatus.EXPIRED, expiredUser.status)
+        assertEquals(fixture.clock.currentInstant, expiredUser.createdAt)
+    }
+
     private fun registrationFixture(
         mailShouldFail: Boolean = false,
-        activeTermsVersions: List<TermsVersion> = listOf(
-            TermsVersion(id = 1, version = "2026-03", contentSlug = "drumdibum-agb-2026-03", isActive = true)
-        )
-    ): RegistrationFixture {
-        val properties = RegistrationProperties(
+        keycloakDeleteShouldFail: Boolean = false,
+        properties: RegistrationProperties = RegistrationProperties(
             frontendBaseUrl = "http://localhost:3000",
             verificationTtl = java.time.Duration.ofHours(24),
             cleanupCron = "0 0 * * * *",
@@ -420,9 +662,13 @@ class RegistrationServiceTest {
                 mode = CaptchaMode.MOCK,
                 mockPassToken = "test-pass"
             )
+        ),
+        activeTermsVersions: List<TermsVersion> = listOf(
+            TermsVersion(id = 1, version = "2026-03", contentSlug = "drumdibum-agb-2026-03", isActive = true)
         )
+    ): RegistrationFixture {
         val clock = MutableClock(Instant.parse("2026-03-24T12:00:00Z"))
-        val keycloakClient = FakeKeycloakAdminClient()
+        val keycloakClient = FakeKeycloakAdminClient(deleteShouldFail = keycloakDeleteShouldFail)
         val appUserStore = InMemoryAppUserStore(clock)
         val termsVersionStore = InMemoryTermsVersionStore(activeTermsVersions)
         val termsConsentStore = InMemoryTermsConsentStore()
@@ -449,6 +695,7 @@ class RegistrationServiceTest {
             appUserStore = appUserStore,
             termsVersionStore = termsVersionStore,
             termsConsentStore = termsConsentStore,
+            verificationStore = verificationStore,
             mailService = mailService,
             clock = clock
         )
@@ -461,6 +708,7 @@ private data class RegistrationFixture(
     val appUserStore: InMemoryAppUserStore,
     val termsVersionStore: InMemoryTermsVersionStore,
     val termsConsentStore: InMemoryTermsConsentStore,
+    val verificationStore: InMemoryRegistrationVerificationStore,
     val mailService: FakeRegistrationMailService,
     val clock: MutableClock
 )
@@ -577,7 +825,9 @@ private class InMemoryAppUserStore(
             .toList()
 }
 
-private class FakeKeycloakAdminClient : KeycloakAdminClient {
+private class FakeKeycloakAdminClient(
+    private val deleteShouldFail: Boolean = false
+) : KeycloakAdminClient {
     private val users = linkedMapOf<String, FakeKeycloakUser>()
     private var sequence = 1
 
@@ -642,6 +892,9 @@ private class FakeKeycloakAdminClient : KeycloakAdminClient {
     }
 
     override fun deleteUser(userId: String) {
+        if (deleteShouldFail) {
+            throw IllegalStateException("Keycloak delete failed")
+        }
         users.remove(userId)
     }
 

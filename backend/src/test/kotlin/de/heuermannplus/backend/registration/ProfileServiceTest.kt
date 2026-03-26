@@ -10,6 +10,7 @@ import kotlin.test.assertNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.security.core.authority.AuthorityUtils
 
 class ProfileServiceTest {
 
@@ -46,6 +47,22 @@ class ProfileServiceTest {
     }
 
     @Test
+    fun `profile falls back to authentication name when subject is missing`() {
+        val appUser = appUser(
+            keycloakUserId = "kc-rob",
+            nickname = "rob",
+            email = "r.schlottmann@example.com"
+        )
+        val service = profileService(appUsers = listOf(appUser))
+        val authentication = authentication(subject = null, authenticationName = "kc-rob")
+
+        val profile = service.profile(authentication)
+
+        assertEquals("rob", profile.username)
+        assertEquals("r.schlottmann@example.com", profile.email)
+    }
+
+    @Test
     fun `profile rejects tokens without any usable identity claim`() {
         val service = profileService()
 
@@ -73,6 +90,19 @@ class ProfileServiceTest {
     }
 
     @Test
+    fun `updateProfile rejects username that is too long`() {
+        val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val service = profileService(appUsers = listOf(appUser))
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.updateProfile(authentication(subject = "kc-rob"), UpdateProfileRequest(username = "a".repeat(256)))
+        }
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.status)
+        assertEquals("INVALID_USERNAME", exception.code)
+    }
+
+    @Test
     fun `updateProfile updates nickname when not conflicting`() {
         val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
         val appStore = InMemoryAppUserStore(listOf(appUser))
@@ -89,6 +119,39 @@ class ProfileServiceTest {
 
         assertEquals("newrob", updated.username)
         assertEquals("newrob", keycloakClient.updatedUsername)
+    }
+
+    @Test
+    fun `updateProfile allows same username and normalizes optional names`() {
+        val appUser = appUser(keycloakUserId = "kc-rob", nickname = "rob")
+        val appStore = InMemoryAppUserStore(listOf(appUser))
+        val keycloakClient = RecordingKeycloakAdminClient(
+            usernameLookup = mapOf(
+                "rob" to KeycloakUserSummary(
+                    id = "kc-rob",
+                    username = "rob",
+                    email = "test@example.com",
+                    enabled = true,
+                    emailVerified = true
+                )
+            )
+        )
+        val service = ProfileService(
+            passwordPolicyEvaluator = PasswordPolicyEvaluator(registrationProperties()),
+            keycloakAdminClient = keycloakClient,
+            appUserStore = appStore,
+            clock = Clock.fixed(Instant.parse("2026-03-25T11:30:00Z"), ZoneId.of("UTC"))
+        )
+
+        val updated = service.updateProfile(
+            authentication(subject = "kc-rob"),
+            UpdateProfileRequest(username = "rob", firstName = "  ", lastName = "  New  ")
+        )
+
+        assertEquals("rob", updated.username)
+        assertEquals(null, updated.firstName)
+        assertEquals("New", updated.lastName)
+        assertEquals("rob", keycloakClient.updatedUsername)
     }
 
     @Test
@@ -249,11 +312,41 @@ class ProfileServiceTest {
     }
 
     @Test
+    fun `profile falls back from preferred username miss to email`() {
+        val appUser = appUser(
+            keycloakUserId = "kc-rob",
+            nickname = "rob",
+            email = "r.schlottmann@example.com"
+        )
+        val service = profileService(appUsers = listOf(appUser))
+        val authentication = authentication(
+            preferredUsername = "missing-user",
+            email = "r.schlottmann@example.com"
+        )
+
+        val profile = service.profile(authentication)
+
+        assertEquals("rob", profile.username)
+    }
+
+    @Test
     fun `profile returns not found when token identifies missing user`() {
         val service = profileService()
 
         val exception = assertFailsWith<RegistrationException> {
             service.profile(authentication(subject = "missing-id"))
+        }
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.status)
+        assertEquals("PROFILE_NOT_FOUND", exception.code)
+    }
+
+    @Test
+    fun `profile returns not found when identity claims are present but unresolved`() {
+        val service = profileService()
+
+        val exception = assertFailsWith<RegistrationException> {
+            service.profile(authentication(preferredUsername = "missing-user", email = "missing@example.com"))
         }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.status)
@@ -307,7 +400,8 @@ class ProfileServiceTest {
     private fun authentication(
         subject: String? = null,
         preferredUsername: String? = null,
-        email: String? = null
+        email: String? = null,
+        authenticationName: String? = null
     ): JwtAuthenticationToken {
         val builder = Jwt.withTokenValue("token")
             .header("alg", "none")
@@ -322,8 +416,13 @@ class ProfileServiceTest {
         if (email != null) {
             builder.claim("email", email)
         }
+        val jwt = builder.build()
 
-        return JwtAuthenticationToken(builder.build())
+        return if (authenticationName != null) {
+            JwtAuthenticationToken(jwt, AuthorityUtils.NO_AUTHORITIES, authenticationName)
+        } else {
+            JwtAuthenticationToken(jwt)
+        }
     }
 
     private class InMemoryAppUserStore(
