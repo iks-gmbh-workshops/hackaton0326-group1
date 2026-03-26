@@ -4,6 +4,8 @@ import de.heuermannplus.backend.api.GroupController
 import de.heuermannplus.backend.group.CreateGroupRequest
 import de.heuermannplus.backend.group.CreateMembershipRequest
 import de.heuermannplus.backend.group.CurrentUser
+import de.heuermannplus.backend.group.GroupKnownUserInvitationMail
+import de.heuermannplus.backend.group.GroupMailService
 import de.heuermannplus.backend.group.GroupMembershipStatus
 import de.heuermannplus.backend.group.GroupProperties
 import de.heuermannplus.backend.group.GroupService
@@ -24,7 +26,7 @@ import kotlin.test.assertTrue
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 
-class GroupControllerCoverageTest {
+class GroupControllerTest {
 
     @Test
     fun `list create get update and delete delegate through controller`() {
@@ -164,8 +166,9 @@ private fun groupControllerFixture(): GroupControllerFixture {
         invitationStore = InMemoryGroupInvitationStore(),
         tokenStore = InMemoryGroupTokenStore(),
         joinRequestStore = InMemoryGroupJoinRequestStore(),
+        activityStore = InMemoryActivityStore(),
         appUserStore = appUserStore,
-        groupMailService = FakeGroupMailService(),
+        groupMailService = NoopGroupMailService(),
         tokenService = VerificationTokenService(),
         groupProperties = GroupProperties(frontendBaseUrl = "http://localhost:3000"),
         clock = clock
@@ -205,3 +208,9 @@ private fun authenticationToken(subject: String): JwtAuthenticationToken =
             )
         )
     )
+
+private class NoopGroupMailService : GroupMailService {
+    override fun sendKnownUserInvitation(invitation: GroupKnownUserInvitationMail) = Unit
+
+    override fun sendUnknownEmailInvitation(email: String, groupName: String, inviterName: String) = Unit
+}
