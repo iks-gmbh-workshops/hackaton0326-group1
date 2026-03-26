@@ -246,7 +246,7 @@ class RestKeycloakAdminClient(
             ?: throw RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_TOKEN",
-                message = "Der Verifizierungslink ist ungueltig"
+                message = "Der Verifizierungslink ist ungültig"
             )
 
         restClient.put()
@@ -308,7 +308,7 @@ class RestKeycloakAdminClient(
             throw RegistrationException(
                 status = HttpStatus.BAD_GATEWAY,
                 code = "KEYCLOAK_ADMIN_FORBIDDEN",
-                message = "Registrierung ist momentan nicht verfuegbar"
+                message = "Registrierung ist momentan nicht verfügbar"
             )
         }
     }
@@ -331,7 +331,7 @@ class RestKeycloakAdminClient(
         return RegistrationException(
             status = HttpStatus.BAD_GATEWAY,
             code = "KEYCLOAK_ADMIN_FORBIDDEN",
-            message = "Registrierung ist momentan nicht verfuegbar"
+            message = "Registrierung ist momentan nicht verfügbar"
         )
     }
 
@@ -350,7 +350,7 @@ class RestKeycloakAdminClient(
                 message = if (minLength != null && maxLength != null) {
                     "Nickname muss zwischen $minLength und $maxLength Zeichen lang sein"
                 } else {
-                    "Nickname ist ungueltig"
+                    "Nickname ist ungültig"
                 },
                 field = "nickname"
             )
@@ -360,7 +360,7 @@ class RestKeycloakAdminClient(
             return RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_NICKNAME",
-                message = "Nickname ist ungueltig",
+                message = "Nickname ist ungültig",
                 field = "nickname"
             )
         }
@@ -369,7 +369,7 @@ class RestKeycloakAdminClient(
             return RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_EMAIL",
-                message = "Email-Adresse ist ungueltig",
+                message = "Email-Adresse ist ungültig",
                 field = "email"
             )
         }
@@ -382,7 +382,7 @@ class RestKeycloakAdminClient(
         return RegistrationException(
             status = HttpStatus.BAD_REQUEST,
             code = "KEYCLOAK_CREATE_FAILED",
-            message = "Die Registrierungsdaten sind ungueltig"
+            message = "Die Registrierungsdaten sind ungültig"
         )
     }
 
@@ -395,7 +395,7 @@ class RestKeycloakAdminClient(
             return RegistrationException(
                 status = HttpStatus.BAD_REQUEST,
                 code = "INVALID_USERNAME",
-                message = "Username ist ungueltig",
+                message = "Username ist ungültig",
                 field = "username"
             )
         }
@@ -430,7 +430,7 @@ class RestKeycloakAdminClient(
             return response?.accessToken ?: throw RegistrationException(
                 status = HttpStatus.BAD_GATEWAY,
                 code = "KEYCLOAK_TOKEN_FAILED",
-                message = "Registrierung ist momentan nicht verfuegbar"
+                message = "Registrierung ist momentan nicht verfügbar"
             )
         } catch (exception: HttpClientErrorException.Unauthorized) {
             logger.error(
@@ -443,7 +443,7 @@ class RestKeycloakAdminClient(
             throw RegistrationException(
                 status = HttpStatus.BAD_GATEWAY,
                 code = "KEYCLOAK_ADMIN_AUTH_FAILED",
-                message = "Registrierung ist momentan nicht verfuegbar"
+                message = "Registrierung ist momentan nicht verfügbar"
             )
         } catch (exception: RestClientException) {
             logger.error(
@@ -456,7 +456,7 @@ class RestKeycloakAdminClient(
             throw RegistrationException(
                 status = HttpStatus.BAD_GATEWAY,
                 code = "KEYCLOAK_TOKEN_FAILED",
-                message = "Registrierung ist momentan nicht verfuegbar"
+                message = "Registrierung ist momentan nicht verfügbar"
             )
         }
     }

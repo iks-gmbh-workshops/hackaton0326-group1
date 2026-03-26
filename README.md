@@ -1,13 +1,13 @@
 # HeuermannPlus
 
-Multilayer-Web-App-Scaffold mit Next.js im Frontend, Spring Boot mit Kotlin im Backend, Keycloak fuer Authentifizierung und zwei getrennten PostgreSQL-Instanzen fuer App- und IAM-Daten.
+Multilayer-Web-App-Scaffold mit Next.js im Frontend, Spring Boot mit Kotlin im Backend, Keycloak für Authentifizierung und zwei getrennten PostgreSQL-Instanzen für App- und IAM-Daten.
 
 ## Stack
 
 - Frontend: Next.js 15.5.9, React 19.1.1, TypeScript 5.9.2, Tailwind CSS 4.1.13, DaisyUI 5.1.7
 - Backend: Spring Boot 4.0.3, Kotlin 2.2.20, Gradle 9.4.0, Java 25 Runtime mit Bytecode-Target 24
 - Auth: Keycloak 26.5.5
-- Persistenz: PostgreSQL 18.3 fuer App und Keycloak
+- Persistenz: PostgreSQL 18.3 für App und Keycloak
 - Lokales Setup: Docker Compose im Repo-Root
 
 ## Projektstruktur
@@ -42,25 +42,25 @@ docker compose up --build
 - Keycloak: `http://localhost:8081`
 - Mailpit UI: `http://localhost:8025`
 
-## Lokale Zugange
+## Lokale Zugänge
 
 - Keycloak Admin: `admin` / `Admin123!`
-- Anwendungsnutzer: lokal ueber die Registrierungsstrecke im Frontend anlegen
+- Anwendungsnutzer: lokal über die Registrierungsstrecke im Frontend anlegen
 
 ## Auth-Demo
 
 - Das Frontend startet den Login gegen Keycloak.
 - Nach erfolgreichem Login speichert `next-auth` die Session JWT-basiert.
-- Geschuetzte Frontend-Calls gehen direkt aus dem Browser an das Backend und senden den Access Token als Bearer-JWT.
+- Geschützte Frontend-Calls gehen direkt aus dem Browser an das Backend und senden den Access Token als Bearer-JWT.
 - Das Backend validiert den Bearer-Token gegen Keycloak als OAuth2 Resource Server.
 
 ## Registrierung lokal
 
-- Die Compose-Umgebung enthaelt jetzt Mailpit fuer Verifizierungs-E-Mails und einen technischen Keycloak-Client fuer die Registrierungslogik.
-- Im Default-Setup laeuft Captcha lokal im Mock-Modus; verwende dafuer den Token `test-pass`.
+- Die Compose-Umgebung enthält jetzt Mailpit für Verifizierungs-E-Mails und einen technischen Keycloak-Client für die Registrierungslogik.
+- Im Default-Setup läuft Captcha lokal im Mock-Modus; verwende dafür den Token `test-pass`.
 - Wenn ein bestehendes Keycloak-Postgres-Volume schon vor der Realm-Erweiterung angelegt wurde, zieht `--import-realm` die neuen Clients und Rollen nicht nach.
-- Typisches Symptom davon bei der Registrierung: Im Backend erscheint `401 invalid_client`, waehrend Keycloak selbst `client_not_found` fuer `heuermannplus-registration-service` loggt.
-- In diesem Fall den Stack fuer einen kompletten lokalen Neuimport einmal mit geloeschten Volumes starten:
+- Typisches Symptom davon bei der Registrierung: Im Backend erscheint `401 invalid_client`, während Keycloak selbst `client_not_found` für `heuermannplus-registration-service` loggt.
+- In diesem Fall den Stack für einen kompletten lokalen Neuimport einmal mit gelöschten Volumes starten:
 
 ```bash
 docker compose down -v
@@ -72,7 +72,7 @@ docker compose up --build
 - Frontend: Node.js 24.x LTS und `npm install && npm run dev` in `frontend/`
 - Backend: Java 25 und `./gradlew bootRun` in `backend/`
 
-Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle Abhaengigkeiten damit konsistent hochfahren.
+Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle Abhängigkeiten damit konsistent hochfahren.
 
 ## Dev Container
 
@@ -84,7 +84,7 @@ Ein VS-Code-Dev-Container liegt unter `.devcontainer/` und ist auf diesen Repo-S
 
 Nutzung:
 
-1. In VS Code `Dev Containers: Reopen in Container` ausfuehren.
+1. In VS Code `Dev Containers: Reopen in Container` ausführen.
 2. Nach dem ersten Bootstrap bei Bedarf den App-Stack manuell starten:
 
 ```bash

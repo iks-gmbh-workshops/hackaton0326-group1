@@ -112,7 +112,7 @@ class PrivateControllerTest {
         }
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
-        assertEquals("401 UNAUTHORIZED \"JWT enthaelt keinen Subject-Claim\"", exception.message)
+        assertEquals("401 UNAUTHORIZED \"JWT enthält keinen Subject-Claim\"", exception.message)
     }
 
     private fun authenticationToken(

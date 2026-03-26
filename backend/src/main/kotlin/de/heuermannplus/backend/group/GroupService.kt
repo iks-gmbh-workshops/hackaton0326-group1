@@ -120,7 +120,7 @@ class GroupService(
         val group = requireGroup(groupId)
         val currentMembership = membershipStore.findByGroupIdAndUserId(groupId, currentUser.userId)
             ?.takeIf { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
-            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_MEMBER", "Gruppendetails koennen nur fuer Mitglieder angezeigt werden")
+            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_MEMBER", "Gruppendetails können nur für Mitglieder angezeigt werden")
         val memberships = membershipStore.findByGroupId(groupId)
             .filter { it.status == GroupMembershipStatus.ACTIVE || it.status == GroupMembershipStatus.INVITED }
             .sortedWith(compareByDescending<GroupMembership> { it.isAdmin }.thenBy { it.displayName.lowercase() })
@@ -435,10 +435,10 @@ class GroupService(
         val token = request.token.requireField("token", "Bitte Gruppeneinladungstoken eingeben")
         val now = Instant.now(clock)
         val invitationToken = tokenStore.findByTokenHash(tokenService.hash(token))
-            ?: throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungueltig", "token")
+            ?: throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungültig", "token")
 
         if (invitationToken.usedAt != null) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungueltig", "token")
+            throw GroupException(HttpStatus.BAD_REQUEST, "INVALID_GROUP_TOKEN", "Gruppeneinladungstoken ist ungültig", "token")
         }
         if (invitationToken.expiresAt.isBefore(now)) {
             throw GroupException(HttpStatus.BAD_REQUEST, "TOKEN_EXPIRED", "Gruppeneinladungstoken ist abgelaufen", "token")
@@ -510,7 +510,7 @@ class GroupService(
         requireAdminMembership(groupId, currentUser.userId)
         val membership = requireMembership(groupId, membershipId)
         if (membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte koennen nur aktiven Mitgliedern gegeben werden")
+            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte können nur aktiven Mitgliedern gegeben werden")
         }
         membershipStore.save(membership.copy(isAdmin = true, updatedAt = Instant.now(clock)))
         return getGroup(groupId, currentUser)
@@ -521,7 +521,7 @@ class GroupService(
         requireAdminMembership(groupId, currentUser.userId)
         val membership = requireMembership(groupId, membershipId)
         if (membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte koennen nur aktiven Mitgliedern entzogen werden")
+            throw GroupException(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_EXISTS", "Adminrechte können nur aktiven Mitgliedern entzogen werden")
         }
         if (membership.isAdmin && membership.status == GroupMembershipStatus.ACTIVE && activeAdminCount(groupId) <= 1) {
             throw GroupException(HttpStatus.BAD_REQUEST, "LAST_ADMIN_REQUIRED", "Mindestens ein Gruppenverwalter muss erhalten bleiben")
@@ -554,9 +554,9 @@ class GroupService(
 
     private fun requireAdminMembership(groupId: Long, userId: String): GroupMembership {
         val membership = membershipStore.findByGroupIdAndUserId(groupId, userId)
-            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur fuer Gruppenverwalter erlaubt")
+            ?: throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur für Gruppenverwalter erlaubt")
         if (!membership.isAdmin || membership.status != GroupMembershipStatus.ACTIVE) {
-            throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur fuer Gruppenverwalter erlaubt")
+            throw GroupException(HttpStatus.FORBIDDEN, "FORBIDDEN_GROUP_ADMIN", "Aktion ist nur für Gruppenverwalter erlaubt")
         }
         return membership
     }

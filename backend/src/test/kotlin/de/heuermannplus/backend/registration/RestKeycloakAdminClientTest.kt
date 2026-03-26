@@ -44,7 +44,7 @@ class RestKeycloakAdminClientTest {
 
         assertEquals(HttpStatus.BAD_GATEWAY, exception.status)
         assertEquals("KEYCLOAK_ADMIN_AUTH_FAILED", exception.code)
-        assertEquals("Registrierung ist momentan nicht verfuegbar", exception.message)
+        assertEquals("Registrierung ist momentan nicht verfügbar", exception.message)
 
         server.verify()
     }
@@ -136,7 +136,7 @@ class RestKeycloakAdminClientTest {
 
         assertEquals(HttpStatus.BAD_GATEWAY, exception.status)
         assertEquals("KEYCLOAK_ADMIN_FORBIDDEN", exception.code)
-        assertEquals("Registrierung ist momentan nicht verfuegbar", exception.message)
+        assertEquals("Registrierung ist momentan nicht verfügbar", exception.message)
 
         server.verify()
     }

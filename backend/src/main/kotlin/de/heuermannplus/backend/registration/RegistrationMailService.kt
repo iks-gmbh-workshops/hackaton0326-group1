@@ -20,15 +20,15 @@ class SmtpRegistrationMailService(
         val message = SimpleMailMessage().apply {
             from = registrationProperties.emailFrom
             setTo(email)
-            subject = "Bitte bestaetige deine Registrierung"
+            subject = "Bitte bestätige deine Registrierung"
             text =
                 """
                 Hallo $nickname,
 
-                bitte bestaetige deine Registrierung fuer drumdibum ueber folgenden Link:
+                bitte bestätige deine Registrierung für drumdibum über folgenden Link:
                 $verifyUrl
 
-                Der Link ist 24 Stunden gueltig.
+                Der Link ist 24 Stunden gültig.
                 """.trimIndent()
         }
 

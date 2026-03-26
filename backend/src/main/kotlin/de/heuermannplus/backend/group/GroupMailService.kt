@@ -21,14 +21,14 @@ class SmtpGroupMailService(
         val message = SimpleMailMessage().apply {
             from = groupProperties.emailFrom
             setTo(email)
-            subject = "Neue Gruppeneinladung fuer $groupName"
+            subject = "Neue Gruppeneinladung für $groupName"
             text =
                 """
                 Hallo $inviteeName,
 
                 $inviterName hat Dich zur Gruppe "$groupName" eingeladen.
 
-                Melde Dich bei drumdibum an und oeffne den Gruppenbereich:
+                Melde Dich bei drumdibum an und öffne den Gruppenbereich:
                 $groupsUrl
                 """.trimIndent()
         }

@@ -78,7 +78,7 @@ class RegistrationServiceTest {
         val token = fixture.mailService.lastToken()
         val verifyResponse = fixture.service.verify(RegistrationVerifyRequest(token = token))
 
-        assertEquals("Die Registrierung wurde erfolgreich bestaetigt", verifyResponse.message)
+        assertEquals("Die Registrierung wurde erfolgreich bestätigt", verifyResponse.message)
 
         val activatedUser = fixture.keycloakClient.findUserByUsername("drummer")
         assertNotNull(activatedUser)
@@ -133,7 +133,7 @@ class RegistrationServiceTest {
             )
         }
 
-        assertEquals("Ungueltiges Format der Email Adresse", exception.message)
+        assertEquals("Ungültiges Format der Email Adresse", exception.message)
     }
 
     @Test
@@ -265,7 +265,7 @@ class RegistrationServiceTest {
             fixture.service.verify(RegistrationVerifyRequest(token = "unknown"))
         }
 
-        assertEquals("Der Verifizierungslink ist ungueltig", exception.message)
+        assertEquals("Der Verifizierungslink ist ungültig", exception.message)
     }
 
     @Test
