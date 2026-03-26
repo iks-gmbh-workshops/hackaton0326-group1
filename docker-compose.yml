@@ -39,7 +39,8 @@ services:
 
   keycloak:
     build:
-      context: ./keycloak
+      context: .
+      dockerfile: keycloak/Dockerfile
     restart: unless-stopped
     command:
       - start-dev
@@ -58,8 +59,6 @@ services:
       KC_HTTP_ENABLED: "true"
     ports:
       - "${KEYCLOAK_PORT}:8080"
-    volumes:
-      - ./keycloakify/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar:/opt/keycloak/providers/heuermannplus-theme.jar:ro
     depends_on:
       keycloak-postgres:
         condition: service_healthy
