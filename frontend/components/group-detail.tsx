@@ -220,7 +220,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
           <Field disabled={!group.currentUserAdmin} label="Beschreibung" onChange={setDescription} value={description} />
 
           {group.currentUserAdmin ? (
-            <button className="btn btn-primary" disabled={isPending} type="submit">
+            <button className="form-actions btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Speichere..." : "Änderungen speichern"}
             </button>
           ) : null}
@@ -325,7 +325,7 @@ export function GroupDetailView({ groupId }: GroupDetailProps) {
               value={inviteTarget}
               wrapperRef={inviteFieldRef}
             />
-            <button className="btn btn-primary" disabled={isPending} type="submit">
+            <button className="form-actions btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Sende..." : "Mitglied einladen"}
             </button>
           </form>

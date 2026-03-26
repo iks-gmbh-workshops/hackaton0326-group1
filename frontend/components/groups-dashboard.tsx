@@ -181,7 +181,7 @@ export function GroupsDashboard() {
 
           {submitError?.field === "name" ? <div className="alert alert-error">{submitError.message}</div> : null}
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="form-actions flex flex-wrap items-center gap-3">
             <button className="btn btn-primary" disabled={isPending} type="submit">
               {isPending ? "Speichere..." : "Gruppe erstellen"}
             </button>
@@ -205,7 +205,7 @@ export function GroupsDashboard() {
             required
             value={joinToken}
           />
-          <button className="btn btn-outline btn-primary" disabled={isPending} type="submit">
+          <button className="form-actions btn btn-outline btn-primary" disabled={isPending} type="submit">
             {isPending ? "Prüfe..." : "Token einlösen"}
           </button>
         </form>

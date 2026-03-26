@@ -341,7 +341,7 @@ export function ProfileManagement() {
                         ) : null}
                         {profileSuccess ? <div className="alert alert-success">{profileSuccess}</div> : null}
 
-                        <button className="btn btn-primary" disabled={isSavingProfile} type="submit">
+                        <button className="form-actions btn btn-primary" disabled={isSavingProfile} type="submit">
                             {isSavingProfile ? "Speichere..." : "Profil speichern"}
                         </button>
                     </form>
@@ -380,7 +380,7 @@ export function ProfileManagement() {
                             ) : null}
                             {passwordSuccess ? <div className="alert alert-success">{passwordSuccess}</div> : null}
 
-                            <button className="btn btn-primary" disabled={isChangingPassword} type="submit">
+                            <button className="form-actions btn btn-primary" disabled={isChangingPassword} type="submit">
                                 {isChangingPassword ? "Ändere..." : "Passwort ändern"}
                             </button>
                         </form>
@@ -429,7 +429,7 @@ export function ProfileManagement() {
                                 Bitte lösche dein Konto nur, wenn du dir sicher bist, dass dieser Schritt dauerhaft sein soll.
                             </p>
 
-                            <button className="btn border-none bg-white text-red-800 shadow-sm hover:bg-white/92 sm:min-w-52" disabled={isDeleting} type="submit">
+                            <button className="form-actions btn border-none bg-white text-red-800 shadow-sm hover:bg-white/92 sm:min-w-52" disabled={isDeleting} type="submit">
                                 {isDeleting ? "Lösche unwiderruflich..." : "Konto jetzt endgültig löschen"}
                             </button>
                         </form>

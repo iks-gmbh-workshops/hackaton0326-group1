@@ -82,7 +82,7 @@ export function ActivityFormView({ groupId }: ActivityFormViewProps) {
 
           {error ? <div className="alert alert-error">{error.message}</div> : null}
 
-          <button className="btn btn-primary" disabled={isPending} type="submit">
+          <button className="form-actions btn btn-primary" disabled={isPending} type="submit">
             {isPending ? "Speichere..." : "Aktivität erstellen"}
           </button>
         </form>

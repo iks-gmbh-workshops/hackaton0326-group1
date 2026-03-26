@@ -262,7 +262,7 @@ export function RegistrationForm() {
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="form-actions flex flex-wrap items-center gap-3">
           <button className="btn btn-primary" disabled={isPending} type="submit">
             {isPending ? "Registriere..." : "Registrieren"}
           </button>

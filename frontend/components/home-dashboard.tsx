@@ -61,11 +61,11 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
           </div>
 
           <div className="max-w-3xl space-y-4">
-            <p className="subheadline">Dein schneller Überblick für Gruppen und nächste Schritte.</p>
-            <h1 className="headline">Willkommen zurück, {userName}.</h1>
+            <p className="subheadline">Dein schneller Ueberblick fuer Gruppen und naechste Schritte.</p>
+            <h1 className="headline">Willkommen zurueck, {userName}.</h1>
             <p className="body-copy max-w-2xl">
-              Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz für kommende
-              Aktivitäten.
+              Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz fuer kommende
+              Aktivitaeten.
             </p>
           </div>
 
@@ -78,36 +78,42 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <div className="soft-panel grid gap-4">
           <div className="section-intro">
-            <p className="section-title">Übersicht</p>
-            <h2 className="section-headline text-3xl">Direkt nach dem Login orientieren</h2>
+            <p className="section-title">Uebersicht</p>
+            <h2 className="section-headline max-w-[16ch]">Direkt nach dem Login orientieren</h2>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
+          <div className="overview-grid">
+            <div className="overview-stat">
               <p className="subsection-title">Meine Gruppen</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsGroups}</p>
-              <p className="helper-text">aktive Zugehörigkeiten</p>
+              <div className="overview-stat-body">
+                <p className="overview-stat-value">{statsGroups}</p>
+                <p className="helper-text">aktive Zugehoerigkeiten</p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
+            <div className="overview-stat">
               <p className="subsection-title">Einladungen</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsInvitations}</p>
-              <p className="helper-text">offene Gruppeneinladungen</p>
+              <div className="overview-stat-body">
+                <p className="overview-stat-value">{statsInvitations}</p>
+                <p className="helper-text">offene Gruppeneinladungen</p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-base-300 bg-white/90 p-4">
-              <p className="subsection-title">Anträge</p>
-              <p className="section-headline mt-2 text-[2rem]">{statsRequests}</p>
-              <p className="helper-text">laufende Mitgliedschaftsanträge</p>
+            <div className="overview-stat">
+              <p className="subsection-title">Antraege</p>
+              <div className="overview-stat-body">
+                <p className="overview-stat-value">{statsRequests}</p>
+                <p className="helper-text">laufende Mitgliedschaftsantraege</p>
+              </div>
             </div>
           </div>
 
           <p className="body-copy text-sm">
             {isLoading
-              ? "Die aktuellen Übersichten werden geladen."
+              ? "Die aktuellen Uebersichten werden geladen."
               : data.invitations.length
-              ? "Du hast offene Einladungen, die du in der Gruppenverwaltung direkt annehmen kannst."
-              : "Keine offenen Einladungen im Moment."}
+                ? "Du hast offene Einladungen, die du in der Gruppenverwaltung direkt annehmen kannst."
+                : "Keine offenen Einladungen im Moment."}
           </p>
         </div>
       </section>
@@ -121,7 +127,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
               <p className="section-title">Meine Gruppen</p>
               <h2 className="section-headline">Deine wichtigsten Gruppen auf einen Blick</h2>
               <p className="subheadline">
-                Kompakt dargestellt für den schnellen Einstieg. Die komplette Verwaltung bleibt unter Gruppen.
+                Kompakt dargestellt fuer den schnellen Einstieg. Die komplette Verwaltung bleibt unter Gruppen.
               </p>
             </div>
 
@@ -156,7 +162,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
                     <p className="body-copy text-sm">{group.description || "Keine Beschreibung hinterlegt."}</p>
                     <p className="helper-text">{group.memberCount} aktive Mitglieder</p>
                     <Link className="btn btn-sm btn-primary" href={`/groups/${group.id}` as Route}>
-                      Details öffnen
+                      Details oeffnen
                     </Link>
                   </article>
                 ))}
@@ -164,7 +170,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             ) : null}
 
             {!isLoading && !loadError && remainingGroups > 0 ? (
-              <p className="helper-text">Und {remainingGroups} weitere Gruppen in der vollständigen Gruppenverwaltung.</p>
+              <p className="helper-text">Und {remainingGroups} weitere Gruppen in der vollstaendigen Gruppenverwaltung.</p>
             ) : null}
 
             {!isLoading && !loadError && (data.invitations.length || data.joinRequests.length) ? (
@@ -196,7 +202,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
             <div className="flex flex-wrap items-center gap-3">
               <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
-                Gesamte Gruppenverwaltung öffnen
+                Gesamte Gruppenverwaltung oeffnen
               </Link>
             </div>
           </div>
@@ -204,17 +210,17 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <section className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Bevorstehende Aktivitäten</p>
-            <h2 className="section-headline">Hier erscheinen deine nächsten Termine</h2>
+            <p className="section-title">Bevorstehende Aktivitaeten</p>
+            <h2 className="section-headline">Hier erscheinen deine naechsten Termine</h2>
             <p className="subheadline">
-              Die Aktivitätenfunktion ist im Projekt noch nicht umgesetzt. Dieser Bereich ist dafür bereits vorgesehen.
+              Die Aktivitaetenfunktion ist im Projekt noch nicht umgesetzt. Dieser Bereich ist dafuer bereits vorgesehen.
             </p>
           </div>
 
           <div className="rounded-xl border border-base-300 bg-white/90 p-5">
-            <p className="subsection-title">Noch keine Aktivitätenansicht verfügbar</p>
+            <p className="subsection-title">Noch keine Aktivitaetenansicht verfuegbar</p>
             <p className="body-copy mt-3 text-sm">
-              Sobald Aktivitäten im Produkt eingeführt sind, werden hier deine anstehenden Termine, Treffpunkte und
+              Sobald Aktivitaeten im Produkt eingefuehrt sind, werden hier deine anstehenden Termine, Treffpunkte und
               relevante Aktualisierungen gesammelt angezeigt.
             </p>
           </div>
@@ -223,8 +229,8 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             <div className="status-row">
               <span className="status-dot" />
               <p className="body-copy text-sm">
-                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit später echte Aktivitäten ohne
-                Bedeutungsbruch eingebunden werden können.
+                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit spaeter echte Aktivitaeten ohne
+                Bedeutungsbruch eingebunden werden koennen.
               </p>
             </div>
           </div>
