@@ -17,7 +17,7 @@ export function PublicLoginButton({ className }: PublicLoginButtonProps) {
   }
 
   return (
-    <button className={className} disabled={isPending} onClick={handleLogin}>
+    <button className={className} disabled={isPending} onClick={handleLogin} type="button">
       {isPending ? "Weiter..." : "Anmelden"}
     </button>
   );

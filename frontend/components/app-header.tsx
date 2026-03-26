@@ -13,52 +13,97 @@ type AppHeaderProps = {
 
 export function AppHeader({ authenticated, userName }: AppHeaderProps) {
   const pathname = usePathname();
-  const showPublicLogin = !authenticated && pathname === "/";
   const isProfilePage = pathname === "/profile";
+  const isRegisterPage = pathname.startsWith("/register");
+
+  const publicNavClass = (href: string) =>
+    `btn btn-ghost btn-sm app-nav-link ${pathname === href ? "app-nav-link-active" : ""}`;
+  const privateNavClass = (href: string) =>
+    `btn btn-ghost btn-sm app-nav-link ${pathname.startsWith(href) ? "app-nav-link-active" : ""}`;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-base-300/80 bg-base-100/94">
-      <div className="mx-auto flex min-h-[4.75rem] w-full max-w-7xl items-center justify-between gap-4 px-3 py-3">
-        <Link href="/" className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-[rgba(0,85,120,0.14)] bg-[#f3f6f7] shadow-sm"
-          >
-            <Image src="/icon.svg" alt="" width={40} height={40} className="h-full w-full" />
+    <header className="app-header">
+      <div className="app-header-inner">
+        <Link href="/" className="app-brand">
+          <span aria-hidden="true" className="app-brand-mark">
+            <Image src="/icon.svg" alt="" width={48} height={48} className="h-full w-full" />
           </span>
-          <span className="brand-kicker">HeuermannPlus</span>
+
+          <span className="app-brand-copy">
+            <span className="brand-kicker">HeuermannPlus</span>
+            <span className="app-brand-title">Gruppen koordinieren, Einladungen steuern, Aktivitäten sichtbar halten</span>
+          </span>
         </Link>
 
         {authenticated ? (
-          <nav className="flex flex-wrap items-center justify-end gap-2">
-            <Link href={"/groups" as Route} className="btn btn-ghost btn-sm">
-              Gruppen
-            </Link>
+          <>
+            <nav className="app-header-nav" aria-label="Hauptnavigation">
+              <Link href={"/groups" as Route} className={privateNavClass("/groups")}>
+                Gruppen
+              </Link>
+              <Link href={"/activities" as Route} className={privateNavClass("/activities")}>
+                Aktivitäten
+              </Link>
+            </nav>
 
-            <Link href={"/activities" as Route} className="btn btn-ghost btn-sm">
-              Aktivitäten
+            <div className="app-header-actions">
+              <Link
+                href={"/groups" as Route}
+                className={`btn btn-ghost btn-sm app-nav-link lg:hidden ${pathname.startsWith("/groups") ? "app-nav-link-active" : ""}`}
+              >
+                Gruppen
+              </Link>
+
+              <Link
+                href={"/activities" as Route}
+                className={`btn btn-ghost btn-sm app-nav-link lg:hidden ${pathname.startsWith("/activities") ? "app-nav-link-active" : ""}`}
+              >
+                Aktivitäten
+              </Link>
+
+              <Link
+                href={"/profile" as Route}
+                aria-current={isProfilePage ? "page" : undefined}
+                className={`app-user-chip ${isProfilePage ? "ring-1 ring-[rgba(0,85,120,0.14)]" : ""}`}
+              >
+                <span className="app-user-label">
+                  <span>Profil</span>
+                  <strong>{userName ?? "Nutzer"}</strong>
+                </span>
+                <span className="btn btn-ghost btn-sm">Öffnen</span>
+              </Link>
+
+              <AuthControls authenticated={authenticated} />
+            </div>
+          </>
+        ) : (
+          <div className="app-header-actions">
+            <nav className="app-header-nav" aria-label="Öffentliche Navigation">
+              <Link href={"/" as Route} className={publicNavClass("/")}>
+                Start
+              </Link>
+              <Link href={"/register" as Route} className={publicNavClass("/register")}>
+                Registrierung
+              </Link>
+            </nav>
+
+            <Link
+              href={"/" as Route}
+              className={`btn btn-ghost btn-sm app-nav-link lg:hidden ${pathname === "/" ? "app-nav-link-active" : ""}`}
+            >
+              Start
             </Link>
 
             <Link
-              href={"/profile" as Route}
-              aria-current={isProfilePage ? "page" : undefined}
-              className={`btn btn-ghost btn-sm h-auto py-2 ${isProfilePage ? "bg-base-200" : ""}`}
+              href={"/register" as Route}
+              className={`btn btn-outline btn-primary btn-sm ${isRegisterPage ? "app-nav-link-active" : ""}`}
             >
-              <span className="block text-left">
-                <span className="block text-[0.7rem] font-semibold uppercase tracking-wider text-base-content/70">
-                  Ihr Profil
-                </span>
-                <span className="block text-[0.9rem] font-semibold">{userName ?? "Nutzer"}</span>
-              </span>
+              Konto erstellen
             </Link>
 
-            <AuthControls authenticated={authenticated} />
-          </nav>
-        ) : showPublicLogin ? (
-          <div className="flex items-center gap-2">
             <AuthControls authenticated={false} variant="header" />
           </div>
-        ) : null}
+        )}
       </div>
     </header>
   );

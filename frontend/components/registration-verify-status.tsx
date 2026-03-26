@@ -60,25 +60,41 @@ export function RegistrationVerifyStatus() {
   }, [searchParams]);
 
   return (
-    <div className="soft-panel mx-auto grid w-full max-w-2xl gap-4 rounded-[1.75rem]">
-      <p className="section-title">Verifizierung</p>
-      <h1 className="section-headline">Registrierung bestätigen</h1>
+    <section className="public-verification-shell">
+      <div className="public-callout public-verification-card">
+        <div className="section-intro">
+          <p className="section-title">Verifizierung</p>
+          <h1 className="display-headline">Bestätige deinen Zugang und schließe den Einstieg sauber ab.</h1>
+          <p className="body-copy">
+            Die Rückmeldung unten kommt direkt aus dem bestehenden Verifizierungsprozess. Das Redesign ändert nicht den
+            Ablauf, sondern macht Erfolg und Fehler eindeutiger sichtbar.
+          </p>
+        </div>
 
-      {state.status === "loading" ? (
-        <p className="subheadline">Wir prüfen deinen Verifizierungslink...</p>
-      ) : null}
+        {state.status === "loading" ? <div className="alert alert-info">Wir prüfen deinen Verifizierungslink...</div> : null}
+        {state.status === "success" ? <div className="alert alert-success">{state.message}</div> : null}
+        {state.status === "error" ? <div className="alert alert-error">{state.message}</div> : null}
 
-      {state.status === "success" ? <div className="alert alert-success">{state.message}</div> : null}
-      {state.status === "error" ? <div className="alert alert-error">{state.message}</div> : null}
+        <div className="public-stage-list">
+          <div className="public-stage-row">
+            <span className="public-stage-number">1</span>
+            <p className="body-copy text-sm">Der Token wird gegen den bestehenden Backend-Prozess validiert.</p>
+          </div>
+          <div className="public-stage-row">
+            <span className="public-stage-number">2</span>
+            <p className="body-copy text-sm">Bei Erfolg ist die Registrierung abgeschlossen und dein Zugang kann genutzt werden.</p>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Link className="btn btn-primary" href={"/" as Route}>
-          Zur Anmeldung
-        </Link>
-        <Link className="btn btn-ghost" href={"/register" as Route}>
-          Neue Registrierung
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link className="btn btn-primary" href={"/" as Route}>
+            Zur Anmeldung
+          </Link>
+          <Link className="btn btn-ghost" href={"/register" as Route}>
+            Neue Registrierung
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

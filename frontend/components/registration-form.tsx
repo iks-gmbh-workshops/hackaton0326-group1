@@ -136,124 +136,139 @@ export function RegistrationForm() {
   }
 
   if (!policy) {
-    return <div className="soft-panel">Lade Registrierungsformular...</div>;
+    return <div className="soft-panel public-loading-panel">Lade Registrierungsformular...</div>;
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <form className="brand-card space-y-5 p-6" onSubmit={handleSubmit}>
-        <div className="space-y-2">
+    <div className="public-registration-layout">
+      <form className="brand-card public-form-card" onSubmit={handleSubmit}>
+        <div className="section-intro">
           <p className="section-title">Registrierung</p>
-          <h1 className="section-headline">Erstelle dein drumdibum Konto</h1>
-          <p className="subheadline">
-            Nach der Registrierung senden wir dir einen Verifizierungslink per E-Mail. Erst danach wird dein Zugang freigeschaltet.
+          <h1 className="display-headline">Richte dein Konto in einem klaren, geführten Einstieg ein.</h1>
+          <p className="body-copy">
+            Die Funktion bleibt gleich: Daten erfassen, Captcha bestätigen, Bedingungen akzeptieren, Verifizierungslink
+            per E-Mail erhalten. Das Design ordnet diese Schritte nur sauberer und lesbarer.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            error={submitError?.field === "firstName" ? submitError.message : undefined}
-            id="firstName"
-            label="Vorname"
-            onChange={(value) => updateField("firstName", value)}
-            value={form.firstName ?? ""}
-          />
-          <Field
-            error={submitError?.field === "lastName" ? submitError.message : undefined}
-            id="lastName"
-            label="Name"
-            onChange={(value) => updateField("lastName", value)}
-            value={form.lastName ?? ""}
-          />
-        </div>
-
-        <Field
-          error={submitError?.field === "nickname" ? submitError.message : nicknameValidationError ?? undefined}
-          id="nickname"
-          label="Nickname"
-          maxLength={policy.nickname.maxLength}
-          minLength={policy.nickname.minLength}
-          onChange={(value) => updateField("nickname", value)}
-          required
-          value={form.nickname}
-        />
-        {!submitError?.field || submitError.field !== "nickname" ? (
-          <p className="helper-text">
-            Zwischen {policy.nickname.minLength} und {policy.nickname.maxLength} Zeichen.
-          </p>
-        ) : null}
-        {submitError?.field === "nickname" && submitError.suggestedNickname ? (
-          <button className="btn btn-sm btn-outline btn-primary" onClick={applySuggestedNickname} type="button">
-            Vorschlag übernehmen: {submitError.suggestedNickname}
-          </button>
-        ) : null}
-
-        <Field
-          error={submitError?.field === "email" ? submitError.message : undefined}
-          id="email"
-          label="Email-Adresse"
-          onChange={(value) => updateField("email", value)}
-          required
-          type="email"
-          value={form.email}
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            error={submitError?.field === "password" ? submitError.message : undefined}
-            id="password"
-            label="Passwort"
-            onChange={(value) => updateField("password", value)}
-            required
-            type="password"
-            value={form.password}
-          />
-          <Field
-            error={submitError?.field === "passwordRepeat" ? submitError.message : undefined}
-            id="passwordRepeat"
-            label="Passwort wiederholen"
-            onChange={(value) => updateField("passwordRepeat", value)}
-            required
-            type="password"
-            value={form.passwordRepeat}
-          />
-        </div>
-
-        <CaptchaField
-          captcha={policy.captcha}
-          disabled={isPending}
-          error={submitError?.field === "captchaToken" ? submitError.message : undefined}
-          onChange={(value) => updateField("captchaToken", value)}
-          value={form.captchaToken}
-        />
-
-        <fieldset className="space-y-2">
-          <label className="terms-checkbox-row" htmlFor="acceptTerms">
-            <input
-              checked={form.acceptTerms}
-              className={`checkbox checkbox-sm ${submitError?.field === "acceptTerms" ? "checkbox-error" : "checkbox-primary"}`}
-              id="acceptTerms"
-              name="acceptTerms"
-              onChange={(event) => updateField("acceptTerms", event.target.checked)}
-              required
-              type="checkbox"
+        <div className="public-form-grid">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              error={submitError?.field === "firstName" ? submitError.message : undefined}
+              id="firstName"
+              label="Vorname"
+              onChange={(value) => updateField("firstName", value)}
+              value={form.firstName ?? ""}
             />
-            <span className="body-copy text-sm leading-7">
-              Ich stimme den{" "}
-              <a
-                className="text-primary underline decoration-[0.08em] underline-offset-3"
-                href={policy.terms.url}
-                rel="noreferrer"
-                target="_blank"
-              >
-                Nutzungsbedingungen
-              </a>{" "}
-              in Version {policy.terms.currentVersion} zu.
-            </span>
-          </label>
-          {submitError?.field === "acceptTerms" ? <p className="text-sm text-error">{submitError.message}</p> : null}
-          <p className="helper-text">Die Registrierung ist nur möglich, wenn du der aktuell gültigen Version zustimmst.</p>
-        </fieldset>
+            <Field
+              error={submitError?.field === "lastName" ? submitError.message : undefined}
+              id="lastName"
+              label="Nachname"
+              onChange={(value) => updateField("lastName", value)}
+              value={form.lastName ?? ""}
+            />
+          </div>
+
+          <div className="public-form-callout">
+            <Field
+              error={submitError?.field === "nickname" ? submitError.message : nicknameValidationError ?? undefined}
+              id="nickname"
+              label="Nickname"
+              maxLength={policy.nickname.maxLength}
+              minLength={policy.nickname.minLength}
+              onChange={(value) => updateField("nickname", value)}
+              required
+              value={form.nickname}
+            />
+            {!submitError?.field || submitError.field !== "nickname" ? (
+              <p className="helper-text">
+                Zwischen {policy.nickname.minLength} und {policy.nickname.maxLength} Zeichen, eindeutig und gut erkennbar.
+              </p>
+            ) : null}
+            {submitError?.field === "nickname" && submitError.suggestedNickname ? (
+              <button className="btn btn-sm btn-outline btn-primary justify-self-start" onClick={applySuggestedNickname} type="button">
+                Vorschlag übernehmen: {submitError.suggestedNickname}
+              </button>
+            ) : null}
+          </div>
+
+          <Field
+            error={submitError?.field === "email" ? submitError.message : undefined}
+            id="email"
+            label="E-Mail-Adresse"
+            onChange={(value) => updateField("email", value)}
+            required
+            type="email"
+            value={form.email}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              error={submitError?.field === "password" ? submitError.message : undefined}
+              id="password"
+              label="Passwort"
+              onChange={(value) => updateField("password", value)}
+              required
+              type="password"
+              value={form.password}
+            />
+            <Field
+              error={submitError?.field === "passwordRepeat" ? submitError.message : undefined}
+              id="passwordRepeat"
+              label="Passwort wiederholen"
+              onChange={(value) => updateField("passwordRepeat", value)}
+              required
+              type="password"
+              value={form.passwordRepeat}
+            />
+          </div>
+
+          <div className="public-form-callout">
+            <CaptchaField
+              captcha={policy.captcha}
+              disabled={isPending}
+              error={submitError?.field === "captchaToken" ? submitError.message : undefined}
+              onChange={(value) => updateField("captchaToken", value)}
+              value={form.captchaToken}
+            />
+          </div>
+
+          <fieldset className="public-form-callout">
+            <div className="section-intro">
+              <p className="subsection-title">Rechtlicher Schritt</p>
+              <p className="body-copy text-sm">
+                Die Registrierung wird nur abgeschlossen, wenn du der aktuell gültigen Version zustimmst.
+              </p>
+            </div>
+
+            <label className="terms-checkbox-row" htmlFor="acceptTerms">
+              <input
+                checked={form.acceptTerms}
+                className={`checkbox checkbox-sm ${submitError?.field === "acceptTerms" ? "checkbox-error" : "checkbox-primary"}`}
+                id="acceptTerms"
+                name="acceptTerms"
+                onChange={(event) => updateField("acceptTerms", event.target.checked)}
+                required
+                type="checkbox"
+              />
+              <span className="body-copy text-sm leading-7">
+                Ich stimme den{" "}
+                <a
+                  className="text-primary underline decoration-[0.08em] underline-offset-3"
+                  href={policy.terms.url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Nutzungsbedingungen
+                </a>{" "}
+                in Version {policy.terms.currentVersion} zu.
+              </span>
+            </label>
+
+            {submitError?.field === "acceptTerms" ? <p className="text-sm text-error">{submitError.message}</p> : null}
+            <p className="helper-text">Ohne diese Zustimmung wird kein Konto erstellt.</p>
+          </fieldset>
+        </div>
 
         {submitError && !submitError.field ? <div className="alert alert-error">{submitError.message}</div> : null}
         {successMessage ? (
@@ -264,7 +279,7 @@ export function RegistrationForm() {
 
         <div className="form-actions flex flex-wrap items-center gap-3">
           <button className="btn btn-primary" disabled={isPending} type="submit">
-            {isPending ? "Registriere..." : "Registrieren"}
+            {isPending ? "Registriere..." : "Registrierung abschicken"}
           </button>
           <Link className="btn btn-ghost" href="/">
             Zur Startseite
@@ -272,26 +287,42 @@ export function RegistrationForm() {
         </div>
       </form>
 
-      <div className="space-y-5">
+      <aside className="public-support-stack">
         <PasswordRequirements requirements={requirements} />
 
-        <div className="soft-panel">
-          <p className="section-title">Ablauf</p>
-          <div className="mt-4 space-y-3">
-            <p className="body-copy text-sm">1. Formular ausfüllen, Captcha bestätigen und der aktuellen AGB-Version zustimmen.</p>
-            <p className="body-copy text-sm">2. Verifizierungs-E-Mail öffnen und Link klicken.</p>
-            <p className="body-copy text-sm">3. Nach erfolgreicher Prüfung wird dein Konto freigeschaltet.</p>
+        <div className="soft-panel public-support-card">
+          <div className="section-intro">
+            <p className="section-title">Ablauf</p>
+            <h2 className="section-headline">Was nach dem Formular passiert.</h2>
+          </div>
+
+          <div className="public-stage-list">
+            <div className="public-stage-row">
+              <span className="public-stage-number">1</span>
+              <p className="body-copy text-sm">Formular ausfüllen, Captcha bestätigen und der gültigen Version zustimmen.</p>
+            </div>
+            <div className="public-stage-row">
+              <span className="public-stage-number">2</span>
+              <p className="body-copy text-sm">Verifizierungs-E-Mail öffnen und den enthaltenen Link aufrufen.</p>
+            </div>
+            <div className="public-stage-row">
+              <span className="public-stage-number">3</span>
+              <p className="body-copy text-sm">Nach erfolgreicher Prüfung wird dein Konto freigeschaltet.</p>
+            </div>
           </div>
         </div>
 
-        <div className="soft-panel text-sm">
-          <p className="subsection-title">Rollenstart</p>
-          <p className="body-copy mt-2 text-sm">
-            Neue Nutzer starten ohne aktive Anwendungsfreigabe. Erst nach der E-Mail-Verifizierung wird die Rolle
-            `app-user` zugewiesen.
+        <div className="soft-panel public-support-card">
+          <div className="section-intro">
+            <p className="section-title">Freischaltung</p>
+            <h2 className="section-headline">Neue Nutzer starten bewusst ohne direkte App-Freigabe.</h2>
+          </div>
+          <p className="body-copy text-sm">
+            Erst nach der bestätigten E-Mail-Verifizierung weist das System die Rolle <code>app-user</code> zu. Die
+            Sicherheitslogik bleibt unverändert; diese Karte macht sie nur transparenter.
           </p>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

@@ -46,7 +46,7 @@ export function AuthControls({ authenticated, variant = "default" }: AuthControl
 
   if (authenticated) {
     return (
-      <button className="btn btn-outline btn-primary" disabled={isPending} onClick={handleLogout}>
+      <button className="btn btn-outline btn-primary" disabled={isPending} onClick={handleLogout} type="button">
         {isPending ? "Abmelden..." : "Abmelden"}
       </button>
     );
@@ -57,6 +57,7 @@ export function AuthControls({ authenticated, variant = "default" }: AuthControl
       className={variant === "header" ? "btn btn-outline btn-primary btn-sm" : "btn btn-primary"}
       disabled={isPending}
       onClick={handleLogin}
+      type="button"
     >
       {isPending ? "Weiter..." : variant === "header" ? "Anmelden" : "Mit Keycloak anmelden"}
     </button>

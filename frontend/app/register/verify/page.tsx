@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 export default function RegisterVerifyPage() {
   return (
     <main className="page-shell">
-      <div className="page-container">
-        <Suspense fallback={<div className="soft-panel mx-auto max-w-2xl">Lade Verifizierung...</div>}>
+      <div className="page-container public-shell">
+        <Suspense fallback={<div className="soft-panel public-loading-panel">Lade Verifizierung...</div>}>
           <RegistrationVerifyStatus />
         </Suspense>
       </div>

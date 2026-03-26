@@ -15,7 +15,7 @@ const headlineFont = Merriweather({
 
 export const metadata: Metadata = {
   title: "HeuermannPlus",
-  description: "Scaffold fuer eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak.",
+  description: "Scaffold für eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak.",
   icons: {
     icon: "/icon.svg"
   }
@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html data-theme="light" lang="de">
-      <body className={headlineFont.variable}>
+      <body className={`${headlineFont.variable} app-frame`}>
         <AppHeader authenticated={authenticated} userName={displayName} />
         {children}
       </body>

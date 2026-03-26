@@ -7,10 +7,69 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const metrics = [
+  {
+    title: "Einladungen geordnet",
+    value: "01",
+    copy: "Teile Gruppenbeitritte nachvollziehbar statt in verstreuten Nachrichten."
+  },
+  {
+    title: "Aktivitäten gebündelt",
+    value: "02",
+    copy: "Plane Treffpunkte, Abläufe und nächste Schritte an einem gemeinsamen Ort."
+  },
+  {
+    title: "Rollen klar lesbar",
+    value: "03",
+    copy: "Organisator:innen und Mitglieder sehen schneller, was für sie gerade relevant ist."
+  }
+];
+
+const stages = [
+  {
+    step: "01",
+    title: "Gruppe aufsetzen",
+    copy: "Lege einen gemeinsamen Rahmen mit Name, Beschreibung und klarer Verantwortung fest."
+  },
+  {
+    step: "02",
+    title: "Menschen verbinden",
+    copy: "Hole neue Mitglieder über Einladungen in denselben Arbeitskontext, ohne Informationsverlust."
+  },
+  {
+    step: "03",
+    title: "Aktivitäten steuern",
+    copy: "Halte fest, was ansteht, wer beteiligt ist und was als Nächstes passieren soll."
+  }
+];
+
+const proofPoints = [
+  {
+    title: "Für Organisator:innen",
+    headline: "Weniger Rückfragen, stärkere Orientierung.",
+    copy: "Die zentrale Gruppenansicht reduziert Abstimmungslast und zeigt, wo Entscheidungen oder Reaktionen gebraucht werden."
+  },
+  {
+    title: "Für Mitglieder",
+    headline: "Schneller verstehen, sicherer teilnehmen.",
+    copy: "Mitglieder sehen Einladungen, Aktivitäten und den aktuellen Stand gebündelt statt verteilt über mehrere Kanäle."
+  },
+  {
+    title: "Für den Einstieg",
+    headline: "Ein klarer Start statt Tool-Sammlung.",
+    copy: "Konto anlegen, verifizieren, loslegen: der Einstieg bleibt nachvollziehbar und führt direkt in die gemeinsame Struktur."
+  },
+  {
+    title: "Für spätere Erweiterung",
+    headline: "Die Oberfläche bleibt aufnahmefähig.",
+    copy: "Das Design priorisiert klare Sektionen und robuste Muster, damit künftige Funktionen nicht wie Fremdkörper wirken."
+  }
+];
+
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const authenticated = Boolean(session?.user);
-  const displayName = session?.user?.name ?? session?.user?.email ?? "Willkommen zurueck";
+  const displayName = session?.user?.name ?? session?.user?.email ?? "Willkommen zurück";
 
   if (authenticated) {
     return (
@@ -22,164 +81,139 @@ export default async function HomePage() {
 
   return (
     <main className="page-shell">
-      <div className="page-container">
-        <section className="landing-hero">
-          <div className="landing-hero-copy">
-            <div className="landing-kicker-row">
-              <span className="brand-kicker">HeuermannPlus</span>
-              <span className="landing-eyebrow">Fuer Gruppen, die sich nicht im Chaos verlieren wollen</span>
-            </div>
-
+      <div className="page-container public-shell">
+        <section className="public-hero">
+          <div className="public-hero-copy space-y-6">
             <div className="section-intro">
-              <p className="subheadline">Vom ersten Einladen bis zur gemeinsamen Aktivitaet bleibt alles an einem Ort.</p>
-              <h1 className="display-headline">
-                Organisiere Gruppen so, dass sich alle schneller zurechtfinden und leichter mitmachen.
-              </h1>
-              <p className="body-copy landing-lead">
-                HeuermannPlus gibt Organisator:innen und Mitgliedern einen klaren gemeinsamen Ausgangspunkt: Gruppen
-                anlegen, Menschen einladen, Aktivitaeten planen und den naechsten Schritt fuer alle sichtbar machen.
+              <p className="section-title">Koordination für echte Gruppenarbeit</p>
+              <h1 className="display-headline">Ein neuer Ausgangspunkt für Einladungen, Gruppen und gemeinsame Aktivitäten.</h1>
+              <p className="body-copy">
+                HeuermannPlus strukturiert den Weg vom ersten Zugang bis zur laufenden Zusammenarbeit. Gruppen starten
+                geordnet, Mitglieder finden schneller ihren Platz und Aktivitäten bleiben sichtbar statt implizit.
               </p>
             </div>
 
-            <div className="landing-cta-row">
+            <div className="public-auth-strip">
               <Link className="btn btn-primary btn-lg" href={"/register" as Route}>
                 Konto erstellen
               </Link>
-              <PublicLoginButton className="btn btn-ghost landing-login-button" />
+              <PublicLoginButton className="btn btn-outline btn-primary btn-lg" />
             </div>
 
-            <p className="helper-text landing-helper">
-              Bereits dabei? Melde dich an und geh direkt zur bestehenden Gruppe oder zu deinen Aktivitaeten.
+            <p className="helper-text">
+              Die erste Iteration konzentriert sich auf den öffentlichen Einstieg: klares Onboarding, stärkere
+              Hierarchie und eine Shell, die später von den geschützten Bereichen weiterverwendet wird.
             </p>
           </div>
 
-          <div className="landing-visual" aria-hidden="true">
-            <div className="landing-visual-card landing-visual-card-primary">
-              <p className="section-title">Heute im Blick</p>
-              <div className="landing-visual-cluster">
-                <div className="landing-token landing-token-wide">
-                  <span className="landing-token-title">Sommergruppe</span>
-                  <span className="landing-token-copy">Mitglieder einladen</span>
+          <div className="public-stage-rail" aria-hidden="true">
+            <div className="public-callout">
+              <div className="section-intro">
+                <p className="section-title">Heute sichtbar</p>
+                <h2 className="section-headline">Weniger Sucharbeit, mehr gemeinsame Orientierung.</h2>
+              </div>
+
+              <div className="public-stage-list">
+                <div className="public-stage-row">
+                  <span className="public-stage-number">A</span>
+                  <div className="space-y-1">
+                    <p className="subsection-title">Gruppenraum</p>
+                    <p className="body-copy text-sm">Beschreibung, Mitgliedschaft und Verantwortung an einem Ort.</p>
+                  </div>
                 </div>
-                <div className="landing-token">
-                  <span className="landing-token-title">Einladung</span>
-                  <span className="landing-token-copy">geteilt</span>
+
+                <div className="public-stage-row">
+                  <span className="public-stage-number">B</span>
+                  <div className="space-y-1">
+                    <p className="subsection-title">Einladungsfluss</p>
+                    <p className="body-copy text-sm">Neue Personen gelangen nachvollziehbar in bestehende Gruppen.</p>
+                  </div>
                 </div>
-                <div className="landing-token landing-token-accent">
-                  <span className="landing-token-title">Aktivitaet</span>
-                  <span className="landing-token-copy">gemeinsam planen</span>
+
+                <div className="public-stage-row">
+                  <span className="public-stage-number">C</span>
+                  <div className="space-y-1">
+                    <p className="subsection-title">Aktivitätsfokus</p>
+                    <p className="body-copy text-sm">Nächste Schritte bleiben offen lesbar, auch wenn mehrere Personen beteiligt sind.</p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="landing-visual-card landing-visual-card-secondary">
-              <div className="landing-diagram">
-                <span className="landing-node landing-node-large">Gruppe</span>
-                <span className="landing-node">Mitglieder</span>
-                <span className="landing-node">Einladungen</span>
-                <span className="landing-node">Aktivitaeten</span>
-              </div>
-            </div>
           </div>
         </section>
 
-        <section className="page-section landing-section">
-          <div className="section-intro landing-section-intro">
-            <p className="section-title">Fuer Organisator:innen und Mitglieder</p>
-            <h2 className="section-headline">Beide Seiten sehen sofort, was als Naechstes wichtig ist.</h2>
+        <section className="public-section page-section">
+          <div className="section-intro">
+            <p className="section-title">Was das Produkt stärkt</p>
+            <h2 className="section-headline">Die neue visuelle Sprache ordnet das Produkt nach Aufgaben statt nach Zufall.</h2>
+            <p className="subheadline">
+              Typografie, Farbcodierung und Flächenhierarchie folgen der Styleguide-Basis, während DaisyUI die
+              Komponentenlogik für Buttons, Karten, Alerts und Formulare trägt.
+            </p>
           </div>
 
-          <div className="landing-audience-grid">
-            <article className="landing-story-card">
-              <p className="subsection-title">Wenn du organisierst</p>
-              <h3 className="headline landing-card-headline">Weniger Nachfragen. Mehr Klarheit fuer deine Gruppe.</h3>
-              <p className="body-copy">
-                Lege Gruppen an, lade Menschen ein und halte Aktivitaeten so fest, dass Entscheidungen nicht in
-                einzelnen Nachrichten verloren gehen.
-              </p>
-            </article>
-
-            <article className="landing-story-card landing-story-card-soft">
-              <p className="subsection-title">Wenn du mitmachst</p>
-              <h3 className="headline landing-card-headline">Du erkennst schneller, worum es geht und wie du teilnimmst.</h3>
-              <p className="body-copy">
-                Tritt einer Gruppe bei, sieh deine Aktivitaeten gebuendelt und bleib nah an dem, was fuer deine
-                Teilnahme gerade relevant ist.
-              </p>
-            </article>
+          <div className="public-metric-grid">
+            {metrics.map((metric) => (
+              <article key={metric.title} className="public-metric-card">
+                <p className="subsection-title">{metric.title}</p>
+                <p className="public-metric-value">{metric.value}</p>
+                <p className="body-copy text-sm">{metric.copy}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="page-section landing-section">
-          <div className="section-intro landing-section-intro">
-            <p className="section-title">So funktioniert der Einstieg</p>
-            <h2 className="section-headline">Drei Schritte vom ersten Konto bis zur gemeinsamen Planung.</h2>
+        <section className="public-section page-section">
+          <div className="section-intro">
+            <p className="section-title">Vom Einstieg bis zur Planung</p>
+            <h2 className="section-headline">Drei Bewegungen, die das Produkt klar lesbar machen.</h2>
           </div>
 
-          <div className="landing-steps-grid">
-            <article className="landing-step-card">
-              <span className="step-index">1</span>
-              <p className="subsection-title">Ankommen</p>
-              <p className="body-copy">
-                Erstelle dein Konto und starte mit einem klaren Einstieg statt mit verstreuten Einzeltools.
-              </p>
-            </article>
-
-            <article className="landing-step-card">
-              <span className="step-index">2</span>
-              <p className="subsection-title">Verbinden</p>
-              <p className="body-copy">
-                Erstelle eine Gruppe oder nimm eine Einladung an, damit alle am selben Ort zusammenkommen.
-              </p>
-            </article>
-
-            <article className="landing-step-card">
-              <span className="step-index">3</span>
-              <p className="subsection-title">Koordinieren</p>
-              <p className="body-copy">
-                Plane Aktivitaeten, behalte Mitglieder im Blick und mache den naechsten Schritt fuer alle sichtbar.
-              </p>
-            </article>
+          <div className="public-stage-grid">
+            {stages.map((stage) => (
+              <article key={stage.step} className="public-stage-card">
+                <span className="public-stage-number">{stage.step}</span>
+                <p className="headline text-[1.35rem] leading-tight">{stage.title}</p>
+                <p className="body-copy text-sm">{stage.copy}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="page-section landing-section">
-          <div className="section-intro landing-section-intro">
-            <p className="section-title">Warum HeuermannPlus</p>
-            <h2 className="section-headline">Konkrete Produktstaerken fuer den Alltag deiner Gruppe.</h2>
+        <section className="public-section page-section">
+          <div className="section-intro">
+            <p className="section-title">Relevanz für beide Seiten</p>
+            <h2 className="section-headline">Die Oberfläche bleibt gleichermaßen klar für Organisator:innen und Mitglieder.</h2>
           </div>
 
-          <div className="landing-proof-grid">
-            <article className="benefit-item landing-proof-card">
-              <p className="subsection-title">Gruppen verwalten</p>
-              <p className="body-copy">
-                Gruppen erhalten einen festen Ort mit Namen, Beschreibung und klarer Verantwortung.
-              </p>
-            </article>
-
-            <article className="benefit-item landing-proof-card">
-              <p className="subsection-title">Mitglieder einladen</p>
-              <p className="body-copy">
-                Einladungen helfen dir, neue und bestehende Kontakte geordnet in die Gruppe zu holen.
-              </p>
-            </article>
-
-            <article className="benefit-item landing-proof-card">
-              <p className="subsection-title">Aktivitaeten planen</p>
-              <p className="body-copy">
-                Gemeinsame Aktivitaeten bleiben als konkrete Planung sichtbar statt nur als lose Absprache.
-              </p>
-            </article>
-
-            <article className="benefit-item landing-proof-card">
-              <p className="subsection-title">Mitmachen statt suchen</p>
-              <p className="body-copy">
-                Mitglieder sehen schneller, wo sie gehoeren, was ansteht und wie sie sich beteiligen koennen.
-              </p>
-            </article>
+          <div className="public-proof-grid">
+            {proofPoints.map((point) => (
+              <article key={point.title} className="feature-card">
+                <p className="subsection-title">{point.title}</p>
+                <h3 className="headline text-[1.45rem]">{point.headline}</h3>
+                <p className="body-copy text-sm">{point.copy}</p>
+              </article>
+            ))}
           </div>
         </section>
 
+        <section className="public-callout page-section">
+          <div className="section-intro">
+            <p className="section-title">Direkter Einstieg</p>
+            <h2 className="section-headline">Starte mit einem Konto und führe deine Gruppe später in dieselbe neue Shell.</h2>
+            <p className="body-copy">
+              Die jetzige Iteration verankert Navigation, Typografie, CTA-Hierarchie und Formularrhythmus. Die
+              geschützten Bereiche können diese Muster im nächsten Schritt direkt übernehmen.
+            </p>
+          </div>
+
+          <div className="public-auth-strip">
+            <Link className="btn btn-primary" href={"/register" as Route}>
+              Registrierung starten
+            </Link>
+            <PublicLoginButton className="btn btn-ghost" />
+          </div>
+        </section>
       </div>
     </main>
   );

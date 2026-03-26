@@ -79,7 +79,7 @@ Die Root-Compose-Datei bleibt trotzdem der bevorzugte lokale Einstieg, weil alle
 Ein VS-Code-Dev-Container liegt unter `.devcontainer/` und ist auf diesen Repo-Stack zugeschnitten.
 
 - Vorinstalliert: Node.js 24.x, npm, Java 25, Docker-CLI-Zugriff auf den Host-Daemon und `@openai/codex`
-- Beim ersten Container-Start werden `frontend`-Dependencies installiert und der Gradle Wrapper in `backend` vorgewaermt
+- Beim ersten Container-Start werden `frontend`-Dependencies installiert und der Gradle Wrapper in `backend` vorgewärmt
 - Der Root-Stack aus `docker-compose.yml` startet nicht automatisch und bleibt bewusst manuell
 
 Nutzung:
