@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import type { Route } from "next";
 import Link from "next/link";
+import { AuthControls } from "@/components/auth-controls";
 import { HomeDashboard } from "@/components/home-dashboard";
 import { authOptions } from "@/lib/auth";
 
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const authenticated = Boolean(session?.user);
-  const displayName = session?.user?.name ?? session?.user?.email ?? "Willkommen zurueck";
+  const displayName = session?.user?.name ?? session?.user?.email ?? "Willkommen zurück";
 
   if (authenticated) {
     return (
@@ -30,62 +31,68 @@ export default async function HomePage() {
             </div>
 
             <div className="max-w-3xl space-y-4">
-              <p className="subheadline">Plane gemeinsam, koordiniere klar und behalte jederzeit den Ueberblick.</p>
-              <h1 className="headline">
-                Organisiere Gruppen und Aktivitaeten an einem Ort.
-              </h1>
+              <p className="subheadline">Planen, koordinieren und gemeinsam den Überblick behalten.</p>
+              <h1 className="headline">HeuermannPlus bringt Gruppen und Aktivitäten an einen Ort.</h1>
               <p className="body-copy max-w-2xl">
-                HeuermannPlus hilft dir dabei, Gruppen aufzubauen, Mitglieder einzuladen und gemeinsame Vorhaben
-                uebersichtlich zu koordinieren.
+                Die Plattform hilft dabei, Gruppen zu organisieren, Mitglieder zusammenzubringen und gemeinsame
+                Aktivitäten klar und übersichtlich zu koordinieren.
               </p>
               <p className="body-copy max-w-2xl">
-                Vom ersten Beitritt bis zur laufenden Abstimmung bleibt der Einstieg einfach und die Organisation
-                nachvollziehbar.
+                Vom ersten Beitritt bis zur laufenden Abstimmung bleibt der Einstieg bewusst einfach und auf das
+                Wesentliche reduziert.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <Link className="btn btn-primary btn-lg" href={"/register" as Route}>
+            <div className="flex flex-wrap items-center gap-3">
+              <AuthControls authenticated={authenticated} />
+              {!authenticated ? (
+                <Link className="btn btn-outline btn-primary" href={"/register" as Route}>
                   Jetzt registrieren
                 </Link>
-              </div>
-              <p className="helper-text max-w-xl">
-                Erstelle dein Konto und starte direkt mit Gruppen, Einladungen und gemeinsamer Planung.
-              </p>
+              ) : (
+                <>
+                  <Link className="btn btn-outline btn-primary" href={"/profile" as Route}>
+                    Profil verwalten
+                  </Link>
+                  <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
+                    Zu den Gruppen
+                  </Link>
+                  <Link className="btn btn-outline btn-primary" href={"/activities" as Route}>
+                    Zu den Aktivitäten
+                  </Link>
+                </>
+              )}
+              <a className="btn btn-ghost" href="#architecture">
+                Architektur ansehen
+              </a>
             </div>
           </div>
 
           <div className="soft-panel grid gap-5">
             <div className="space-y-2">
-              <h2 className="section-headline text-3xl">Schnell startklar</h2>
+              <h2 className="section-headline text-3xl">Der schnelle Einstieg für neue Mitglieder</h2>
               <p className="subheadline">
-                Drei zentrale Vorteile helfen dir dabei, gemeinsame Vorhaben von Anfang an klar zu organisieren.
+                Registriere dich in wenigen Schritten oder melde dich direkt an, um Gruppen zu erstellen,
+                Einladungen zu verwalten und Aktivitäten zu koordinieren.
               </p>
             </div>
 
-            <div className="benefit-list">
-              <div className="benefit-item">
-                <p className="subsection-title">Gruppen uebersichtlich organisieren</p>
-                <p className="body-copy text-sm">
-                  Lege Gruppen an, halte Strukturen nachvollziehbar und schaffe einen gemeinsamen Ausgangspunkt fuer
-                  eure Planung.
-                </p>
-              </div>
+            <div className="rounded-2xl border border-base-300 bg-white/90 p-4 text-sm text-base-content">
+              <p className="subsection-title">Was dich erwartet</p>
+              <p className="body-copy text-sm">
+                Ein zentraler Ort für Gruppenbeitritt, gemeinsame Planung und klare Kommunikation rund um eure
+                Aktivitäten.
+              </p>
+            </div>
 
-              <div className="benefit-item">
-                <p className="subsection-title">Mitglieder gezielt zusammenbringen</p>
-                <p className="body-copy text-sm">
-                  Lade Personen ein, steuere Zugehoerigkeiten klar und behalte im Blick, wer bereits Teil deiner
-                  Gruppe ist.
-                </p>
-              </div>
+            <div className="brand-divider" />
 
-              <div className="benefit-item">
-                <p className="subsection-title">Vorhaben gemeinsam koordinieren</p>
+            <div className="status-list">
+              <div className="status-row">
+                <span className="status-dot" />
                 <p className="body-copy text-sm">
-                  Bilde Absprachen, Einladungen und naechste Schritte an einem Ort ab, damit gemeinsame Aktivitaeten
-                  einfacher planbar bleiben.
+                  Die Startseite zeigt nur noch den Produktkern und die zwei wichtigsten Einstiege: Anmelden und
+                  Registrieren.
                 </p>
               </div>
             </div>

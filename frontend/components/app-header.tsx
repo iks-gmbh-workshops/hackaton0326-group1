@@ -32,9 +32,9 @@ export function AppHeader({ authenticated, userName }: AppHeaderProps) {
               className="btn btn-ghost btn-sm"
               disabled
               aria-disabled="true"
-              title="Mock: Die Aktivitaeten-Route ist noch nicht implementiert."
+              title="Mock: Die Aktivitäten-Route ist noch nicht implementiert."
             >
-              Aktivitaeten
+              Aktivitäten
             </button>
 
             <button

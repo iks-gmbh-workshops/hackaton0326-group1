@@ -12,7 +12,7 @@ const headlineFont = Merriweather({
 
 export const metadata: Metadata = {
   title: "HeuermannPlus",
-  description: "Scaffold fuer eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak."
+  description: "Scaffold für eine responsive Multilayer-Web-App mit Next.js, Spring Boot und Keycloak."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

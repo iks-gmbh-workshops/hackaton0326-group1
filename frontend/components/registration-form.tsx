@@ -184,7 +184,7 @@ export function RegistrationForm() {
         ) : null}
         {submitError?.field === "nickname" && submitError.suggestedNickname ? (
           <button className="btn btn-sm btn-outline btn-primary" onClick={applySuggestedNickname} type="button">
-            Vorschlag uebernehmen: {submitError.suggestedNickname}
+            Vorschlag übernehmen: {submitError.suggestedNickname}
           </button>
         ) : null}
 
@@ -252,7 +252,7 @@ export function RegistrationForm() {
             </span>
           </label>
           {submitError?.field === "acceptTerms" ? <p className="text-sm text-error">{submitError.message}</p> : null}
-          <p className="helper-text">Die Registrierung ist nur moeglich, wenn du der aktuell gueltigen Version zustimmst.</p>
+          <p className="helper-text">Die Registrierung ist nur möglich, wenn du der aktuell gültigen Version zustimmst.</p>
         </fieldset>
 
         {submitError && !submitError.field ? <div className="alert alert-error">{submitError.message}</div> : null}
@@ -278,9 +278,9 @@ export function RegistrationForm() {
         <div className="soft-panel">
           <p className="section-title">Ablauf</p>
           <div className="mt-4 space-y-3">
-            <p className="body-copy text-sm">1. Formular ausfuellen, Captcha bestaetigen und der aktuellen AGB-Version zustimmen.</p>
-            <p className="body-copy text-sm">2. Verifizierungs-E-Mail oeffnen und Link klicken.</p>
-            <p className="body-copy text-sm">3. Nach erfolgreicher Pruefung wird dein Konto freigeschaltet.</p>
+            <p className="body-copy text-sm">1. Formular ausfüllen, Captcha bestätigen und der aktuellen AGB-Version zustimmen.</p>
+            <p className="body-copy text-sm">2. Verifizierungs-E-Mail öffnen und Link klicken.</p>
+            <p className="body-copy text-sm">3. Nach erfolgreicher Prüfung wird dein Konto freigeschaltet.</p>
           </div>
         </div>
 

@@ -61,11 +61,11 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
           </div>
 
           <div className="max-w-3xl space-y-4">
-            <p className="subheadline">Dein schneller Ueberblick fuer Gruppen und naechste Schritte.</p>
-            <h1 className="section-headline">Willkommen zurueck, {userName}.</h1>
+            <p className="subheadline">Dein schneller Überblick für Gruppen und nächste Schritte.</p>
+            <h1 className="headline">Willkommen zurück, {userName}.</h1>
             <p className="body-copy max-w-2xl">
-              Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz fuer kommende
-              Aktivitaeten.
+              Hier siehst du auf einen Blick deine Gruppen, offene Einladungen und den Platz für kommende
+              Aktivitäten.
             </p>
           </div>
 
@@ -78,39 +78,33 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <div className="soft-panel grid gap-4">
           <div className="section-intro">
-            <p className="section-title">Uebersicht</p>
-            <h2 className="section-headline">Direkt nach dem Login orientieren</h2>
+            <p className="section-title">Übersicht</p>
+            <h2 className="section-headline text-3xl">Direkt nach dem Login orientieren</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Meine Gruppen</p>
-              <p className="section-headline self-end text-[2rem] leading-none">{statsGroups}</p>
-              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
-                aktive Zugehoerigkeiten
-              </p>
+              <p className="section-headline mt-2 text-[2rem]">{statsGroups}</p>
+              <p className="helper-text">aktive Zugehörigkeiten</p>
             </div>
 
-            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
+            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
               <p className="subsection-title">Einladungen</p>
-              <p className="section-headline self-end text-[2rem] leading-none">{statsInvitations}</p>
-              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
-                offene Gruppeneinladungen
-              </p>
+              <p className="section-headline mt-2 text-[2rem]">{statsInvitations}</p>
+              <p className="helper-text">offene Gruppeneinladungen</p>
             </div>
 
-            <div className="grid min-h-full min-w-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-base-300 bg-white/90 p-4">
-              <p className="subsection-title">Antraege</p>
-              <p className="section-headline self-end text-[2rem] leading-none">{statsRequests}</p>
-              <p className="helper-text mt-2 max-w-[16ch] overflow-hidden text-pretty [overflow-wrap:anywhere]">
-                laufende Mitgliedschaftsantraege
-              </p>
+            <div className="rounded-2xl border border-base-300 bg-white/90 p-4">
+              <p className="subsection-title">Anträge</p>
+              <p className="section-headline mt-2 text-[2rem]">{statsRequests}</p>
+              <p className="helper-text">laufende Mitgliedschaftsanträge</p>
             </div>
           </div>
 
           <p className="body-copy text-sm">
             {isLoading
-              ? "Die aktuellen Uebersichten werden geladen."
+              ? "Die aktuellen Übersichten werden geladen."
               : data.invitations.length
               ? "Du hast offene Einladungen, die du in der Gruppenverwaltung direkt annehmen kannst."
               : "Keine offenen Einladungen im Moment."}
@@ -127,7 +121,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
               <p className="section-title">Meine Gruppen</p>
               <h2 className="section-headline">Deine wichtigsten Gruppen auf einen Blick</h2>
               <p className="subheadline">
-                Kompakt dargestellt fuer den schnellen Einstieg. Die komplette Verwaltung bleibt unter Gruppen.
+                Kompakt dargestellt für den schnellen Einstieg. Die komplette Verwaltung bleibt unter Gruppen.
               </p>
             </div>
 
@@ -162,7 +156,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
                     <p className="body-copy text-sm">{group.description || "Keine Beschreibung hinterlegt."}</p>
                     <p className="helper-text">{group.memberCount} aktive Mitglieder</p>
                     <Link className="btn btn-sm btn-primary" href={`/groups/${group.id}` as Route}>
-                      Details oeffnen
+                      Details öffnen
                     </Link>
                   </article>
                 ))}
@@ -170,7 +164,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             ) : null}
 
             {!isLoading && !loadError && remainingGroups > 0 ? (
-              <p className="helper-text">Und {remainingGroups} weitere Gruppen in der vollstaendigen Gruppenverwaltung.</p>
+              <p className="helper-text">Und {remainingGroups} weitere Gruppen in der vollständigen Gruppenverwaltung.</p>
             ) : null}
 
             {!isLoading && !loadError && (data.invitations.length || data.joinRequests.length) ? (
@@ -202,7 +196,7 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
             <div className="flex flex-wrap items-center gap-3">
               <Link className="btn btn-outline btn-primary" href={"/groups" as Route}>
-                Gesamte Gruppenverwaltung oeffnen
+                Gesamte Gruppenverwaltung öffnen
               </Link>
             </div>
           </div>
@@ -210,17 +204,17 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
 
         <section className="soft-panel space-y-4">
           <div className="section-intro">
-            <p className="section-title">Bevorstehende Aktivitaeten</p>
-            <h2 className="section-headline">Hier erscheinen deine naechsten Termine</h2>
+            <p className="section-title">Bevorstehende Aktivitäten</p>
+            <h2 className="section-headline">Hier erscheinen deine nächsten Termine</h2>
             <p className="subheadline">
-              Die Aktivitaetenfunktion ist im Projekt noch nicht umgesetzt. Dieser Bereich ist dafuer bereits vorgesehen.
+              Die Aktivitätenfunktion ist im Projekt noch nicht umgesetzt. Dieser Bereich ist dafür bereits vorgesehen.
             </p>
           </div>
 
           <div className="rounded-2xl border border-base-300 bg-white/90 p-5">
-            <p className="subsection-title">Noch keine Aktivitaetenansicht verfuegbar</p>
+            <p className="subsection-title">Noch keine Aktivitätenansicht verfügbar</p>
             <p className="body-copy mt-3 text-sm">
-              Sobald Aktivitaeten im Produkt eingefuehrt sind, werden hier deine anstehenden Termine, Treffpunkte und
+              Sobald Aktivitäten im Produkt eingeführt sind, werden hier deine anstehenden Termine, Treffpunkte und
               relevante Aktualisierungen gesammelt angezeigt.
             </p>
           </div>
@@ -229,8 +223,8 @@ export function HomeDashboard({ userName }: HomeDashboardProps) {
             <div className="status-row">
               <span className="status-dot" />
               <p className="body-copy text-sm">
-                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit spaeter echte Aktivitaeten ohne
-                Bedeutungsbruch eingebunden werden koennen.
+                Der Bereich bleibt absichtlich ohne Platzhalterdaten, damit spaeter echte Aktivitäten ohne
+                Bedeutungsbruch eingebunden werden können.
               </p>
             </div>
           </div>

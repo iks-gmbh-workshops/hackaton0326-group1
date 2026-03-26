@@ -47,7 +47,7 @@ export function AuthControls({ authenticated, variant = "default" }: AuthControl
   if (authenticated) {
     return (
       <button className="btn btn-outline btn-primary" disabled={isPending} onClick={handleLogout}>
-        {isPending ? "Abmelden..." : "Logout"}
+        {isPending ? "Abmelden..." : "Abmelden"}
       </button>
     );
   }
